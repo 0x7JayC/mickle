@@ -47,18 +47,117 @@ body {
   overflow-x: hidden;
 }
 
-/* The vivid ambient ground — what the glass refracts */
-body::before {
+/* The vivid ambient ground — default A1 (warm sunrise) */
+body::before, .ambient-a1 {
   content: "";
-  position: fixed;
+  position: absolute;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
+  pointer-events: none;
   background:
     radial-gradient(60vw 60vw at 12% 8%, rgba(255, 122, 89, 0.55), transparent 60%),
     radial-gradient(50vw 50vw at 92% 18%, rgba(245, 185, 74, 0.55), transparent 60%),
     radial-gradient(60vw 60vw at 80% 92%, rgba(109, 94, 245, 0.45), transparent 65%),
     radial-gradient(70vw 70vw at 8% 88%, rgba(236, 72, 153, 0.35), transparent 65%),
     linear-gradient(180deg, #fff8f0 0%, #fdf2ff 100%);
+}
+body::before { position: fixed; }
+
+/* A2 — cool dawn */
+.ambient-a2 {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60vw 60vw at 14% 10%, rgba(125, 211, 252, 0.55), transparent 60%),
+    radial-gradient(50vw 50vw at 90% 14%, rgba(167, 243, 208, 0.55), transparent 60%),
+    radial-gradient(55vw 55vw at 84% 92%, rgba(196, 181, 253, 0.5), transparent 65%),
+    radial-gradient(70vw 70vw at 6% 86%, rgba(254, 240, 138, 0.4), transparent 65%),
+    linear-gradient(180deg, #f5fbff 0%, #f6f3ff 100%);
+}
+
+/* A4 — monochrome cream */
+.ambient-a4 {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(60vw 60vw at 14% 10%, rgba(204, 122, 80, 0.18), transparent 60%),
+    radial-gradient(70vw 70vw at 86% 92%, rgba(150, 110, 70, 0.12), transparent 65%),
+    linear-gradient(180deg, #fbf6ee 0%, #f3ece0 100%);
+}
+
+/* A5 — aurora (dark) */
+.ambient-a5 {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(55vw 55vw at 12% 12%, rgba(45, 212, 191, 0.55), transparent 60%),
+    radial-gradient(50vw 50vw at 92% 22%, rgba(168, 85, 247, 0.6), transparent 60%),
+    radial-gradient(60vw 60vw at 84% 92%, rgba(236, 72, 153, 0.55), transparent 65%),
+    radial-gradient(70vw 70vw at 8% 88%, rgba(59, 130, 246, 0.45), transparent 65%),
+    linear-gradient(180deg, #08070f 0%, #0e0a1f 100%);
+}
+
+/* Per-palette tokens (override --accent, foreground, glass tints) */
+.theme-a1 {
+  --accent: #ff7a59; --accent-2: #f5b94a; --accent-3: #6d5ef5;
+  --foreground: #0c0a14;
+  --foreground-muted: rgba(12,10,20,0.62);
+  --foreground-subtle: rgba(12,10,20,0.42);
+  --glass-tint: rgba(255,255,255,0.55);
+  --glass-tint-strong: rgba(255,255,255,0.72);
+  --glass-tint-deep: rgba(255,255,255,0.32);
+  --glass-stroke: rgba(255,255,255,0.7);
+  --glass-stroke-inner: rgba(255,255,255,0.9);
+  color: var(--foreground);
+}
+.theme-a2 {
+  --accent: #38bdf8; --accent-2: #34d399; --accent-3: #a78bfa;
+  --foreground: #0a1426;
+  --foreground-muted: rgba(10,20,38,0.62);
+  --foreground-subtle: rgba(10,20,38,0.42);
+  --glass-tint: rgba(255,255,255,0.55);
+  --glass-tint-strong: rgba(255,255,255,0.74);
+  --glass-tint-deep: rgba(255,255,255,0.32);
+  --glass-stroke: rgba(255,255,255,0.75);
+  --glass-stroke-inner: rgba(255,255,255,0.95);
+  color: var(--foreground);
+}
+.theme-a4 {
+  --accent: #b15932; --accent-2: #8c6a3a; --accent-3: #4a3b2a;
+  --foreground: #1c1610;
+  --foreground-muted: rgba(28,22,16,0.62);
+  --foreground-subtle: rgba(28,22,16,0.42);
+  --glass-tint: rgba(252,247,238,0.55);
+  --glass-tint-strong: rgba(252,247,238,0.78);
+  --glass-tint-deep: rgba(252,247,238,0.36);
+  --glass-stroke: rgba(255,255,255,0.65);
+  --glass-stroke-inner: rgba(255,255,255,0.85);
+  color: var(--foreground);
+}
+.theme-a5 {
+  --accent: #2dd4bf; --accent-2: #a855f7; --accent-3: #ec4899;
+  --foreground: #f3f0ff;
+  --foreground-muted: rgba(243,240,255,0.66);
+  --foreground-subtle: rgba(243,240,255,0.42);
+  --glass-tint: rgba(255,255,255,0.08);
+  --glass-tint-strong: rgba(255,255,255,0.14);
+  --glass-tint-deep: rgba(255,255,255,0.05);
+  --glass-stroke: rgba(255,255,255,0.18);
+  --glass-stroke-inner: rgba(255,255,255,0.3);
+  color: var(--foreground);
+}
+
+/* In dark theme A5, button-primary should keep its punch */
+.theme-a5 .glass-button-primary {
+  background: linear-gradient(180deg, #2dd4bf 0%, #a855f7 100%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.35),
+    0 8px 24px rgba(168, 85, 247, 0.45),
+    0 16px 40px -8px rgba(168, 85, 247, 0.45);
+}
+.theme-a2 .glass-button-primary {
+  background: linear-gradient(180deg, #38bdf8 0%, #6366f1 100%);
+}
+.theme-a4 .glass-button-primary {
+  background: linear-gradient(180deg, #c66a3f 0%, #8c4a26 100%);
 }
 
 body::after {
@@ -135,7 +234,7 @@ body::after {
 .glass-button:active { transform: translateY(0); }
 
 .glass-button-primary {
-  background: linear-gradient(180deg, #ff8a6b 0%, #ff6a47 100%);
+  background: linear-gradient(180deg, var(--accent, #ff8a6b) 0%, color-mix(in srgb, var(--accent, #ff6a47) 80%, black) 100%);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow:

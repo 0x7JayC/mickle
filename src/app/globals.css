@@ -36,6 +36,7 @@
 html, body {
   color: var(--foreground);
   background: #fdf6ef;
+  transition: background-color 0.5s ease;
 }
 
 body {
@@ -47,9 +48,23 @@ body {
   overflow-x: hidden;
 }
 
-/* The vivid ambient ground — default A1 (warm sunrise) */
-body::before, .ambient-a1 {
-  content: "";
+/* Fixed full-page ambient layer (cross-fades on theme switch) */
+.ambient-fixed {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+/* Smooth color transitions when theme switches */
+.glass, .glass-strong, .glass-pill, .glass-button, .glass-button-primary {
+  transition: background 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease, color 0.5s ease;
+}
+body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
+
+/* The vivid ambient ground — A1 (warm sunrise) */
+.ambient-a1 {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -61,7 +76,6 @@ body::before, .ambient-a1 {
     radial-gradient(70vw 70vw at 8% 88%, rgba(236, 72, 153, 0.35), transparent 65%),
     linear-gradient(180deg, #fff8f0 0%, #fdf2ff 100%);
 }
-body::before { position: fixed; }
 
 /* A2 — cool dawn */
 .ambient-a2 {

@@ -1,52 +1,191 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --surface: #131313;
-  --surface-2: #1c1c1c;
-  --foreground: #f5f5f5;
-  --muted: #8b8b8b;
-  --accent: #f5d76e;
-  --accent-2: #d97757;
-  --positive: #4ade80;
-  --negative: #f87171;
-  --border: #262626;
+  --foreground: #0c0a14;
+  --foreground-muted: rgba(12, 10, 20, 0.62);
+  --foreground-subtle: rgba(12, 10, 20, 0.42);
+  --accent: #ff7a59;       /* warm coral */
+  --accent-2: #f5b94a;     /* honey */
+  --accent-3: #6d5ef5;     /* indigo */
+  --positive: #10b981;
+  --negative: #ef4444;
+
+  --glass-tint: rgba(255, 255, 255, 0.55);
+  --glass-tint-strong: rgba(255, 255, 255, 0.72);
+  --glass-tint-deep: rgba(255, 255, 255, 0.32);
+  --glass-stroke: rgba(255, 255, 255, 0.7);
+  --glass-stroke-inner: rgba(255, 255, 255, 0.9);
+  --glass-shadow: 0 1px 2px rgba(12, 10, 20, 0.04),
+                  0 8px 24px rgba(12, 10, 20, 0.06),
+                  0 32px 64px -24px rgba(109, 94, 245, 0.18);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
   --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
+  --color-muted: var(--foreground-muted);
+  --color-subtle: var(--foreground-subtle);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
-  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 html, body {
-  background: var(--background);
   color: var(--foreground);
+  background: #fdf6ef;
 }
 
 body {
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
   -webkit-font-smoothing: antialiased;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+/* The vivid ambient ground — what the glass refracts */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60vw 60vw at 12% 8%, rgba(255, 122, 89, 0.55), transparent 60%),
+    radial-gradient(50vw 50vw at 92% 18%, rgba(245, 185, 74, 0.55), transparent 60%),
+    radial-gradient(60vw 60vw at 80% 92%, rgba(109, 94, 245, 0.45), transparent 65%),
+    radial-gradient(70vw 70vw at 8% 88%, rgba(236, 72, 153, 0.35), transparent 65%),
+    linear-gradient(180deg, #fff8f0 0%, #fdf2ff 100%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px);
+  background-size: 3px 3px;
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+
+/* ===== Liquid glass surface ===== */
+.glass {
+  background: var(--glass-tint);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-inner),
+    inset 0 -1px 0 rgba(255,255,255,0.25),
+    0 1px 2px rgba(12, 10, 20, 0.04),
+    0 12px 32px rgba(12, 10, 20, 0.08),
+    0 32px 80px -24px rgba(109, 94, 245, 0.22);
+  border-radius: 28px;
+}
+
+.glass-strong {
+  background: var(--glass-tint-strong);
+  backdrop-filter: blur(36px) saturate(180%);
+  -webkit-backdrop-filter: blur(36px) saturate(180%);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(255,255,255,0.3),
+    0 1px 2px rgba(12, 10, 20, 0.05),
+    0 16px 40px rgba(12, 10, 20, 0.1),
+    0 40px 100px -32px rgba(109, 94, 245, 0.28);
+  border-radius: 32px;
+}
+
+.glass-pill {
+  background: var(--glass-tint-deep);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    0 4px 12px rgba(12, 10, 20, 0.06);
+  border-radius: 999px;
+}
+
+.glass-button {
+  background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.15));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    inset 0 -1px 0 rgba(255,255,255,0.2),
+    0 6px 16px rgba(12, 10, 20, 0.08);
+  border-radius: 999px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.glass-button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.95),
+    0 10px 24px rgba(12, 10, 20, 0.12);
+}
+.glass-button:active { transform: translateY(0); }
+
+.glass-button-primary {
+  background: linear-gradient(180deg, #ff8a6b 0%, #ff6a47 100%);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.45),
+    inset 0 -2px 0 rgba(0,0,0,0.06),
+    0 8px 20px rgba(255, 122, 89, 0.45),
+    0 16px 40px -8px rgba(255, 122, 89, 0.4);
+  border-radius: 999px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.glass-button-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 12px 28px rgba(255, 122, 89, 0.55),
+    0 22px 50px -8px rgba(255, 122, 89, 0.5);
+}
+.glass-button-primary:active { transform: translateY(0); }
+
+.glass-button-primary:disabled {
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.25));
+  color: var(--foreground-muted);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.7),
+    0 2px 6px rgba(12,10,20,0.05);
+  cursor: not-allowed;
+}
+
+/* Text gradients */
+.text-display {
+  background: linear-gradient(180deg, #18121e 0%, #2a2236 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.04em;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 @keyframes fade-up {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.fade-up { animation: fade-up 0.6s ease-out both; }
+.fade-up { animation: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}

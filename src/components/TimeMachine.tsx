@@ -40,10 +40,9 @@ export default function TimeMachine() {
   const contributed = useMemo(() => projectContributed(daily, horizon.years), [daily, horizon]);
   const growth = future - contributed;
 
-  // Build chart points
   const points = useMemo(() => {
     const months = horizon.years * 12;
-    const step = Math.max(1, Math.floor(months / 60));
+    const step = Math.max(1, Math.floor(months / 80));
     const pts: { m: number; v: number; c: number }[] = [];
     const monthly = daily * (365 / 12);
     const r = HISTORICAL_SP_CAGR / 12;
@@ -74,10 +73,10 @@ export default function TimeMachine() {
   return (
     <div className="w-full">
       {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-surface">
-          <span className="text-xs text-muted uppercase tracking-wider">Daily</span>
-          <span className="text-accent font-mono text-lg">${daily}</span>
+      <div className="flex flex-wrap items-center gap-3 mb-7">
+        <div className="glass-pill flex items-center gap-3 pl-4 pr-4 py-2.5">
+          <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">Daily</span>
+          <span className="text-foreground font-mono text-lg font-semibold tabular-nums">${daily}</span>
           <input
             type="range"
             min={1}
@@ -85,59 +84,83 @@ export default function TimeMachine() {
             step={1}
             value={daily}
             onChange={(e) => setDaily(Number(e.target.value))}
-            className="w-32 accent-accent"
+            className="w-32 sm:w-40 accent-[#ff7a59]"
           />
         </div>
-        <div className="flex gap-1 p-1 rounded-lg border border-border bg-surface">
-          {HORIZONS.map((h) => (
-            <button
-              key={h.years}
-              onClick={() => setHorizon(h)}
-              className={`px-3 py-1.5 text-sm rounded-md transition ${
-                h.years === horizon.years
-                  ? "bg-accent text-background font-semibold"
-                  : "text-muted hover:text-foreground"
-              }`}
-            >
-              {h.label}
-            </button>
-          ))}
+        <div className="glass-pill flex gap-1 p-1">
+          {HORIZONS.map((h) => {
+            const active = h.years === horizon.years;
+            return (
+              <button
+                key={h.years}
+                onClick={() => setHorizon(h)}
+                className={`px-3.5 py-1.5 text-sm rounded-full transition font-medium ${
+                  active
+                    ? "bg-foreground text-white shadow-[0_4px_12px_rgba(12,10,20,0.3)]"
+                    : "text-muted hover:text-foreground"
+                }`}
+              >
+                {h.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-border bg-surface p-4 sm:p-6">
+      <div className="rounded-3xl bg-white/40 backdrop-blur-xl p-4 sm:p-6 border border-white/60 shadow-inner">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="none">
           <defs>
-            <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+            <linearGradient id="grad-area" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ff7a59" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#f5b94a" stopOpacity="0.18" />
+              <stop offset="100%" stopColor="#6d5ef5" stopOpacity="0" />
             </linearGradient>
+            <linearGradient id="grad-line" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#ff7a59" />
+              <stop offset="50%" stopColor="#f5b94a" />
+              <stop offset="100%" stopColor="#6d5ef5" />
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
-          <path d={areaPath} fill="url(#grad)" />
-          <path d={contribPath} fill="none" stroke="var(--muted)" strokeWidth="1.5" strokeDasharray="4 4" />
-          <path d={linePath} fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+          <path d={areaPath} fill="url(#grad-area)" />
+          <path
+            d={contribPath}
+            fill="none"
+            stroke="rgba(12,10,20,0.3)"
+            strokeWidth="1.5"
+            strokeDasharray="4 5"
+          />
+          <path d={linePath} fill="none" stroke="url(#grad-line)" strokeWidth="3" filter="url(#glow)" strokeLinecap="round" />
         </svg>
-        <div className="flex items-center gap-4 text-xs text-muted mt-2">
+        <div className="flex items-center gap-5 text-xs text-muted mt-2 px-1">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-0.5 bg-accent" /> Projected value
+            <span className="inline-block w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#ff7a59] via-[#f5b94a] to-[#6d5ef5]" />
+            Projected
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3 h-px border-t border-dashed border-muted" /> Total contributed
+            <span className="inline-block w-3.5 h-px border-t border-dashed border-foreground/40" />
+            Contributed
           </span>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        <Stat label={`In ${horizon.label}`} value={fmtMoney(future)} accent />
+      <div className="grid grid-cols-3 gap-3 mt-5">
+        <Stat label={`In ${horizon.label}`} value={fmtMoney(future)} variant="primary" />
         <Stat label="You contributed" value={fmtMoney(contributed)} />
-        <Stat label="Compounding gave you" value={fmtMoney(growth)} positive />
+        <Stat label="Compounding" value={fmtMoney(growth)} variant="positive" />
       </div>
 
-      <p className="text-xs text-muted mt-4 max-w-prose">
-        Projection uses historical S&P 500 CAGR of 10.2%. Past performance does not guarantee future results.
-        SPYx (Backed Finance) is a tokenized claim on the SPDR S&P 500 ETF, redeemable 1:1.
+      <p className="text-xs text-subtle mt-5 max-w-prose leading-relaxed">
+        Historical S&P 500 CAGR of 10.2%. Past performance is not indicative of future results.
+        SPYx (Backed Finance) is a tokenized claim on SPDR S&P 500 ETF, redeemable 1:1.
       </p>
     </div>
   );
@@ -146,22 +169,22 @@ export default function TimeMachine() {
 function Stat({
   label,
   value,
-  accent,
-  positive,
+  variant,
 }: {
   label: string;
   value: string;
-  accent?: boolean;
-  positive?: boolean;
+  variant?: "primary" | "positive";
 }) {
+  const valueClass =
+    variant === "primary"
+      ? "bg-gradient-to-br from-[#ff7a59] via-[#f5b94a] to-[#ff7a59] bg-clip-text text-transparent"
+      : variant === "positive"
+      ? "text-[#10b981]"
+      : "text-foreground";
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
-      <div className="text-[10px] uppercase tracking-widest text-muted mb-1.5">{label}</div>
-      <div
-        className={`font-mono text-2xl sm:text-3xl font-bold tracking-tight ${
-          accent ? "text-accent" : positive ? "text-positive" : "text-foreground"
-        }`}
-      >
+    <div className="rounded-2xl bg-white/55 backdrop-blur-xl border border-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_rgba(12,10,20,0.04)]">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-muted mb-2 font-semibold">{label}</div>
+      <div className={`font-mono text-2xl sm:text-3xl font-bold tracking-tight tabular-nums ${valueClass}`}>
         {value}
       </div>
     </div>

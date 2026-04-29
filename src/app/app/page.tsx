@@ -9,7 +9,7 @@ const STORAGE_KEY = "mickle:state:v1";
 
 type State = {
   streak: number;
-  lastTapDate: string | null; // YYYY-MM-DD
+  lastTapDate: string | null;
   totalContributed: number;
   startDate: string;
 };
@@ -21,19 +21,14 @@ const initial: State = {
   startDate: new Date().toISOString().slice(0, 10),
 };
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function dayDiff(a: string, b: string) {
-  const ms = new Date(b).getTime() - new Date(a).getTime();
-  return Math.round(ms / 86_400_000);
-}
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const dayDiff = (a: string, b: string) =>
+  Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86_400_000);
 
 export default function AppPage() {
   const [state, setState] = useState<State>(initial);
   const [hydrated, setHydrated] = useState(false);
-  const [justTapped, setJustTapped] = useState(false);
+  const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
     const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -68,8 +63,8 @@ export default function AppPage() {
         totalContributed: s.totalContributed + 1,
       };
     });
-    setJustTapped(true);
-    setTimeout(() => setJustTapped(false), 1200);
+    setPulse(true);
+    setTimeout(() => setPulse(false), 900);
   };
 
   const handleReset = () => {
@@ -80,100 +75,97 @@ export default function AppPage() {
   };
 
   return (
-    <main className="flex-1 px-6 sm:px-10 max-w-5xl mx-auto w-full">
-      <nav className="py-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-accent" />
-          <span className="font-bold text-lg tracking-tight">Mickle</span>
-        </Link>
-        <button
-          onClick={handleReset}
-          className="text-xs text-muted hover:text-foreground font-mono"
-        >
-          reset demo
-        </button>
+    <main className="flex-1">
+      <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4">
+        <div className="max-w-5xl mx-auto glass-pill px-2 py-2 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 pl-3">
+            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a] shadow-[0_4px_12px_rgba(255,122,89,0.4)]" />
+            <span className="font-semibold text-base tracking-tight">Mickle</span>
+          </Link>
+          <button
+            onClick={handleReset}
+            className="px-4 py-2 text-xs text-muted hover:text-foreground font-mono rounded-full transition"
+          >
+            reset demo
+          </button>
+        </div>
       </nav>
 
-      <div className="py-8 sm:py-12">
-        {/* Banner */}
-        <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-2.5 text-xs text-muted mb-8 font-mono">
-          Demo build · streak persists locally · wallet + on-chain deposit not wired yet
+      <div className="px-4 sm:px-6 py-12 max-w-3xl mx-auto w-full">
+        {/* Demo banner */}
+        <div className="glass-pill px-4 py-2 text-[11px] text-muted mb-10 font-mono inline-block">
+          Demo build · local persistence · wallet not yet wired
         </div>
 
         {/* Streak hero */}
-        <div className="mb-12">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted font-mono mb-2">
+        <div className="glass-strong p-8 sm:p-12 mb-8 text-center fade-up">
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted font-mono mb-4 font-semibold">
             Your streak
           </div>
-          <div className="flex items-end gap-4">
-            <div
-              className={`font-mono text-7xl sm:text-9xl font-extrabold tracking-tighter text-accent transition ${
-                justTapped ? "scale-110" : ""
-              }`}
-            >
-              {state.streak}
-            </div>
-            <div className="pb-3 text-muted">
-              <div className="text-sm">
-                {state.streak === 0
-                  ? "Tap below to begin."
-                  : state.streak === 1
-                  ? "day"
-                  : "days"}
-              </div>
-              {state.totalContributed > 0 && (
-                <div className="text-xs font-mono mt-1">
-                  ${state.totalContributed} contributed
-                </div>
-              )}
-            </div>
+          <div
+            className={`font-mono text-8xl sm:text-[10rem] font-extrabold tracking-tighter leading-none transition-transform duration-500 ${
+              pulse ? "scale-110" : ""
+            }`}
+            style={{
+              background: "linear-gradient(140deg, #ff7a59 0%, #f5b94a 45%, #6d5ef5 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            {state.streak}
           </div>
-        </div>
-
-        {/* Parable */}
-        <div className="mb-10 max-w-2xl">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted font-mono mb-3">
-            Today&apos;s parable
+          <div className="mt-3 text-muted">
+            {state.streak === 0
+              ? "Tap below to begin."
+              : `${state.streak === 1 ? "day" : "days"} of showing up`}
           </div>
-          <blockquote className="border-l-2 border-accent pl-5 py-1">
-            <p className="text-xl sm:text-2xl text-foreground leading-snug font-medium">
-              &ldquo;{parable.text}&rdquo;
-            </p>
-            {parable.source && (
-              <cite className="block mt-3 text-sm text-muted not-italic">— {parable.source}</cite>
-            )}
-          </blockquote>
+          {state.totalContributed > 0 && (
+            <div className="text-xs font-mono text-subtle mt-2 tabular-nums">
+              ${state.totalContributed} contributed
+            </div>
+          )}
         </div>
 
         {/* Tap */}
-        <div className="mb-16">
+        <div className="text-center mb-12 fade-up" style={{ animationDelay: "0.1s" }}>
           <button
             onClick={handleTap}
             disabled={tappedToday}
-            className={`w-full sm:w-auto px-12 py-5 rounded-xl font-semibold text-lg transition ${
-              tappedToday
-                ? "bg-surface text-muted cursor-not-allowed border border-border"
-                : "bg-accent text-background hover:opacity-90 active:scale-[0.98]"
-            }`}
+            className="glass-button-primary px-12 py-5 font-semibold text-lg disabled:hover:translate-y-0"
           >
             {tappedToday ? "✓ Today's $1 in" : "Add today's $1"}
           </button>
           {tappedToday && (
-            <p className="text-sm text-muted mt-3">
+            <p className="text-sm text-muted mt-4">
               Come back tomorrow. The streak grows by showing up.
             </p>
           )}
         </div>
 
-        {/* Time machine */}
-        <div className="border-t border-border pt-12">
-          <div className="text-xs uppercase tracking-[0.2em] text-muted font-mono mb-3">
-            Where you&apos;re headed
+        {/* Parable */}
+        <div className="glass p-8 sm:p-10 mb-12 fade-up" style={{ animationDelay: "0.18s" }}>
+          <div className="text-[10px] uppercase tracking-[0.22em] text-muted font-mono mb-4 font-semibold">
+            Today&apos;s parable
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">
-            The Time Machine
-          </h2>
-          <TimeMachine />
+          <p className="text-xl sm:text-2xl text-foreground leading-snug font-medium tracking-tight">
+            &ldquo;{parable.text}&rdquo;
+          </p>
+          {parable.source && (
+            <div className="mt-4 text-sm text-muted">— {parable.source}</div>
+          )}
+        </div>
+
+        {/* Time machine */}
+        <div className="fade-up" style={{ animationDelay: "0.26s" }}>
+          <div className="text-center mb-5">
+            <span className="text-[10px] uppercase tracking-[0.22em] text-muted font-mono font-semibold">
+              Where you&apos;re headed
+            </span>
+          </div>
+          <div className="glass-strong p-5 sm:p-8">
+            <TimeMachine />
+          </div>
         </div>
       </div>
     </main>

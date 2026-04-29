@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mickle
 
-## Getting Started
+> Every little makes a mickle.
 
-First, run the development server:
+DCA into a tokenized S&P basket on Solana. $1 a day. Global. On-chain. Watch consistency compound.
+
+Built for Breakout hackathon. See `../.superstack/idea-context.md` for the full thesis, MVP plan, GTM, risks, and validation sprint.
+
+## Stack
+
+- **Next.js 16** (App Router, Turbopack) + **React 19** + **Tailwind v4**
+- **TypeScript**
+- Planned integrations (not wired yet — stubs only):
+  - **Privy** — embedded wallet (email login, no Phantom required)
+  - **Jupiter** — USDC → SPYx routing, server-side batched
+  - **Backed Finance / SPYx** — tokenized SPDR S&P 500 ETF on Solana
+  - **Solana** — `@solana/web3.js`, compressed NFTs (Bubblegum) for streak milestones
+
+## What ships in v0 (this commit)
+
+- ✅ Landing page with **The Time Machine** — interactive S&P compounding visualization
+- ✅ `/app` daily-ritual UI — streak, parable, "Add today's $1" tap
+- ✅ Local-storage persistence (so the demo works without a wallet on day 1)
+- ⏳ Privy wallet integration
+- ⏳ Jupiter swap (server-side batcher)
+- ⏳ On-ramp (manual USDC fallback first, fiat partner v1.5)
+- ⏳ Streak NFT milestones (cNFT)
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev          # http://localhost:3000
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Deploy to Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Vanilla Next.js 16 app. Push to GitHub and import on Vercel — no env vars required for the demo build.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+git add -A
+git commit -m "Mickle v0: Time Machine + daily ritual demo"
+# Push to GitHub, then 'New Project' on vercel.com
+```
 
-## Learn More
+Or via CLI:
+```bash
+npm i -g vercel
+vercel
+```
 
-To learn more about Next.js, take a look at the following resources:
+## v0 → v1 build order
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Wire Privy** — replace localStorage with embedded wallet + Postgres
+2. **Wire Jupiter swap** — USDC → SPYx route, single user happy path
+3. **Add server-side batcher** — pool daily $1 deposits, execute one swap, distribute pro-rata
+4. **Manual USDC deposit** — landing for advanced users while fiat on-ramp is in flight
+5. **Streak cNFTs** — milestone mints at day 7 / 30 / 100 / 365
+6. **Fiat on-ramp** — Jupiter's MoonPay/Coinbase partner integration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Important notes
 
-## Deploy on Vercel
+- **Not for UK or US retail.** SPYx is issued by Backed Finance under EU prospectus. Geo-block these on signup.
+- **Not investment advice.** Disclose clearly.
+- **Frame yourself as integrator, not issuer.** You provide the UX layer; Backed issues the tokenized claim.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/
+    page.tsx          # Landing — Time Machine hero
+    app/page.tsx      # Daily ritual page
+    layout.tsx
+    globals.css
+  components/
+    TimeMachine.tsx   # The pitch. Design this in Figma before changing logic.
+  lib/
+    parables.ts       # 30 daily reflections
+```
+
+The Time Machine is the product. Everything else is plumbing.

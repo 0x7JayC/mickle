@@ -108,7 +108,7 @@ export default function TimeMachine() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-3xl bg-white/40 backdrop-blur-xl p-4 sm:p-6 border border-white/60 shadow-inner">
+      <div className="glass-soft p-4 sm:p-6">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" preserveAspectRatio="none">
           <defs>
             <linearGradient id="grad-area" x1="0" y1="0" x2="0" y2="1">
@@ -133,7 +133,8 @@ export default function TimeMachine() {
           <path
             d={contribPath}
             fill="none"
-            stroke="rgba(12,10,20,0.3)"
+            stroke="currentColor"
+            strokeOpacity="0.32"
             strokeWidth="1.5"
             strokeDasharray="4 5"
           />
@@ -145,7 +146,7 @@ export default function TimeMachine() {
             Projected
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-3.5 h-px border-t border-dashed border-foreground/40" />
+            <span className="inline-block w-3.5 h-px border-t border-dashed border-current opacity-40" />
             Contributed
           </span>
         </div>
@@ -182,7 +183,7 @@ function Stat({
       ? "text-[#10b981]"
       : "text-foreground";
   return (
-    <div className="rounded-2xl bg-white/55 backdrop-blur-xl border border-white/70 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_12px_rgba(12,10,20,0.04)]">
+    <div className="glass-soft p-4">
       <div className="text-[10px] uppercase tracking-[0.18em] text-muted mb-2 font-semibold">{label}</div>
       <div className={`font-mono text-2xl sm:text-3xl font-bold tracking-tight tabular-nums ${valueClass}`}>
         {value}

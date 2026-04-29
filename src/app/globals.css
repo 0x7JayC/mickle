@@ -114,6 +114,7 @@ body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
   --foreground: #0c0a14;
   --foreground-muted: rgba(12,10,20,0.62);
   --foreground-subtle: rgba(12,10,20,0.42);
+  --display-from: #18121e; --display-to: #2a2236;
   --glass-tint: rgba(255,255,255,0.55);
   --glass-tint-strong: rgba(255,255,255,0.72);
   --glass-tint-deep: rgba(255,255,255,0.32);
@@ -126,6 +127,7 @@ body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
   --foreground: #0a1426;
   --foreground-muted: rgba(10,20,38,0.62);
   --foreground-subtle: rgba(10,20,38,0.42);
+  --display-from: #0a1426; --display-to: #1e2a4a;
   --glass-tint: rgba(255,255,255,0.55);
   --glass-tint-strong: rgba(255,255,255,0.74);
   --glass-tint-deep: rgba(255,255,255,0.32);
@@ -138,6 +140,7 @@ body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
   --foreground: #1c1610;
   --foreground-muted: rgba(28,22,16,0.62);
   --foreground-subtle: rgba(28,22,16,0.42);
+  --display-from: #1c1610; --display-to: #3a2d1f;
   --glass-tint: rgba(252,247,238,0.55);
   --glass-tint-strong: rgba(252,247,238,0.78);
   --glass-tint-deep: rgba(252,247,238,0.36);
@@ -150,6 +153,7 @@ body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
   --foreground: #f3f0ff;
   --foreground-muted: rgba(243,240,255,0.66);
   --foreground-subtle: rgba(243,240,255,0.42);
+  --display-from: #ffffff; --display-to: #d8d0ff;
   --glass-tint: rgba(255,255,255,0.08);
   --glass-tint-strong: rgba(255,255,255,0.14);
   --glass-tint-deep: rgba(255,255,255,0.05);
@@ -158,14 +162,51 @@ body, h1, h2, h3, p, span, div { transition: color 0.5s ease; }
   color: var(--foreground);
 }
 
-/* In dark theme A5, button-primary should keep its punch */
+/* A5 (dark) — button-primary keeps its punch; secondary glass flips */
 .theme-a5 .glass-button-primary {
   background: linear-gradient(180deg, #2dd4bf 0%, #a855f7 100%);
   border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.35),
     0 8px 24px rgba(168, 85, 247, 0.45),
     0 16px 40px -8px rgba(168, 85, 247, 0.45);
+}
+.theme-a5 .glass-button {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.22);
+  color: var(--foreground);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 6px 16px rgba(0,0,0,0.3);
+}
+.theme-a5 .glass {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 1px 2px rgba(0,0,0,0.3),
+    0 16px 40px rgba(0,0,0,0.35);
+}
+.theme-a5 .glass-strong {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 1px 2px rgba(0,0,0,0.4),
+    0 24px 60px rgba(0,0,0,0.45);
+}
+.theme-a5 .glass-pill {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 4px 12px rgba(0,0,0,0.3);
+}
+/* On A5, the segmented "active" button needs to invert (white pill on dark) */
+.theme-a5 .glass-pill button[class*="bg-foreground"] {
+  background: rgba(255,255,255,0.92) !important;
+  color: #0c0a14 !important;
 }
 .theme-a2 .glass-button-primary {
   background: linear-gradient(180deg, #38bdf8 0%, #6366f1 100%);
@@ -214,6 +255,24 @@ body::after {
     0 16px 40px rgba(12, 10, 20, 0.1),
     0 40px 100px -32px rgba(109, 94, 245, 0.28);
   border-radius: 32px;
+}
+
+.glass-soft {
+  background: var(--glass-tint);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-inner),
+    0 4px 12px rgba(12, 10, 20, 0.04);
+  border-radius: 24px;
+}
+.theme-a5 .glass-soft {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    0 6px 16px rgba(0,0,0,0.3);
 }
 
 .glass-pill {
@@ -277,9 +336,9 @@ body::after {
   cursor: not-allowed;
 }
 
-/* Text gradients */
+/* Text gradients — retint per theme */
 .text-display {
-  background: linear-gradient(180deg, #18121e 0%, #2a2236 100%);
+  background: linear-gradient(180deg, var(--display-from, #18121e) 0%, var(--display-to, #2a2236) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

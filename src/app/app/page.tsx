@@ -10,6 +10,7 @@ import DepositModal from "@/components/DepositModal";
 import ActivityFeed from "@/components/ActivityFeed";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import SettingsDrawer from "@/components/SettingsDrawer";
+import QuoteOfDay from "@/components/QuoteOfDay";
 
 type DbUser = {
   id: string;
@@ -345,6 +346,9 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Daily quote — sits at the top of the day */}
+      <QuoteOfDay />
 
       {/* First-run welcome — disappears after first tap or top-up */}
       <OnboardingBanner

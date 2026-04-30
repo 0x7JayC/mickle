@@ -17,7 +17,7 @@ export const PARABLES: Parable[] = [
   { day: 14, text: "Two weeks. The doubt is quieter now. Stay.", source: "—" },
   { day: 15, text: "The mustard seed is the smallest of seeds. And yet.", source: "Matthew 13:31" },
   { day: 16, text: "Patience is bitter but its fruit is sweet.", source: "Aristotle" },
-  { day: 17, text: "Drop by drop is the lake filled.", source: "Buddha" },
+  { day: 17, text: "It is in the small unseen acts that the soul is shaped most surely.", source: "Charles Spurgeon" },
   { day: 18, text: "By small and simple things are great things brought to pass.", source: "—" },
   { day: 19, text: "If you are faithful in small matters, you will be faithful in large ones.", source: "Luke 16:10" },
   { day: 20, text: "Twenty days. A streak you would have called a fluke is becoming an identity.", source: "—" },

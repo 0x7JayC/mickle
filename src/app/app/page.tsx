@@ -37,6 +37,12 @@ export default function App() {
   const [horizon, setHorizon] = useState<number>(10);
   const [tapping, setTapping] = useState(false);
   const [tapToast, setTapToast] = useState<string | null>(null);
+  const [lastBatch, setLastBatch] = useState<{
+    executed_at: string;
+    total_usdc: number;
+    spyx_received: number | null;
+    tx_sig: string | null;
+  } | null>(null);
 
   const wallet = wallets[0]?.address ?? null;
 
@@ -56,6 +62,14 @@ export default function App() {
       }
     })();
   }, [authenticated, wallet, getAccessToken]);
+
+  // Last treasury batch — load once for the activity strip
+  useEffect(() => {
+    if (!authenticated) return;
+    fetch("/api/last-batch")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setLastBatch(j.batch));
+  }, [authenticated]);
 
   // Live SPYx position — refresh every 30s while the dashboard is open
   useEffect(() => {
@@ -283,6 +297,36 @@ export default function App() {
         <PositionStat position={position} />
         <ContributedStat gbp={contributed} />
       </div>
+
+      {/* Treasury activity — visible only when a batch has actually run */}
+      {lastBatch && (
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-foreground/[0.04] border border-foreground/10 mb-6 text-[12px]">
+          <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden />
+          <span className="font-mono uppercase tracking-[0.16em] text-foreground/55 shrink-0">
+            Treasury
+          </span>
+          <span className="text-foreground/75 truncate">
+            {new Date(lastBatch.executed_at).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+            })}{" "}
+            · ${Number(lastBatch.total_usdc).toFixed(2)} swapped
+            {lastBatch.spyx_received
+              ? ` · ${Number(lastBatch.spyx_received).toFixed(4)} SPYx`
+              : ""}
+          </span>
+          {lastBatch.tx_sig && (
+            <a
+              href={`https://solscan.io/tx/${lastBatch.tx_sig}`}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-auto shrink-0 text-accent font-semibold hover:underline"
+            >
+              View ↗
+            </a>
+          )}
+        </div>
+      )}
 
       {/* Milestone tracker — Day 30 → NFT */}
       <section className="glass-strong rounded-[18px] p-5 sm:p-6 mb-6">

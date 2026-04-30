@@ -340,21 +340,24 @@
 @media (max-width: 720px) {
   .scrolly-beat .grid {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto 1fr;
     padding: 180px 24px 100px;
+    gap: 16px;
+  }
+  /* Hero ascends to the top on mobile so the headline + CTA lead.
+     Stat card follows. Second stat card is hidden — too dense on phone. */
+  .scrolly-hero {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
     gap: 16px;
   }
   .scrolly-stat-card {
     max-width: 100%;
-  }
-  .scrolly-stat-card.bottom {
     grid-row: 2;
   }
-  .scrolly-hero {
-    grid-column: 1;
-    grid-row: 3;
-    align-self: start;
-    gap: 16px;
+  .scrolly-stat-card.bottom {
+    display: none;
   }
   .scrolly-hero .head {
     font-size: clamp(36px, 10vw, 56px);

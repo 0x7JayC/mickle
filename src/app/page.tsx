@@ -25,7 +25,7 @@ export default function Home() {
       </nav>
 
       {/* Hero — tighter sub-copy, tech stack as footnote */}
-      <section className="px-4 sm:px-6 pt-10 sm:pt-20 pb-10 sm:pb-14 max-w-6xl mx-auto w-full">
+      <section className="px-4 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-8 max-w-6xl mx-auto w-full">
         <div className="fade-up text-center">
           <span className="inline-block glass-pill px-4 py-1.5 text-xs uppercase tracking-[0.18em] font-semibold text-foreground/70 mb-8">
             The patience product crypto doesn&apos;t have
@@ -41,7 +41,7 @@ export default function Home() {
           <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
             Solana · SPYx · Jupiter
           </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-16">
+          <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-12">
             <Link href="/app" className="glass-button-primary px-7 py-3.5 font-semibold">
               Start your streak →
             </Link>
@@ -65,7 +65,7 @@ export default function Home() {
       </section>
 
       {/* How — vertical, scannable, with icons (review point B) */}
-      <section id="how" className="px-4 sm:px-6 py-14 sm:py-20 max-w-3xl mx-auto w-full">
+      <section id="how" className="px-4 sm:px-6 py-10 sm:py-14 max-w-3xl mx-auto w-full">
         <div className="text-center mb-8 sm:mb-10">
           <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">A daily ritual</span>
           <h2 className="text-display text-4xl sm:text-6xl font-bold mt-3">How it works.</h2>
@@ -78,7 +78,7 @@ export default function Home() {
       </section>
 
       {/* Why — lead reason gets hero card, others are equal-weight (review point C) */}
-      <section id="why" className="px-4 sm:px-6 py-14 sm:py-20 max-w-5xl mx-auto w-full">
+      <section id="why" className="px-4 sm:px-6 py-10 sm:py-14 max-w-5xl mx-auto w-full">
         <div className="max-w-3xl mb-6 sm:mb-10">
           <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">Why on‑chain</span>
           <h2 className="text-display text-4xl sm:text-6xl font-bold mt-3 mb-6">

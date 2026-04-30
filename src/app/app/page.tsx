@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useWallets as useSolanaWallets } from "@privy-io/react-auth/solana";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import MiniTimeMachine from "@/components/MiniTimeMachine";
 import { getTodaysParable } from "@/lib/parables";
 import DepositModal from "@/components/DepositModal";
@@ -30,7 +31,15 @@ type Position = {
 
 
 export default function App() {
+  const router = useRouter();
   const { ready, authenticated, user, login, logout, linkWallet, getAccessToken } = usePrivy();
+  // Sign out → land on the marketing site, not the unauthenticated /app
+  // welcome modal. Wraps logout so settings drawer + nav share the same
+  // post-logout destination.
+  const signOut = async () => {
+    await logout();
+    router.push("/");
+  };
   const { wallets: solanaWallets } = useSolanaWallets();
   const allWallets = solanaWallets.map((w) => ({
     address: w.address,
@@ -470,7 +479,7 @@ export default function App() {
         walletCount={allWallets.length}
         onSignOut={() => {
           setSettingsOpen(false);
-          logout();
+          signOut();
         }}
       />
 

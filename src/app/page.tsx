@@ -24,8 +24,8 @@ const OUTRO_START = 0.98;
 const SEEK_THRESHOLD = 1 / 15; // ~67ms — 2 frames at 30 fps
 
 const BEAT_EYEBROWS: Record<Lang, string[]> = {
-  en: ["MEET MICKLE", "THE PROBLEM", "REALITY CHECK", "WHAT IF", "THE WAY", "HOW IT WORKS", "THE PROOF", "START TODAY"],
-  zh: ["认识 MICKLE", "现状", "算笔账", "假如呢", "我们的方式", "怎么运作", "证据", "今天就开始"],
+  en: ["MEET MICKLE", "THE PROBLEM", "REALITY CHECK", "WHAT IF", "HOW IT WORKS", "THE WAY", "THE PROOF", "START TODAY"],
+  zh: ["认识 MICKLE", "现状", "算笔账", "假如呢", "怎么运作", "我们的方式", "证据", "今天就开始"],
 };
 
 const HINT: Record<Lang, string> = { en: "Scroll to begin", zh: "向下滚动开始故事" };
@@ -333,18 +333,18 @@ export default function Home() {
             i={4}
             lang={lang}
             refCb={(el) => (beatRefs.current[4] = el)}
-            statTop={{ label: { en: "Things we don't do", zh: "不做的事" }, num: "0", unit: { en: "fomo", zh: "焦虑" }, plus: "o", desc: { en: "No memecoins. No \"gems\". No vibes. Just an index.", zh: "不投机,不押注,不赌运气。只买全世界都用的指数。" } }}
-            head={lang === "zh" ? <>不躁<Star />不慌</> : <>NO PUMPS<Star />NO DUMPS</>}
-            meta={lang === "zh" ? <>把全球最稳的资产,<strong>按小份额慢慢攒进来</strong>。</> : <>The boring asset class. In tiny servings. <strong>On purpose.</strong></>}
+            statTop={{ label: { en: "Mickle handles", zh: "交给 Mickle" }, num: "3", unit: { en: "steps", zh: "步" }, plus: "p", desc: { en: "Charge → Buy → Allocate. You don't lift a paw.", zh: "扣款 → 集中买入 → 按比例分配。你只负责出现。" } }}
+            head={lang === "zh" ? <>自动<Star />集中<Star />公平</> : <>AUTO<Star />POOLED<Star />FAIR</>}
+            meta={lang === "zh" ? <>Mickle 替你扣款、批量买入、按比例分配 — <strong>你只负责坚持</strong>。</> : <>We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></>}
             onCta={onCta}
           />
           <Beat
             i={5}
             lang={lang}
             refCb={(el) => (beatRefs.current[5] = el)}
-            statTop={{ label: { en: "Mickle handles", zh: "交给 Mickle" }, num: "3", unit: { en: "steps", zh: "步" }, plus: "p", desc: { en: "Charge → Buy → Allocate. You don't lift a paw.", zh: "扣款 → 集中买入 → 按比例分配。你只负责出现。" } }}
-            head={lang === "zh" ? <>自动<Star />集中<Star />公平</> : <>AUTO<Star />POOLED<Star />FAIR</>}
-            meta={lang === "zh" ? <>Mickle 替你扣款、批量买入、按比例分配 — <strong>你只负责坚持</strong>。</> : <>We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></>}
+            statTop={{ label: { en: "Things we don't do", zh: "不做的事" }, num: "0", unit: { en: "fomo", zh: "焦虑" }, plus: "o", desc: { en: "No memecoins. No \"gems\". No vibes. Just an index.", zh: "不投机,不押注,不赌运气。只买全世界都用的指数。" } }}
+            head={lang === "zh" ? <>不躁<Star />不慌</> : <>NO PUMPS<Star />NO DUMPS</>}
+            meta={lang === "zh" ? <>把全球最稳的资产,<strong>按小份额慢慢攒进来</strong>。</> : <>The boring asset class. In tiny servings. <strong>On purpose.</strong></>}
             onCta={onCta}
           />
           <Beat

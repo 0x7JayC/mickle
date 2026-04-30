@@ -168,6 +168,14 @@ Total: 180 seconds.
 
 ---
 
+## Generated assets
+
+| Asset | File | Regen command |
+|---|---|---|
+| Cover image (OG / Arena cover slot) | `public/cover.png` (1200×630), `public/cover@2x.png` (2400×1260) | `npm run cover` |
+| App icons (PWA · Apple Touch · favicon) | `public/icon-{192,512}.png`, `apple-touch-icon.png`, `favicon-32.png` | `npm run icons` |
+| Pitch deck PDF | `pitch-deck-YYYYMMDD-HHMMSS.pdf` (next to the HTML source) | `npm run deck:pdf` |
+
 ## 6. Submission checklist
 
 Use this when filling out [arena.colosseum.com](https://arena.colosseum.com).

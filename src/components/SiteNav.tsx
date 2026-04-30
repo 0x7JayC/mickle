@@ -32,20 +32,20 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
         <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <Link
             href="/#how"
-            className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
+            className="px-2 sm:px-3 py-2 text-[13px] sm:text-sm text-muted hover:text-foreground transition rounded-full"
           >
             {t(dict, "how", lang)}
           </Link>
           <Link
             href="/treasury"
-            className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
+            className="px-2 sm:px-3 py-2 text-[13px] sm:text-sm text-muted hover:text-foreground transition rounded-full"
           >
             {t(dict, "treasury", lang)}
           </Link>
           {showAccount && (
             <Link
               href="/app"
-              className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
+              className="px-2 sm:px-3 py-2 text-[13px] sm:text-sm text-muted hover:text-foreground transition rounded-full"
             >
               {t(dict, "account", lang)}
             </Link>

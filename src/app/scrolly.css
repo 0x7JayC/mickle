@@ -283,7 +283,7 @@
 /* Progress rail — bottom-fixed, 8 ticks */
 .scrolly-rail {
   position: fixed;
-  bottom: 24px;
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 60;
@@ -313,7 +313,7 @@
 /* First-load scroll hint */
 .scrolly-hint {
   position: fixed;
-  bottom: 80px;
+  bottom: max(80px, calc(env(safe-area-inset-bottom) + 68px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 55;
@@ -350,7 +350,9 @@
     grid-column: 1;
   }
   .scrolly-hero .head {
-    font-size: clamp(40px, 13vw, 64px);
+    font-size: clamp(36px, 10vw, 56px);
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
   }
   .scrolly-icon-cluster {
     top: 80px;

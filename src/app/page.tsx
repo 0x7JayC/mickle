@@ -234,7 +234,7 @@ export default function Home() {
       {/* Layer 1 — full-bleed video stack */}
       <div className="scrolly-stage" ref={stageRef} aria-hidden>
         <video ref={introRef} src="/scrolly/intro-loop.mp4" autoPlay loop muted playsInline preload="auto" data-active="true" />
-        <video ref={mainRef} src="/scrolly/main.mp4" muted playsInline preload="auto" />
+        <video ref={mainRef} src="/scrolly/main.mp4" muted playsInline preload="metadata" />
         <video
           ref={(el) => {
             catRefs.current[0] = el;
@@ -244,7 +244,7 @@ export default function Home() {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
         />
         <video
           ref={(el) => {
@@ -255,7 +255,7 @@ export default function Home() {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
         />
         <video
           ref={(el) => {
@@ -266,9 +266,9 @@ export default function Home() {
           loop
           muted
           playsInline
-          preload="auto"
+          preload="metadata"
         />
-        <video ref={outroRef} src="/scrolly/outro-loop.mp4" autoPlay loop muted playsInline preload="auto" />
+        <video ref={outroRef} src="/scrolly/outro-loop.mp4" loop muted playsInline preload="metadata" />
       </div>
 
       {/* Top nav — shared with /app and /treasury */}

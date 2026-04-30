@@ -24,7 +24,6 @@ type Position = {
   configured: boolean;
 };
 
-const MILESTONE_DAYS = 30;
 
 export default function App() {
   const { ready, authenticated, user, login, logout, linkWallet, getAccessToken } = usePrivy();
@@ -54,6 +53,9 @@ export default function App() {
     spyx_received: number | null;
     tx_sig: string | null;
   } | null>(null);
+  const [milestones, setMilestones] = useState<
+    { kind: string; asset_address: string | null; minted_at: string }[]
+  >([]);
 
   const wallet = solanaWallets[0]?.address ?? null;
 
@@ -81,6 +83,24 @@ export default function App() {
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => j && setLastBatch(j.batch));
   }, [authenticated]);
+
+  // Milestones — refetch after every tap (a tap can mint a day_7/30/100)
+  const refreshMilestones = async () => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const r = await fetch("/api/milestones", {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    if (r.ok) {
+      const { milestones } = await r.json();
+      setMilestones(milestones);
+    }
+  };
+  useEffect(() => {
+    if (!authenticated) return;
+    refreshMilestones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated, dbUser?.streak_count]);
 
   // Live SPYx position — refresh every 30s while the dashboard is open
   useEffect(() => {
@@ -177,7 +197,6 @@ export default function App() {
   const hour = new Date().getHours();
   const greeting = hour < 5 ? "Late night" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const parable = getTodaysParable(Math.max(streak, 1));
-  const progress = Math.min(streak / MILESTONE_DAYS, 1);
 
   const onTap = async () => {
     if (tapping || tappedToday) return;
@@ -339,29 +358,8 @@ export default function App() {
         </div>
       )}
 
-      {/* Milestone tracker — Day 30 → NFT */}
-      <section className="glass-strong rounded-[18px] p-5 sm:p-6 mb-6">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Next milestone
-          </span>
-          <span className="text-[12px] font-semibold text-accent whitespace-nowrap">
-            Day {MILESTONE_DAYS} · NFT
-          </span>
-        </div>
-        <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${Math.max(progress * 100, 2)}%`,
-              background: "var(--accent)",
-            }}
-          />
-        </div>
-        <div className="text-[12px] text-foreground/55 mt-2 font-mono">
-          {streak} of {MILESTONE_DAYS} days
-        </div>
-      </section>
+      {/* Milestones — earned card if Day 30 reached, else progress bar */}
+      <MilestoneCard streak={streak} milestones={milestones} />
 
       {/* Time Machine — projection with year selector */}
       <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
@@ -455,6 +453,129 @@ export default function App() {
         </div>
       </details>
     </main>
+  );
+}
+
+const MILESTONE_KINDS: { kind: string; days: number; label: string; emoji: string }[] = [
+  { kind: "day_7", days: 7, label: "Week one", emoji: "🌱" },
+  { kind: "day_30", days: 30, label: "The mickle", emoji: "🔥" },
+  { kind: "day_100", days: 100, label: "The muckle", emoji: "💎" },
+];
+
+function MilestoneCard({
+  streak,
+  milestones,
+}: {
+  streak: number;
+  milestones: { kind: string; asset_address: string | null; minted_at: string }[];
+}) {
+  // Next un-earned milestone
+  const earned = new Set(milestones.map((m) => m.kind));
+  const next = MILESTONE_KINDS.find((m) => !earned.has(m.kind));
+  const latest = MILESTONE_KINDS.findLast?.((m) => earned.has(m.kind))
+    ?? [...MILESTONE_KINDS].reverse().find((m) => earned.has(m.kind));
+
+  if (!next) {
+    // All earned — show the highest one in a celebratory state
+    return latest ? <EarnedCard kind={latest} milestoneCount={milestones.length} all /> : null;
+  }
+
+  if (latest) {
+    // At least one earned — show celebrate + progress to next stacked
+    return (
+      <div className="space-y-3 mb-6">
+        <EarnedCard kind={latest} milestoneCount={milestones.length} />
+        <ProgressCard streak={streak} target={next} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6">
+      <ProgressCard streak={streak} target={next} />
+    </div>
+  );
+}
+
+function EarnedCard({
+  kind,
+  milestoneCount,
+  all = false,
+}: {
+  kind: { kind: string; days: number; label: string; emoji: string };
+  milestoneCount: number;
+  all?: boolean;
+}) {
+  return (
+    <section
+      className="rounded-[18px] p-5 sm:p-6 border"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(255,122,89,0.10), rgba(245,185,74,0.08))",
+        borderColor: "rgba(255,122,89,0.28)",
+      }}
+    >
+      <div className="flex items-center gap-4">
+        <div
+          className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+          style={{
+            background: "var(--accent)",
+            boxShadow:
+              "0 8px 20px -4px rgba(255,122,89,0.45), inset 0 1px 0 rgba(255,255,255,0.4)",
+          }}
+          aria-hidden
+        >
+          {kind.emoji}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
+            Milestone earned
+          </div>
+          <div className="text-lg sm:text-xl font-bold tracking-tight mt-0.5">
+            Day {kind.days} · {kind.label}
+          </div>
+          <div className="text-[12px] text-foreground/60 mt-1">
+            Soulbound NFT minted to your wallet
+            {milestoneCount > 1 ? ` · ${milestoneCount} earned total` : ""}
+            {all ? " · every milestone in the bag" : ""}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ProgressCard({
+  streak,
+  target,
+}: {
+  streak: number;
+  target: { kind: string; days: number; label: string; emoji: string };
+}) {
+  const progress = Math.min(streak / target.days, 1);
+  return (
+    <section className="glass-strong rounded-[18px] p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+          Next milestone
+        </span>
+        <span className="text-[12px] font-semibold text-accent whitespace-nowrap">
+          Day {target.days} · {target.label}
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{
+            width: `${Math.max(progress * 100, 2)}%`,
+            background: "var(--accent)",
+          }}
+        />
+      </div>
+      <div className="text-[12px] text-foreground/55 mt-2 font-mono">
+        {streak} of {target.days} days
+      </div>
+    </section>
   );
 }
 

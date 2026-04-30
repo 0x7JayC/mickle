@@ -31,6 +31,10 @@ export default function PrivyProviders({ children }: { children: React.ReactNode
         appearance: {
           theme: "light",
           accentColor: "#ff7a59",
+          // Lock the wallet picker to Solana for v1. Without this Privy's
+          // link / connect modals fall back to including MetaMask /
+          // Coinbase Wallet / WalletConnect from the EVM defaults.
+          walletChainType: "solana-only",
           walletList: ["phantom", "backpack", "solflare"],
         },
         embeddedWallets: {

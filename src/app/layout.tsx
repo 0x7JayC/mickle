@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 const SITE_URL = "https://mickle-gamma.vercel.app";
 const TITLE = "Mickle — Every little makes a mickle";
 const DESCRIPTION =
-  "£1 a day into the S&P 500. On Solana. Global. Watch consistency compound.";
+  "£1 a day into the S&P 500. Run by a cat. Global. On Solana.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

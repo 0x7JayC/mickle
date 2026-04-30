@@ -2,7 +2,6 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
-import { base, mainnet } from "viem/chains";
 
 const solanaConnectors = toSolanaWalletConnectors();
 
@@ -24,29 +23,19 @@ export default function PrivyProviders({ children }: { children: React.ReactNode
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["email", "google", "wallet"],
+        // Solana-only. Apple is added so iPhone users get one-tap FaceID
+        // sign-in inside the Capacitor iOS shell. Coinbase / Kraken login
+        // intentionally deferred — Mickle treats those as future identity
+        // providers, not wallet connectors.
+        loginMethods: ["email", "apple", "google", "wallet"],
         appearance: {
           theme: "light",
           accentColor: "#ff7a59",
-          // Surface Coinbase Wallet first for the Base / Coinbase audience.
-          walletList: [
-            "phantom",
-            "coinbase_wallet",
-            "metamask",
-            "wallet_connect",
-            "rainbow",
-            "backpack",
-            "solflare",
-          ],
+          walletList: ["phantom", "backpack", "solflare"],
         },
         embeddedWallets: {
           solana: { createOnLogin: "users-without-wallets" },
-          ethereum: { createOnLogin: "off" },
         },
-        // Base is the headline EVM chain (Coinbase users land here by default).
-        // Mainnet is included so Coinbase Wallet doesn't reject the session.
-        defaultChain: base,
-        supportedChains: [base, mainnet],
         externalWallets: { solana: { connectors: solanaConnectors } },
       }}
     >

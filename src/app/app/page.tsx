@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePrivy, useWallets as useEvmWallets } from "@privy-io/react-auth";
+import { usePrivy } from "@privy-io/react-auth";
 import { useWallets as useSolanaWallets } from "@privy-io/react-auth/solana";
 import Link from "next/link";
 import MiniTimeMachine from "@/components/MiniTimeMachine";
@@ -29,28 +29,17 @@ const MILESTONE_DAYS = 30;
 export default function App() {
   const { ready, authenticated, user, login, logout, linkWallet, getAccessToken } = usePrivy();
   const { wallets: solanaWallets } = useSolanaWallets();
-  const { wallets: evmWallets } = useEvmWallets();
-  const allWallets = [
-    ...solanaWallets.map((w) => ({
-      address: w.address,
-      chain: "solana" as const,
-      embedded:
-        "walletClientType" in w &&
-        (w as { walletClientType?: string }).walletClientType === "privy",
-      label: "Solana",
-    })),
-    ...evmWallets.map((w) => ({
-      address: w.address,
-      chain: "evm" as const,
-      embedded: w.walletClientType === "privy",
-      label:
-        w.walletClientType === "coinbase_wallet"
-          ? "Coinbase · Base"
-          : w.walletClientType === "metamask"
-            ? "MetaMask · Base"
-            : "Base",
-    })),
-  ];
+  const allWallets = solanaWallets.map((w) => ({
+    address: w.address,
+    embedded:
+      "walletClientType" in w &&
+      (w as { walletClientType?: string }).walletClientType === "privy",
+    label:
+      "walletClientType" in w &&
+      (w as { walletClientType?: string }).walletClientType === "privy"
+        ? "Mickle"
+        : "Solana",
+  }));
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
@@ -439,18 +428,12 @@ export default function App() {
         <div className="mt-3 space-y-2">
           {allWallets.map((w) => (
             <div
-              key={`${w.chain}:${w.address}`}
+              key={w.address}
               className="flex items-center gap-3 px-1 py-2 border-t border-foreground/[0.06] first:border-0"
             >
               <span
                 className="shrink-0 w-2 h-2 rounded-full"
-                style={{
-                  background: w.embedded
-                    ? "var(--accent)"
-                    : w.chain === "evm"
-                      ? "#0052FF"
-                      : "#10b981",
-                }}
+                style={{ background: w.embedded ? "var(--accent)" : "#10b981" }}
                 aria-hidden
               />
               <div className="min-w-0 flex-1">
@@ -467,12 +450,8 @@ export default function App() {
             onClick={() => linkWallet()}
             className="w-full mt-1 text-[13px] font-semibold text-accent border border-accent/30 hover:bg-accent/5 rounded-full px-4 py-2 transition"
           >
-            + Connect external wallet
+            + Connect Solana wallet (Phantom · Backpack · Solflare)
           </button>
-          <p className="text-[11px] text-foreground/50 mt-2 leading-relaxed text-center">
-            Solana · Phantom · Backpack · Solflare<br />
-            Base · Coinbase · MetaMask · WalletConnect
-          </p>
         </div>
       </details>
     </main>

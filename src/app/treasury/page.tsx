@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { OpenAppButton } from "@/components/LandingAuth";
+import { SiteNav } from "@/components/SiteNav";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 60;
@@ -56,18 +57,9 @@ export default async function TreasuryPage() {
 
   return (
     <main className="flex-1">
-      <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4">
-        <div className="max-w-5xl mx-auto glass-pill px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a]" />
-            <span className="font-semibold tracking-tight truncate">Mickle</span>
-          </Link>
-          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 hidden sm:block">
-            Treasury · public ledger
-          </span>
-          <OpenAppButton className="text-sm font-semibold text-foreground/70 hover:text-foreground shrink-0" />
-        </div>
-      </nav>
+      <SiteNav>
+        <OpenAppButton className="glass-button-primary px-5 py-2 text-sm font-semibold" />
+      </SiteNav>
 
       <section className="px-4 sm:px-6 pt-10 sm:pt-14 pb-8 max-w-5xl mx-auto w-full">
         <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">

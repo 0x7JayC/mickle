@@ -1,30 +1,13 @@
-import Link from "next/link";
 import TimeMachine from "@/components/TimeMachine";
-import { ThemeDots } from "@/components/ThemeShell";
 import { LandingAuth, LandingNavCta } from "@/components/LandingAuth";
+import { SiteNav } from "@/components/SiteNav";
 
 export default function Home() {
   return (
     <main className="flex-1">
-      {/* Floating glass nav — theme dots inline so they don't block the CTA on mobile */}
-      <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4">
-        <div className="max-w-6xl mx-auto glass-pill px-2 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 pl-3">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a] shadow-[0_4px_12px_rgba(255,122,89,0.4)]" />
-            <span className="font-semibold text-base tracking-tight">Mickle</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="#how" className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full">
-              How
-            </a>
-            <Link href="/treasury" className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full">
-              Treasury
-            </Link>
-            <ThemeDots className="hidden sm:flex mr-1" />
-            <LandingNavCta />
-          </div>
-        </div>
-      </nav>
+      <SiteNav>
+        <LandingNavCta />
+      </SiteNav>
 
       {/* Hero — tighter sub-copy, tech stack as footnote */}
       <section className="px-4 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-8 max-w-6xl mx-auto w-full">

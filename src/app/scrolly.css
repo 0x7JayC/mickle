@@ -341,7 +341,7 @@
   .scrolly-beat .grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto 1fr;
-    padding: 120px 24px 100px;
+    padding: 180px 24px 100px;
     gap: 16px;
   }
   .scrolly-stat-card {
@@ -362,7 +362,7 @@
     line-clamp: unset;
   }
   .scrolly-icon-cluster {
-    top: 80px;
+    top: 120px;
     left: 24px;
   }
 }

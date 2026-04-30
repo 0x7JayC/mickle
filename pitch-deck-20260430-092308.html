@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mickle — Pitch Deck (Colosseum)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --fg: #0c0a14;
+    --fg-muted: rgba(12, 10, 20, 0.62);
+    --fg-subtle: rgba(12, 10, 20, 0.42);
+    --coral: #ff7a59;
+    --honey: #f5b94a;
+    --indigo: #6d5ef5;
+    --pink: #ec4899;
+    --positive: #10b981;
+    --bg-1: #fff8f0;
+    --bg-2: #fdf2ff;
+    --glass: rgba(255,255,255,0.55);
+    --glass-strong: rgba(255,255,255,0.72);
+    --stroke: rgba(255,255,255,0.7);
+    --stroke-inner: rgba(255,255,255,0.9);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--fg);
+    background:
+      radial-gradient(60vw 60vw at 12% 8%, rgba(255, 122, 89, 0.55), transparent 60%),
+      radial-gradient(50vw 50vw at 92% 18%, rgba(245, 185, 74, 0.55), transparent 60%),
+      radial-gradient(60vw 60vw at 80% 92%, rgba(109, 94, 245, 0.45), transparent 65%),
+      radial-gradient(70vw 70vw at 8% 88%, rgba(236, 72, 153, 0.35), transparent 65%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  .deck {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6vh 8vw;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(24px);
+    transition: opacity .55s cubic-bezier(.2,.7,.2,1), transform .55s cubic-bezier(.2,.7,.2,1);
+  }
+  .slide.active { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+  .glass {
+    background: var(--glass-strong);
+    backdrop-filter: blur(36px) saturate(180%);
+    -webkit-backdrop-filter: blur(36px) saturate(180%);
+    border: 1px solid var(--stroke);
+    box-shadow:
+      inset 0 1px 0 var(--stroke-inner),
+      inset 0 -1px 0 rgba(255,255,255,0.3),
+      0 1px 2px rgba(12,10,20,0.05),
+      0 16px 40px rgba(12,10,20,0.10),
+      0 40px 100px -32px rgba(109,94,245,0.28);
+    border-radius: 32px;
+  }
+
+  .pill {
+    display: inline-block;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--stroke);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(12,10,20,0.7);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .display {
+    background: linear-gradient(180deg, #18121e 0%, #2a2236 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    font-weight: 800;
+  }
+
+  .gem {
+    width: 56px; height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, var(--coral), var(--honey));
+    box-shadow: 0 8px 24px -4px rgba(255,122,89,0.5), inset 0 1px 0 rgba(255,255,255,0.5);
+  }
+  .gem-sm { width: 32px; height: 32px; border-radius: 10px; }
+
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .muted { color: var(--fg-muted); }
+  .subtle { color: var(--fg-subtle); }
+
+  /* Slide-specific layouts */
+  .center { text-align: center; max-width: 1100px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; max-width: 1200px; width: 100%; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1200px; width: 100%; }
+  .stack { display: flex; flex-direction: column; gap: 28px; max-width: 1100px; width: 100%; }
+
+  .h1 { font-size: clamp(48px, 7vw, 96px); font-weight: 800; letter-spacing: -0.04em; line-height: 0.95; }
+  .h2 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -0.035em; line-height: 1.0; }
+  .h3 { font-size: clamp(20px, 2vw, 28px); font-weight: 600; letter-spacing: -0.02em; }
+  .lead { font-size: clamp(18px, 1.6vw, 22px); line-height: 1.55; color: var(--fg-muted); }
+  .small { font-size: 14px; line-height: 1.55; color: var(--fg-muted); }
+  .number { font-size: clamp(48px, 6vw, 80px); font-weight: 800; letter-spacing: -0.04em; }
+
+  .card { padding: 28px; border-radius: 24px; }
+  .card .label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 12px; }
+
+  /* Nav + chrome */
+  .chrome {
+    position: fixed; left: 24px; right: 24px; bottom: 18px; z-index: 50;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: none;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--fg-muted);
+  }
+  .chrome > * { pointer-events: auto; }
+  .nav-pill {
+    background: var(--glass-strong); backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--stroke); border-radius: 999px; padding: 8px 14px;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .nav-pill button {
+    background: rgba(12,10,20,0.05); border: 0; cursor: pointer;
+    width: 28px; height: 28px; border-radius: 999px; font-size: 14px; color: var(--fg);
+  }
+  .nav-pill button:hover { background: rgba(12,10,20,0.1); }
+  .progress { display: flex; gap: 4px; }
+  .progress span { width: 18px; height: 3px; border-radius: 2px; background: rgba(12,10,20,0.18); transition: background .3s; }
+  .progress span.on { background: var(--fg); }
+
+  /* Speaker notes overlay */
+  .notes {
+    position: fixed; left: 24px; right: 24px; bottom: 70px; z-index: 60;
+    max-width: 720px; margin: 0 auto;
+    display: none;
+  }
+  .notes.show { display: block; }
+  .notes .glass { padding: 18px 22px; border-radius: 20px; }
+  .notes .label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 6px; }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    border: 1px solid rgba(12,10,20,0.12);
+    background: rgba(255,255,255,0.6);
+    font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .badge.live { color: var(--positive); border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.08); }
+  .badge.next { color: var(--indigo); border-color: rgba(109,94,245,0.3); background: rgba(109,94,245,0.08); }
+  .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+
+  /* Comparison table */
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .vs .card.bad { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); }
+  .vs .card.good { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); }
+  .vs ul { list-style: none; }
+  .vs li { padding: 10px 0; border-bottom: 1px solid rgba(12,10,20,0.06); display: flex; align-items: center; gap: 10px; }
+  .vs li:last-child { border-bottom: 0; }
+  .check { color: var(--positive); font-weight: 800; }
+  .cross { color: rgba(239,68,68,0.8); font-weight: 800; }
+
+  .arrow { font-size: 22px; color: var(--fg-muted); }
+
+  @media print {
+    body { background: white; overflow: visible; }
+    .deck { height: auto; width: 100%; overflow: visible; }
+    .slide { position: relative; opacity: 1 !important; pointer-events: auto !important; transform: none !important; page-break-after: always; min-height: 100vh; }
+    .chrome, .notes { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- 1. TITLE -->
+<section class="slide active" data-notes="Open with the proverb. Say it slowly. Pause. Then: 'Mickle is $1 a day into the S&P 500 on Solana. Email login. Tap once a day. The patience product crypto doesn't have.' That's the whole pitch in 5 seconds.">
+  <div class="center">
+    <div class="gem" style="margin: 0 auto 36px;"></div>
+    <span class="pill" style="margin-bottom: 28px;">Colosseum · Consumer Track</span>
+    <h1 class="display h1" style="margin-bottom: 28px;">Every little<br/>makes a mickle.</h1>
+    <p class="lead" style="max-width: 680px; margin: 0 auto;">
+      $1 a day into the S&P 500. On Solana. Global. On‑chain.<br/>
+      Watch what consistency actually compounds into.
+    </p>
+    <div class="mono small subtle" style="margin-top: 56px;">
+      mickle-gamma.vercel.app · live demo · April 2026
+    </div>
+  </div>
+</section>
+
+<!-- 2. PROBLEM (PAS — Problem) -->
+<section class="slide" data-notes="The lived moment. I tried to set up $1/day into SPY for someone in my family. Robinhood: not available in their country. eToro: spreads ate the $1. UK ISAs: tax wrapper, not a product. The most boring trade in finance — buying the index — is locked away from billions of people. The rails exist on Solana. Nobody had built it.">
+  <div class="stack">
+    <span class="pill">The problem</span>
+    <h2 class="display h2">The most boring trade in finance<br/>is locked away from billions.</h2>
+    <p class="lead" style="max-width: 880px;">
+      I tried to set up a $1 a day DCA into the S&P 500 for someone in my family.
+      Robinhood doesn't open accounts in their country. eToro's spread ate the dollar.
+      UK ISAs are tax wrappers, not a product. There is no Web2 path to fractional S&P
+      at $1, globally, 24/7.
+    </p>
+  </div>
+</section>
+
+<!-- 3. AGITATE — why this matters now (PAS — Agitate / Why Now) -->
+<section class="slide" data-notes="This is the why-now. Three things had to happen. They all happened in the last 12 months. Tokenized SPY (SPYx by Backed) trades on Solana 24/7. Privy ships email-to-wallet in 5 seconds. USDC moves a dollar across borders for free. The window for this product opened in the last year. Before that it was impossible.">
+  <div class="stack">
+    <span class="pill">Why now</span>
+    <h2 class="display h2">Three rails matured<br/>in the last 12 months.</h2>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="glass card">
+        <div class="label">01 · Asset</div>
+        <h3 class="h3" style="margin-bottom: 10px;">Tokenized SPY went live</h3>
+        <p class="small">Backed Finance's <span class="mono">SPYx</span> trades 24/7 on Solana under EU prospectus. The S&P 500 became a programmable token.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">02 · Onboarding</div>
+        <h3 class="h3" style="margin-bottom: 10px;">Email → Solana wallet, 5s</h3>
+        <p class="small">Privy ships embedded Solana wallets keyed to email. No seed phrase. No app store. No KYC for $1.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">03 · Money</div>
+        <h3 class="h3" style="margin-bottom: 10px;">USDC matured globally</h3>
+        <p class="small">Stablecoins are now regulated, liquid, and free to move. A dollar from Lagos to Solana costs nothing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. SOLUTION (PAS — Solve) -->
+<section class="slide" data-notes="The whole product is one tap. Email login provisions a wallet. Each day you tap once. Treasury batches the USDC and routes it through Jupiter into SPYx. Time Machine shows what your streak compounds into. Daily parable. On day 30, a Metaplex Core soulbound NFT — proof of consistency. Designed in Apple's Liquid Glass language because it has to feel like Calm, not Robinhood.">
+  <div class="stack">
+    <span class="pill">The solution</span>
+    <h2 class="display h2">One tap. One dollar.<br/>Every day you show up.</h2>
+    <div class="grid-3">
+      <div class="glass card">
+        <div class="label">01</div>
+        <h3 class="h3" style="margin-bottom: 8px;">Sign in with email</h3>
+        <p class="small">A Solana wallet appears in 5 seconds. No seed phrase.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">02</div>
+        <h3 class="h3" style="margin-bottom: 8px;">Tap once a day for $1</h3>
+        <p class="small">Treasury batches USDC and routes through Jupiter into SPYx.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">03</div>
+        <h3 class="h3" style="margin-bottom: 8px;">Watch consistency compound</h3>
+        <p class="small">Live Time Machine. A streak. A daily parable. The opposite of degen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. DEMO -->
+<section class="slide" data-notes="Live link. Show landing → Time Machine moves with the slider. Click Start → email login → embedded Solana wallet in 5 seconds → dashboard with streak, position, contributed, and tap CTA. Be honest about what's mocked: tap action and Jupiter swap finish on Day 4 of the build. Everything else is live mainnet today.">
+  <div class="stack">
+    <span class="pill">Live demo</span>
+    <h2 class="display h2">mickle-gamma.vercel.app</h2>
+    <p class="lead">What works today, what ships this week.</p>
+    <div class="grid-2" style="margin-top: 8px;">
+      <div class="glass card">
+        <div class="label">Live now</div>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li><span class="badge live"><span class="dot"></span>Live</span> &nbsp; Landing + interactive Time Machine</li>
+          <li><span class="badge live"><span class="dot"></span>Live</span> &nbsp; Email login → embedded Solana wallet</li>
+          <li><span class="badge live"><span class="dot"></span>Live</span> &nbsp; Streak + tap state, cross-device, Supabase</li>
+          <li><span class="badge live"><span class="dot"></span>Live</span> &nbsp; Liquid Glass design, 4 palettes, dark mode</li>
+        </ul>
+      </div>
+      <div class="glass card">
+        <div class="label">Shipping this week</div>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 14px;">
+          <li><span class="badge next"><span class="dot"></span>Next</span> &nbsp; Live SPYx position via RPC + Jupiter price</li>
+          <li><span class="badge next"><span class="dot"></span>Next</span> &nbsp; Solana Pay USDC deposit (QR)</li>
+          <li><span class="badge next"><span class="dot"></span>Next</span> &nbsp; Daily treasury swap → SPYx (Jupiter API)</li>
+          <li><span class="badge next"><span class="dot"></span>Next</span> &nbsp; Day‑30 Metaplex Core soulbound NFT</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. WHY ON-CHAIN (Crypto necessity) -->
+<section class="slide" data-notes="The blockchain necessity test. Strip out crypto and what breaks? Three things. Permissionless access — a $1 deposit from Lagos. 24/7 settlement — the ritual works any time, no market hours. Portable proof — the streak is a soulbound NFT, composable anywhere. This product literally cannot exist on Web2 rails. Robinhood will not open an account in 60 of the countries we need.">
+  <div class="stack">
+    <span class="pill">Why on‑chain</span>
+    <h2 class="display h2">Web2 cannot ship this.<br/>We tried.</h2>
+    <div class="vs" style="margin-top: 8px;">
+      <div class="card bad">
+        <div class="label" style="color: rgba(239,68,68,0.8);">Robinhood / eToro / ISAs</div>
+        <ul>
+          <li><span class="cross">×</span> Country lock‑outs (60+ markets)</li>
+          <li><span class="cross">×</span> Spreads eat $1 deposits</li>
+          <li><span class="cross">×</span> Market hours only</li>
+          <li><span class="cross">×</span> Streak = vendor‑locked badge</li>
+          <li><span class="cross">×</span> AUM gating, account minimums</li>
+        </ul>
+      </div>
+      <div class="card good">
+        <div class="label" style="color: var(--positive);">Mickle on Solana</div>
+        <ul>
+          <li><span class="check">✓</span> Permissionless — email is enough</li>
+          <li><span class="check">✓</span> Stablecoin in, fractional SPYx out</li>
+          <li><span class="check">✓</span> 24/7 ritual, 24/7 settlement</li>
+          <li><span class="check">✓</span> Streak = soulbound NFT, composable</li>
+          <li><span class="check">✓</span> Jupiter fees scale with use, not AUM</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. STACK / ARCHITECTURE (judges love this for a hackathon) -->
+<section class="slide" data-notes="One slide on the stack so judges see it's real. Privy for email→wallet. Supabase for streak/state. Jupiter for the swap (one batch per day, one signature). Backed's SPYx as the underlying. Metaplex Core for milestone NFTs — single-instruction mint, ~80% cheaper than Token Metadata. Pyth for the SPY price feed underlying. Five primitives, one product.">
+  <div class="stack">
+    <span class="pill">The stack</span>
+    <h2 class="display h2">Five primitives.<br/>One ritual.</h2>
+    <div class="grid-3">
+      <div class="glass card">
+        <div class="label">Onboarding</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Privy</h3>
+        <p class="small">Email → embedded Solana wallet in 5 seconds.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">State</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Supabase</h3>
+        <p class="small">Streak, deposits, taps. Realtime subscriptions, RLS locked.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Swap</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Jupiter</h3>
+        <p class="small">Daily batch swap USDC → SPYx. One signature, pro‑rata distribution.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Asset</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Backed SPYx</h3>
+        <p class="small">Tokenized SPDR S&P 500 under EU prospectus.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Proof</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Metaplex Core</h3>
+        <p class="small">Soulbound milestone NFTs. One instruction, ~80% cheaper than Token Metadata.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Price</div>
+        <h3 class="h3 mono" style="margin-bottom: 8px;">Pyth + Jupiter</h3>
+        <p class="small">SPY underlying via Pyth, on‑chain SPYx quote via Jupiter v3.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8. THE ASK -->
+<section class="slide" data-notes="The ask is the Consumer track win — $30K. We will use it for a Backed Finance partnership conversation, a Privy upgrade past 1k MAW, and a security audit before mainnet treasury. End on the proverb. Read it slowly. Pause. 'Every great mickle began with the smallest possible thing, done one more time.' Thank you.">
+  <div class="stack center" style="margin: 0 auto;">
+    <span class="pill">The ask</span>
+    <h2 class="display h2">Consumer track. Colosseum.<br/>The patience product Solana doesn't have.</h2>
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="glass card">
+        <div class="label">Outcome</div>
+        <h3 class="h3" style="margin-bottom: 8px;">Win Consumer track</h3>
+        <p class="small">Closest analog: Tap (Radar 2024). No one has shipped $1 fractional equities yet.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Use of funds</div>
+        <h3 class="h3" style="margin-bottom: 8px;">3 unlocks</h3>
+        <p class="small">Backed partnership · Privy past 1k MAW · audit before treasury custody.</p>
+      </div>
+      <div class="glass card">
+        <div class="label">Timeline</div>
+        <h3 class="h3" style="margin-bottom: 8px;">Mainnet, 30 days</h3>
+        <p class="small">Day 5 swap engine done. Day 30 milestone NFTs. Day 60 fiat on‑ramp.</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top: 36px; max-width: 720px;">
+      Every great mickle began with the smallest possible thing,<br/>done one more time.
+    </p>
+    <div class="mono small subtle" style="margin-top: 28px;">
+      mickle-gamma.vercel.app · @mickle · hello@mickle.app
+    </div>
+  </div>
+</section>
+
+</div>
+
+<!-- Speaker notes overlay -->
+<div class="notes" id="notes"><div class="glass">
+  <div class="label">Speaker note · press N to hide</div>
+  <div id="noteText" class="small" style="color: var(--fg);"></div>
+</div></div>
+
+<!-- Chrome -->
+<div class="chrome">
+  <div class="nav-pill">
+    <span class="mono"><span id="num">1</span> / <span id="total">8</span></span>
+    <span class="progress" id="progress"></span>
+  </div>
+  <div class="nav-pill">
+    <button id="prev" aria-label="Previous">‹</button>
+    <button id="next" aria-label="Next">›</button>
+    <span class="mono small" style="margin-left: 6px; color: var(--fg-muted);">← → · N notes · P print</span>
+  </div>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  const progress = document.getElementById('progress');
+  for (let i = 0; i < total; i++) progress.appendChild(document.createElement('span'));
+  let idx = 0;
+  const notesEl = document.getElementById('notes');
+  const noteText = document.getElementById('noteText');
+  let notesShown = false;
+
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+    document.getElementById('num').textContent = idx + 1;
+    [...progress.children].forEach((p, i) => p.classList.toggle('on', i <= idx));
+    noteText.textContent = slides[idx].dataset.notes || '';
+  }
+  function go(n) { idx = Math.max(0, Math.min(total - 1, n)); render(); }
+
+  document.getElementById('next').onclick = () => go(idx + 1);
+  document.getElementById('prev').onclick = () => go(idx - 1);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ') go(idx + 1);
+    if (e.key === 'ArrowLeft') go(idx - 1);
+    if (e.key.toLowerCase() === 'n') {
+      notesShown = !notesShown;
+      notesEl.classList.toggle('show', notesShown);
+    }
+    if (e.key.toLowerCase() === 'p') window.print();
+  });
+  render();
+</script>
+
+</body>
+</html>

@@ -531,7 +531,7 @@ export default function App() {
 
       {/* Wallets — Solana embedded by default, plus any linked Solana or Base wallet */}
       <details
-        className="glass rounded-[18px] px-4 py-3 mt-2 group"
+        className="glass rounded-[18px] px-4 py-3 group"
         onToggle={(e) => setWalletShown((e.target as HTMLDetailsElement).open)}
       >
         <summary className="flex items-center justify-between cursor-pointer list-none gap-3">
@@ -597,7 +597,11 @@ function MilestoneCard({
 
   if (!next) {
     // All earned — show the highest one in a celebratory state
-    return latest ? <EarnedCard kind={latest} milestoneCount={milestones.length} all /> : null;
+    return latest ? (
+      <div className="mb-6">
+        <EarnedCard kind={latest} milestoneCount={milestones.length} all />
+      </div>
+    ) : null;
   }
 
   if (latest) {

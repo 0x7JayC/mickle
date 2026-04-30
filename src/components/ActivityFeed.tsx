@@ -60,7 +60,7 @@ export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
 
   return (
     <details
-      className="glass rounded-[18px] px-4 py-3 mb-2 group"
+      className="glass rounded-[18px] px-4 py-3 mb-3 group"
       onToggle={(e) => setOpen((e.target as HTMLDetailsElement).open)}
     >
       <summary className="flex items-center justify-between cursor-pointer list-none gap-3">

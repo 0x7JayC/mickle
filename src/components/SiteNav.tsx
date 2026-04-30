@@ -75,17 +75,17 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
           {children}
         </div>
 
-        {/* Mobile dropdown — sits just below the nav pill */}
+        {/* Mobile dropdown — sits just below the nav pill, Liquid Glass panel */}
         {open && (
           <div
-            className="sm:hidden absolute right-2 top-[calc(100%+8px)] min-w-[180px] rounded-[18px] liquid-glass p-2 shadow-[0_12px_32px_-8px_rgba(12,10,20,0.25)]"
+            className="sm:hidden absolute right-2 top-[calc(100%+10px)] min-w-[200px] liquid-glass-panel nav-menu-drop p-1.5"
             role="menu"
           >
             <Link
               href="/#how"
               onClick={close}
               role="menuitem"
-              className="block px-4 py-2.5 text-[15px] text-foreground/80 hover:text-foreground hover:bg-foreground/[0.04] rounded-xl transition"
+              className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
             >
               {t(dict, "how", lang)}
             </Link>
@@ -93,7 +93,7 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
               href="/treasury"
               onClick={close}
               role="menuitem"
-              className="block px-4 py-2.5 text-[15px] text-foreground/80 hover:text-foreground hover:bg-foreground/[0.04] rounded-xl transition"
+              className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
             >
               {t(dict, "treasury", lang)}
             </Link>
@@ -102,7 +102,7 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
                 href="/app"
                 onClick={close}
                 role="menuitem"
-                className="block px-4 py-2.5 text-[15px] text-foreground/80 hover:text-foreground hover:bg-foreground/[0.04] rounded-xl transition"
+                className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
               >
                 {t(dict, "account", lang)}
               </Link>

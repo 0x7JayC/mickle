@@ -9,7 +9,10 @@
     "lint": "eslint",
     "ios:add": "npx cap add ios",
     "ios:sync": "npx cap sync ios",
-    "ios:open": "npx cap open ios"
+    "ios:open": "npx cap open ios",
+    "icons": "node scripts/generate-icons.mjs",
+    "cover": "node scripts/generate-cover.mjs",
+    "deck:pdf": "bash scripts/deck-to-pdf.sh"
   },
   "dependencies": {
     "@capacitor/cli": "^8.3.1",

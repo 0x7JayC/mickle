@@ -13,10 +13,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = "https://mickle-gamma.vercel.app";
+const TITLE = "Mickle — Every little makes a mickle";
+const DESCRIPTION =
+  "£1 a day into the S&P 500. On Solana. Global. Watch consistency compound.";
+
 export const metadata: Metadata = {
-  title: "Mickle — Every little makes a mickle",
-  description:
-    "DCA into a tokenized S&P basket on Solana. £1 a day. Global. On-chain. Watch consistency compound.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
@@ -31,6 +36,28 @@ export const metadata: Metadata = {
       { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Mickle",
+    locale: "en_GB",
+    type: "website",
+    images: [
+      {
+        url: "/cover.png",
+        width: 1200,
+        height: 630,
+        alt: "Mickle — Every little makes a mickle. £1 a day. The S&P 500. On Solana.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+    images: ["/cover.png"],
   },
 };
 

@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 const PRESETS = [
-  { gbp: 10, days: 10, label: "10 days" },
-  { gbp: 30, days: 30, label: "30 days · best fit", highlight: true },
-  { gbp: 90, days: 90, label: "90 days · best fee" },
+  { gbp: 10, days: 10, label: "10 days", tag: null },
+  { gbp: 30, days: 30, label: "30 days", tag: "best fit" },
+  { gbp: 90, days: 90, label: "90 days", tag: "best fee" },
 ];
 
 const FEE_PCT = 0.0099;
@@ -112,18 +112,23 @@ export default function DepositModal({
               <button
                 key={p.gbp}
                 onClick={() => setAmount(p.gbp)}
-                className={`relative rounded-2xl p-4 text-left transition border-2 ${
+                className={`relative rounded-[18px] p-3 sm:p-4 text-left transition border-2 ${
                   active
                     ? "border-accent bg-accent/5 shadow-[0_8px_20px_-6px_rgba(255,122,89,0.35)]"
                     : "border-foreground/10 hover:border-foreground/25"
                 }`}
               >
-                <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/55">
+                <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-foreground/55 whitespace-nowrap">
                   {p.label}
                 </div>
-                <div className="font-bold text-2xl tracking-tight tabular-nums mt-1">
+                <div className="font-bold text-xl sm:text-2xl tracking-tight tabular-nums mt-1">
                   £{p.gbp}
                 </div>
+                {p.tag && (
+                  <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-accent/85 mt-1 hidden sm:block">
+                    {p.tag}
+                  </div>
+                )}
               </button>
             );
           })}

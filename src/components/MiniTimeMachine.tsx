@@ -12,9 +12,9 @@ function fv(daily: number, years: number) {
 }
 
 function fmt(n: number) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
-  return `$${n.toFixed(0)}`;
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `£${(n / 1_000).toFixed(1)}k`;
+  return `£${n.toFixed(0)}`;
 }
 
 export default function MiniTimeMachine({ years = 30, daily = 1 }: { years?: number; daily?: number }) {

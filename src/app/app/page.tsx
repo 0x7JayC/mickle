@@ -365,18 +365,13 @@ export default function App() {
           Today&apos;s ritual
         </span>
         <h2 className="text-display text-3xl sm:text-4xl font-bold mt-2 mb-6 tracking-tight">
-          {tappedToday ? "Done for today." : "Tap once for $1."}
+          {tappedToday ? "Done for today." : "Tap once for £1."}
         </h2>
         <button
           onClick={onTap}
           disabled={tappedToday || tapping}
           aria-label={tappedToday ? "Already tapped today" : "Tap £1 into your S&P 500 position"}
           className="glass-button-primary px-10 py-5 font-bold text-xl w-full max-w-xs mx-auto block disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-[0.98]"
-          style={{
-            boxShadow: tappedToday
-              ? undefined
-              : "0 12px 32px -8px rgba(255,122,89,0.55), 0 4px 12px rgba(255,122,89,0.3), inset 0 1px 0 rgba(255,255,255,0.4)",
-          }}
         >
           {tapping ? "Recording…" : tappedToday ? "✓ Tapped" : "£1 · Tap"}
         </button>
@@ -428,7 +423,7 @@ export default function App() {
       <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Your projection · $1 / day
+            Your projection · £1 / day
           </span>
           <div className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] p-1 border border-foreground/10 self-start sm:self-auto">
             {[1, 2, 3, 5, 10].map((y) => {
@@ -635,19 +630,14 @@ function EarnedCard({
     <section
       className="rounded-[18px] p-5 sm:p-6 border"
       style={{
-        background:
-          "linear-gradient(135deg, rgba(255,122,89,0.10), rgba(245,185,74,0.08))",
+        background: "rgba(255,122,89,0.08)",
         borderColor: "rgba(255,122,89,0.28)",
       }}
     >
       <div className="flex items-center gap-4">
         <div
           className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-          style={{
-            background: "var(--accent)",
-            boxShadow:
-              "0 8px 20px -4px rgba(255,122,89,0.45), inset 0 1px 0 rgba(255,255,255,0.4)",
-          }}
+          style={{ background: "var(--accent)" }}
           aria-hidden
         >
           {kind.emoji}
@@ -735,9 +725,15 @@ function ContributedStat({ gbp }: { gbp: number }) {
 }
 
 function PositionStat({ position }: { position: Position | null }) {
+  // Display in GBP since users think in £. Quote stays in USD because the
+  // S&P 500 is USD-priced; that's a per-share fact, not a UI choice.
+  const USD_TO_GBP = 0.79;
   const usd = position?.usdValue ?? 0;
+  const gbp = usd * USD_TO_GBP;
   const balance = position?.balance ?? 0;
   const live = !!position && position.configured && usd > 0;
+  const fmtGbp = (v: number) =>
+    v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
   const fmtUsd = (v: number) =>
     v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
   return (
@@ -755,7 +751,7 @@ function PositionStat({ position }: { position: Position | null }) {
       {live ? (
         <>
           <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-            {fmtUsd(usd)}
+            {fmtGbp(gbp)}
           </div>
           <div className="text-[12px] text-foreground/55 mt-2 font-mono tabular-nums">
             {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} SPYx

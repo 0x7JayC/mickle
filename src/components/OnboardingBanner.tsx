@@ -31,7 +31,7 @@ export default function OnboardingBanner({
     <div
       className="rounded-[18px] p-5 mb-6 border relative overflow-hidden"
       style={{
-        background: "linear-gradient(135deg, rgba(255,122,89,0.10), rgba(245,185,74,0.06))",
+        background: "rgba(255,122,89,0.08)",
         borderColor: "rgba(255,122,89,0.28)",
       }}
     >
@@ -45,10 +45,7 @@ export default function OnboardingBanner({
       <div className="flex items-start gap-4">
         <div
           className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl"
-          style={{
-            background: "var(--accent)",
-            boxShadow: "0 6px 18px -4px rgba(255,122,89,0.4)",
-          }}
+          style={{ background: "var(--accent)" }}
           aria-hidden
         >
           👋

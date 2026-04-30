@@ -94,7 +94,7 @@ function PalettePreview({ id, name, note }: { id: string; name: string; note: st
               Every little<br/>makes a mickle.
             </h3>
             <p className="text-sm opacity-70 max-w-sm">
-              $1 a day into the S&P 500. On Solana. Watch consistency compound.
+              £1 a day into the S&P 500. On Solana. Watch consistency compound.
             </p>
           </div>
 
@@ -111,7 +111,7 @@ function PalettePreview({ id, name, note }: { id: string; name: string; note: st
           {/* Mini Time Machine glass card */}
           <div className="glass-strong p-4 mt-auto">
             <div className="text-[10px] uppercase tracking-[0.2em] opacity-60 font-mono font-semibold mb-2">
-              The Time Machine · 30y · $1/day
+              The Time Machine · 30y · £1/day
             </div>
             <MiniTimeMachine years={30} daily={1} />
           </div>

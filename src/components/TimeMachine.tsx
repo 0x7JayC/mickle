@@ -27,11 +27,11 @@ function projectContributed(daily: number, years: number) {
 }
 
 function fmtMoney(n: number) {
-  if (n >= 100_000_000) return `$${(n / 1_000_000).toFixed(0)}M`;
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 100_000) return `$${(n / 1_000).toFixed(0)}k`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
-  return `$${n.toFixed(0)}`;
+  if (n >= 100_000_000) return `£${(n / 1_000_000).toFixed(0)}M`;
+  if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 100_000) return `£${(n / 1_000).toFixed(0)}k`;
+  if (n >= 1_000) return `£${(n / 1_000).toFixed(1)}k`;
+  return `£${n.toFixed(0)}`;
 }
 
 export default function TimeMachine() {
@@ -78,7 +78,7 @@ export default function TimeMachine() {
       <div className="flex flex-wrap items-center gap-3 mb-7">
         <div className="glass-pill flex items-center gap-3 pl-4 pr-4 py-2.5">
           <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">Daily</span>
-          <span className="text-foreground font-mono text-lg font-semibold tabular-nums">${daily}</span>
+          <span className="text-foreground font-mono text-lg font-semibold tabular-nums">£{daily}</span>
           <input
             type="range"
             min={1}

@@ -36,7 +36,7 @@ export default function Home() {
             makes a mickle.
           </h1>
           <p className="text-xl sm:text-3xl text-foreground/80 max-w-2xl mx-auto mb-3 font-normal tracking-tight">
-            $1 a day. S&amp;P 500 exposure. Global.
+            £1 a day. S&amp;P 500 exposure. Global.
           </p>
           <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
             Solana · SPYx · Jupiter
@@ -72,7 +72,7 @@ export default function Home() {
         </div>
         <div className="flex flex-col gap-3">
           <Step n="01" icon="✉" title="Sign in with email" body="A Solana wallet appears in 5 seconds. No seed phrase. No app store." />
-          <Step n="02" icon="$" title="Tap once a day for $1" body="Funds route via Jupiter into SPYx — tokenized SPDR S&P 500." />
+          <Step n="02" icon="£" title="Tap once a day for £1" body="Funds route via Jupiter into SPYx — tokenized SPDR S&P 500." />
           <Step n="03" icon="↗" title="Watch consistency compound" body="Live Time Machine. A streak. A daily parable. The opposite of degen." />
         </div>
       </section>
@@ -99,11 +99,11 @@ export default function Home() {
             The unlock
           </span>
           <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mt-2 mb-3 text-foreground">
-            $1 fractional S&amp;P, in 60+ countries.
+            £1 fractional S&amp;P, in 60+ countries.
           </h3>
           <p className="text-base sm:text-lg text-foreground/75 leading-relaxed max-w-2xl">
             No brokerage. No minimums. No market hours. Robinhood doesn&apos;t work in Lagos.
-            eToro&apos;s spread eats $1 deposits. UK ISAs are tax wrappers. Mickle is the rail.
+            eToro&apos;s spread eats £1 deposits. UK ISAs are tax wrappers. Mickle is the rail.
           </p>
         </div>
 

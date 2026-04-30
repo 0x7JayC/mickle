@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Mickle — Every little makes a mickle",
   description:
-    "DCA into a tokenized S&P basket on Solana. $1 a day. Global. On-chain. Watch consistency compound.",
+    "DCA into a tokenized S&P basket on Solana. £1 a day. Global. On-chain. Watch consistency compound.",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

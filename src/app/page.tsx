@@ -16,6 +16,9 @@ export default function Home() {
             <a href="#how" className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full">
               How
             </a>
+            <Link href="/treasury" className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full">
+              Treasury
+            </Link>
             <ThemeDots className="hidden sm:flex mr-1" />
             <Link href="/app" className="glass-button-primary px-5 py-2 text-sm font-semibold">
               Start

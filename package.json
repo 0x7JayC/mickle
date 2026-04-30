@@ -12,7 +12,11 @@
     "ios:open": "npx cap open ios",
     "icons": "node scripts/generate-icons.mjs",
     "cover": "node scripts/generate-cover.mjs",
-    "deck:pdf": "bash scripts/deck-to-pdf.sh"
+    "deck:pdf": "bash scripts/deck-to-pdf.sh",
+    "video:dev": "remotion studio",
+    "video:render": "remotion render Hackathon90 out/hackathon-90.mp4 --crf 18 --color-space bt709 && remotion render Twitter30 out/twitter-30.mp4 --crf 18 --color-space bt709",
+    "video:render:hackathon": "remotion render Hackathon90 out/hackathon-90.mp4 --crf 18 --color-space bt709",
+    "video:render:twitter": "remotion render Twitter30 out/twitter-30.mp4 --crf 18 --color-space bt709"
   },
   "dependencies": {
     "@capacitor/cli": "^8.3.1",
@@ -22,6 +26,9 @@
     "@capacitor/status-bar": "^8.0.2",
     "@privy-io/react-auth": "^3.22.2",
     "@privy-io/server-auth": "^1.32.5",
+    "@remotion/cli": "^4.0.454",
+    "@remotion/google-fonts": "^4.0.454",
+    "@remotion/transitions": "^4.0.454",
     "@solana-program/memo": "^0.11.0",
     "@solana/web3.js": "^1.98.4",
     "@supabase/ssr": "^0.10.2",
@@ -29,7 +36,8 @@
     "bs58": "^6.0.0",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "remotion": "^4.0.454"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

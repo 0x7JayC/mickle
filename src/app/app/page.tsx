@@ -104,38 +104,47 @@ export default function App() {
         </button>
       </nav>
 
-      <div className="mb-8">
-        <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">Today</span>
-        <h1 className="text-display text-4xl sm:text-5xl font-bold mt-2 tracking-tight">
+      <header className="mb-8">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+          Today
+        </span>
+        <h1 className="text-display text-4xl sm:text-5xl font-bold mt-1.5 tracking-tight">
           Hello, {email.split("@")[0]}.
         </h1>
-        <p className="text-muted mt-1 font-mono text-xs break-all">
+      </header>
+
+      <Field label="Wallet" className="mb-8">
+        <code className="block font-mono text-[13px] sm:text-sm text-foreground/90 break-all leading-relaxed">
           {wallet ?? "Provisioning wallet…"}
-        </p>
-      </div>
+        </code>
+      </Field>
 
       <div className="grid sm:grid-cols-3 gap-4 mb-8">
         <Stat label="Streak" value={`${dbUser?.streak_count ?? 0}`} suffix="days" />
-        <Stat label="Position" value="—" suffix="SPYx" hint="Day 2" />
-        <Stat label="Contributed" value="$0" hint="Day 3" />
+        <Stat label="Position" value="—" suffix="SPYx" pending="Day 2" />
+        <Stat label="Contributed" value="$0" pending="Day 3" />
       </div>
 
       <div className="glass-strong p-6 sm:p-8 mb-8">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between gap-4">
           <div>
-            <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">Today&apos;s ritual</span>
-            <h2 className="text-2xl font-semibold mt-1 tracking-tight">
+            <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+              Today&apos;s ritual
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-semibold mt-1.5 tracking-tight text-foreground">
               {tappedToday ? "Done for today." : "Tap once for $1."}
             </h2>
+            <p className="text-sm text-foreground/65 mt-1.5">
+              Tap action wires up on Day 3.
+            </p>
           </div>
           <button
             disabled={tappedToday}
-            className="glass-button-primary px-6 py-3 font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            className="glass-button-primary px-6 py-3 font-semibold disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {tappedToday ? "✓" : "Tap"}
           </button>
         </div>
-        <p className="text-sm text-muted">Tap action wires up on Day 3.</p>
       </div>
 
       <div className="glass p-6 sm:p-8">
@@ -148,25 +157,54 @@ export default function App() {
   );
 }
 
+function Field({
+  label,
+  className = "",
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className={className}>
+      <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-1.5 px-1">
+        {label}
+      </div>
+      <div className="glass-strong px-4 py-3.5 rounded-2xl">{children}</div>
+    </div>
+  );
+}
+
 function Stat({
   label,
   value,
   suffix,
-  hint,
+  pending,
 }: {
   label: string;
   value: string;
   suffix?: string;
-  hint?: string;
+  pending?: string;
 }) {
   return (
-    <div className="glass p-5">
-      <div className="text-xs uppercase tracking-[0.18em] text-muted font-mono mb-2">{label}</div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-3xl font-bold tracking-tight">{value}</span>
-        {suffix && <span className="text-sm text-muted">{suffix}</span>}
+    <div className="glass-strong p-5 rounded-3xl">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+          {label}
+        </span>
+        {pending && (
+          <span className="text-[10px] uppercase tracking-[0.18em] font-mono text-foreground/60 bg-foreground/8 px-2 py-0.5 rounded-full border border-foreground/10">
+            {pending}
+          </span>
+        )}
       </div>
-      {hint && <div className="text-xs text-subtle mt-2">{hint}</div>}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+          {value}
+        </span>
+        {suffix && <span className="text-sm font-medium text-foreground/60">{suffix}</span>}
+      </div>
     </div>
   );
 }

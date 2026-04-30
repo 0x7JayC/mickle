@@ -14,6 +14,7 @@ type DbUser = {
   email: string | null;
   streak_count: number;
   last_tap_date: string | null;
+  total_contributed_gbp: number | string;
 };
 
 type Position = {
@@ -26,7 +27,7 @@ type Position = {
 const MILESTONE_DAYS = 30;
 
 export default function App() {
-  const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
+  const { ready, authenticated, user, login, logout, linkWallet, getAccessToken } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
@@ -34,6 +35,8 @@ export default function App() {
   const [loggingIn, setLoggingIn] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [horizon, setHorizon] = useState<number>(10);
+  const [tapping, setTapping] = useState(false);
+  const [tapToast, setTapToast] = useState<string | null>(null);
 
   const wallet = wallets[0]?.address ?? null;
 
@@ -145,10 +148,57 @@ export default function App() {
   const email = user?.email?.address ?? dbUser?.email ?? "—";
   const handle = email.split("@")[0];
   const streak = dbUser?.streak_count ?? 0;
+  const contributed = Number(dbUser?.total_contributed_gbp ?? 0);
   const hour = new Date().getHours();
   const greeting = hour < 5 ? "Late night" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const parable = getTodaysParable(Math.max(streak, 1));
   const progress = Math.min(streak / MILESTONE_DAYS, 1);
+
+  const onTap = async () => {
+    if (tapping || tappedToday) return;
+    setTapping(true);
+    try {
+      const token = await getAccessToken();
+      if (!token) return;
+      const r = await fetch("/api/tap", {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}` },
+      });
+      if (!r.ok) {
+        setTapToast("Couldn't record your tap. Try again.");
+        return;
+      }
+      const { user: u } = await r.json();
+      setDbUser(u);
+      const newStreak = u.streak_count;
+      setTapToast(
+        newStreak === 1
+          ? "Day 1. The hardest one is now behind you."
+          : newStreak % 7 === 0
+          ? `${newStreak} days. Quietly compounding.`
+          : `Day ${newStreak} · keep showing up.`,
+      );
+    } finally {
+      setTapping(false);
+      setTimeout(() => setTapToast(null), 4000);
+    }
+  };
+
+  const onConfirmDemoDeposit = async (gbp: number) => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const r = await fetch("/api/deposits", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ amount_gbp: gbp }),
+    });
+    if (r.ok) {
+      const { user: u } = await r.json();
+      setDbUser(u);
+      setTapToast(`+£${gbp} top-up recorded (demo).`);
+      setTimeout(() => setTapToast(null), 4000);
+    }
+  };
 
   return (
     <main className="flex-1 px-4 sm:px-6 max-w-3xl w-full mx-auto pt-6 pb-20">
@@ -211,8 +261,9 @@ export default function App() {
           {tappedToday ? "Done for today." : "Tap once for $1."}
         </h2>
         <button
-          disabled={tappedToday}
-          aria-label={tappedToday ? "Already tapped today" : "Tap $1 into your S&P 500 position"}
+          onClick={onTap}
+          disabled={tappedToday || tapping}
+          aria-label={tappedToday ? "Already tapped today" : "Tap £1 into your S&P 500 position"}
           className="glass-button-primary px-10 py-5 font-bold text-xl w-full max-w-xs mx-auto block disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-[0.98]"
           style={{
             boxShadow: tappedToday
@@ -220,17 +271,17 @@ export default function App() {
               : "0 12px 32px -8px rgba(255,122,89,0.55), 0 4px 12px rgba(255,122,89,0.3), inset 0 1px 0 rgba(255,255,255,0.4)",
           }}
         >
-          {tappedToday ? "✓ Tapped" : "$1 · Tap"}
+          {tapping ? "Recording…" : tappedToday ? "✓ Tapped" : "£1 · Tap"}
         </button>
         <p className="text-[13px] text-foreground/55 mt-5 italic max-w-xs mx-auto leading-relaxed">
           {parable.text}
         </p>
       </section>
 
-      {/* Stats — Position is live; Contributed wires up Day 3 */}
+      {/* Stats — Position is live, Contributed reads ledger */}
       <div className="grid sm:grid-cols-2 gap-3 mb-6">
         <PositionStat position={position} />
-        <Stat label="Contributed" empty="Total deposited to date" />
+        <ContributedStat gbp={contributed} />
       </div>
 
       {/* Milestone tracker — Day 30 → NFT */}
@@ -291,39 +342,100 @@ export default function App() {
           wallet={wallet}
           email={user?.email?.address ?? null}
           onClose={() => setDepositOpen(false)}
+          onConfirmDemo={onConfirmDemoDeposit}
         />
       )}
 
-      {/* Wallet — demoted to expandable footer (it's not what users come here for) */}
+      {tapToast && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] bg-foreground text-white px-5 py-3 rounded-full text-[14px] font-medium shadow-[0_12px_32px_-8px_rgba(12,10,20,0.5)] fade-up"
+          style={{ animationDuration: "0.3s" }}
+        >
+          {tapToast}
+        </div>
+      )}
+
+      {/* Wallets — embedded by default, optional external link (Phantom etc.) */}
       <details
         className="glass rounded-[18px] px-4 py-3 mt-2 group"
         onToggle={(e) => setWalletShown((e.target as HTMLDetailsElement).open)}
       >
         <summary className="flex items-center justify-between cursor-pointer list-none gap-3">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Wallet
+            Wallets
           </span>
           <span className="text-[13px] text-foreground/70 font-mono truncate">
-            {wallet ? `${wallet.slice(0, 4)}…${wallet.slice(-4)}` : "Provisioning…"}
+            {wallets.length > 0
+              ? `${wallets.length} connected`
+              : "Provisioning…"}
           </span>
           <span className="text-foreground/40 text-xs ml-auto">{walletShown ? "−" : "+"}</span>
         </summary>
-        <code className="block font-mono text-[13px] text-foreground/85 break-all leading-relaxed mt-3 px-1">
-          {wallet ?? "Provisioning wallet…"}
-        </code>
+        <div className="mt-3 space-y-2">
+          {wallets.map((w) => {
+            const isEmbedded =
+              "walletClientType" in w &&
+              (w as { walletClientType?: string }).walletClientType === "privy";
+            return (
+              <div
+                key={w.address}
+                className="flex items-center gap-3 px-1 py-2 border-t border-foreground/[0.06] first:border-0"
+              >
+                <span
+                  className="shrink-0 w-2 h-2 rounded-full"
+                  style={{ background: isEmbedded ? "var(--accent)" : "#10b981" }}
+                  aria-hidden
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[11px] uppercase tracking-[0.18em] font-mono text-foreground/55">
+                    {isEmbedded ? "Embedded · Mickle" : "External"}
+                  </div>
+                  <code className="block font-mono text-[13px] text-foreground/85 break-all leading-tight mt-1">
+                    {w.address}
+                  </code>
+                </div>
+              </div>
+            );
+          })}
+          <button
+            onClick={() => linkWallet()}
+            className="w-full mt-1 text-[13px] font-semibold text-accent border border-accent/30 hover:bg-accent/5 rounded-full px-4 py-2 transition"
+          >
+            + Connect external wallet (Phantom · Backpack · Solflare)
+          </button>
+        </div>
       </details>
     </main>
   );
 }
 
-function Stat({ label, empty }: { label: string; empty: string }) {
+function ContributedStat({ gbp }: { gbp: number }) {
+  const fmt = (v: number) =>
+    v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
+  const empty = gbp <= 0;
   return (
     <div className="glass-strong rounded-[18px] p-5">
       <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-3">
-        {label}
+        Contributed
       </div>
-      <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">—</div>
-      <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">{empty}</div>
+      {empty ? (
+        <>
+          <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">£0</div>
+          <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">
+            Top up to start your streak
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+            {fmt(gbp)}
+          </div>
+          <div className="text-[12px] text-foreground/55 mt-2 leading-relaxed">
+            Total deposited to date
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -23,7 +23,7 @@ export default function PrivyProviders({ children }: { children: React.ReactNode
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["email", "google"],
+        loginMethods: ["email", "google", "wallet"],
         appearance: { theme: "light", accentColor: "#ff7a59" },
         embeddedWallets: {
           solana: { createOnLogin: "users-without-wallets" },

@@ -152,41 +152,44 @@ export default function App() {
 
   return (
     <main className="flex-1 px-4 sm:px-6 max-w-3xl w-full mx-auto pt-6 pb-20">
-      <nav className="glass-pill px-4 py-2 flex items-center justify-between mb-8">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a]" />
-          <span className="font-semibold tracking-tight">Mickle</span>
+      <nav className="glass-pill px-3 sm:px-4 py-2 flex items-center justify-between gap-2 mb-8">
+        <Link href="/" className="flex items-center gap-2 min-w-0">
+          <div className="w-7 h-7 shrink-0 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a]" />
+          <span className="font-semibold tracking-tight truncate">Mickle</span>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <button
             onClick={() => setDepositOpen(true)}
-            className="glass-button-primary px-4 py-1.5 text-sm font-semibold"
+            className="glass-button-primary px-3 sm:px-4 py-1.5 text-sm font-semibold"
           >
             Top up
           </button>
-          <button onClick={logout} className="text-sm text-muted hover:text-foreground px-3 py-1.5">
+          <button
+            onClick={logout}
+            className="text-sm text-muted hover:text-foreground px-2 sm:px-3 py-1.5"
+          >
             Sign out
           </button>
         </div>
       </nav>
 
       {/* Greeting + streak inline — wallet is no longer the first thing on screen */}
-      <header className="flex items-end justify-between mb-7 gap-4">
-        <div>
+      <header className="flex items-end justify-between mb-7 gap-3">
+        <div className="min-w-0 flex-1">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             {greeting}
           </span>
-          <h1 className="text-display text-4xl sm:text-5xl font-bold mt-1 tracking-tight leading-none">
+          <h1 className="text-display text-3xl sm:text-5xl font-bold mt-1 tracking-tight leading-none truncate">
             {handle}.
           </h1>
         </div>
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Streak
           </span>
-          <div className="font-mono font-bold text-3xl sm:text-4xl text-accent leading-none mt-1 tabular-nums">
+          <div className="font-mono font-bold text-2xl sm:text-4xl text-accent leading-none mt-1 tabular-nums">
             {streak}
-            <span className="ml-1 text-2xl" aria-hidden>
+            <span className="ml-1 text-xl sm:text-2xl" aria-hidden>
               {streak > 0 ? "🔥" : "·"}
             </span>
           </div>
@@ -232,12 +235,12 @@ export default function App() {
 
       {/* Milestone tracker — Day 30 → NFT */}
       <section className="glass-strong rounded-[18px] p-5 sm:p-6 mb-6">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Next milestone
           </span>
-          <span className="text-[12px] font-semibold text-accent">
-            Day {MILESTONE_DAYS} → soulbound NFT
+          <span className="text-[12px] font-semibold text-accent whitespace-nowrap">
+            Day {MILESTONE_DAYS} · NFT
           </span>
         </div>
         <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
@@ -256,18 +259,18 @@ export default function App() {
 
       {/* Time Machine — projection with year selector */}
       <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
-        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Your projection · $1 / day
           </span>
-          <div className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] p-1 border border-foreground/10">
+          <div className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] p-1 border border-foreground/10 self-start sm:self-auto">
             {[1, 2, 3, 5, 10].map((y) => {
               const active = horizon === y;
               return (
                 <button
                   key={y}
                   onClick={() => setHorizon(y)}
-                  className={`px-3 py-1 rounded-full text-[12px] font-mono font-semibold transition tabular-nums ${
+                  className={`px-2.5 sm:px-3 py-1 rounded-full text-[12px] font-mono font-semibold transition tabular-nums ${
                     active
                       ? "bg-white text-foreground shadow-[0_2px_6px_rgba(12,10,20,0.08)]"
                       : "text-foreground/55 hover:text-foreground"

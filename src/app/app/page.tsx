@@ -56,6 +56,8 @@ export default function App() {
   const [milestones, setMilestones] = useState<
     { kind: string; asset_address: string | null; minted_at: string }[]
   >([]);
+  const [demoEnabled, setDemoEnabled] = useState(false);
+  const [celebration, setCelebration] = useState<string | null>(null);
 
   const wallet = solanaWallets[0]?.address ?? null;
 
@@ -82,6 +84,9 @@ export default function App() {
     fetch("/api/last-batch")
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => j && setLastBatch(j.batch));
+    fetch("/api/dev/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setDemoEnabled(j.demo_cheat));
   }, [authenticated]);
 
   // Milestones — refetch after every tap (a tap can mint a day_7/30/100)
@@ -213,8 +218,21 @@ export default function App() {
         return;
       }
       const { user: u } = await r.json();
+      const prevStreak = dbUser?.streak_count ?? 0;
       setDbUser(u);
       const newStreak = u.streak_count;
+      // Celebration when crossing a milestone threshold
+      const crossed = [7, 30, 100].find((t) => prevStreak < t && newStreak >= t);
+      if (crossed) {
+        setCelebration(
+          crossed === 7
+            ? "Week one · 🌱"
+            : crossed === 30
+              ? "The mickle · 🔥"
+              : "The muckle · 💎",
+        );
+        setTimeout(() => setCelebration(null), 4500);
+      }
       setTapToast(
         newStreak === 1
           ? "Day 1. The hardest one is now behind you."
@@ -225,6 +243,31 @@ export default function App() {
     } finally {
       setTapping(false);
       setTimeout(() => setTapToast(null), 4000);
+    }
+  };
+
+  const onDemoSimulate = async (target: number) => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const prevStreak = dbUser?.streak_count ?? 0;
+    const r = await fetch("/api/dev/simulate-streak", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ target }),
+    });
+    if (!r.ok) return;
+    const { user: u } = await r.json();
+    setDbUser(u);
+    const crossed = [7, 30, 100].find((t) => prevStreak < t && target >= t);
+    if (crossed) {
+      setCelebration(
+        crossed === 7
+          ? "Week one · 🌱"
+          : crossed === 30
+            ? "The mickle · 🔥"
+            : "The muckle · 💎",
+      );
+      setTimeout(() => setCelebration(null), 4500);
     }
   };
 
@@ -406,6 +449,52 @@ export default function App() {
           style={{ animationDuration: "0.3s" }}
         >
           {tapToast}
+        </div>
+      )}
+
+      {celebration && (
+        <div
+          role="status"
+          aria-label="Milestone earned"
+          className="fixed inset-0 z-[75] flex items-center justify-center pointer-events-none"
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(circle at center, rgba(255,122,89,0.35), transparent 60%)",
+              animation: "fade-up 0.5s ease both",
+            }}
+          />
+          <div
+            className="relative bg-foreground text-white px-7 py-5 rounded-[18px] text-center shadow-[0_24px_60px_-12px_rgba(12,10,20,0.5)]"
+            style={{ animation: "fade-up 0.6s cubic-bezier(0.2,0.7,0.2,1) both" }}
+          >
+            <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-white/60 mb-1">
+              Milestone earned
+            </div>
+            <div className="text-2xl font-bold tracking-tight">{celebration}</div>
+            <div className="text-[12px] text-white/60 mt-1">Soulbound NFT minted</div>
+          </div>
+        </div>
+      )}
+
+      {demoEnabled && (
+        <div className="fixed bottom-20 right-4 z-[65] glass-strong rounded-[18px] p-3 shadow-[0_12px_32px_-8px_rgba(12,10,20,0.25)]">
+          <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-2">
+            Demo · jump to
+          </div>
+          <div className="flex gap-2">
+            {[0, 7, 30, 100].map((d) => (
+              <button
+                key={d}
+                onClick={() => onDemoSimulate(d)}
+                className="px-3 py-1.5 rounded-full text-[12px] font-mono font-semibold border border-foreground/15 hover:border-accent/40 hover:bg-accent/5 transition tabular-nums"
+              >
+                Day {d}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 

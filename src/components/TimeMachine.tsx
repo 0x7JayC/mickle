@@ -27,7 +27,9 @@ function projectContributed(daily: number, years: number) {
 }
 
 function fmtMoney(n: number) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 100_000_000) return `$${(n / 1_000_000).toFixed(0)}M`;
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 100_000) return `$${(n / 1_000).toFixed(0)}k`;
   if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
   return `$${n.toFixed(0)}`;
 }
@@ -153,10 +155,10 @@ export default function TimeMachine() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mt-5">
+      {/* Stats — single label word so 3-col fits cleanly on mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
         <Stat label={`In ${horizon.label}`} value={fmtMoney(future)} variant="primary" />
-        <Stat label="You contributed" value={fmtMoney(contributed)} />
+        <Stat label="Contributed" value={fmtMoney(contributed)} />
         <Stat label="Compounding" value={fmtMoney(growth)} variant="positive" />
       </div>
 
@@ -184,9 +186,13 @@ function Stat({
       ? "text-[#10b981]"
       : "text-foreground";
   return (
-    <div className="glass-soft p-4">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted mb-2 font-semibold">{label}</div>
-      <div className={`font-mono text-2xl sm:text-3xl font-bold tracking-tight tabular-nums ${valueClass}`}>
+    <div className="glass-soft p-3 sm:p-4 min-w-0">
+      <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.18em] text-muted mb-1.5 sm:mb-2 font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+        {label}
+      </div>
+      <div
+        className={`font-mono text-lg sm:text-3xl font-bold tracking-tight tabular-nums whitespace-nowrap overflow-hidden text-ellipsis ${valueClass}`}
+      >
         {value}
       </div>
     </div>

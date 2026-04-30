@@ -218,7 +218,10 @@ A: Backed is an issuer of tokenized equities — they're a regulated bridge betw
 A: DCA mathematically wins in bear markets — that's the whole reason it exists. The product narrative is *literally* designed for them; that's when streaks get sticky and the patience story resonates loudest.
 
 **Q: Why does this need a token?**
-A: It doesn't. Mickle has no token, no points, no airdrop. Revenue is the 0.99% deposit fee plus a small slice of Jupiter platform fees — scaling with use, not with locked assets, not with token speculation.
+A: It doesn't. Mickle has no token, no points, no airdrop. Revenue is three honest legs: 0.99% deposit fee, ~4.5% APY on cohort float held in Kamino USDC vaults between deposit and daily swap, and a future £0.99/month Streak Premium for users past £30 lifetime contribution. None of it depends on token speculation.
+
+**Q: How do you actually make money on £1/day?**
+A: We don't, on Leg 1 alone. The 0.99% fee covers production cost only above ~£35 per top-up. The model works because of Leg 2 (float yield) and Leg 3 (subscription). On Solana, Kamino USDC vaults pay ~4.5% APY — at £10M of cohort float that's £450k/yr of working-capital yield with zero user-facing change. Leg 3 (£0.99/mo Streak Premium) adds a per-user revenue floor for engaged users. Full breakdown in `MONEY.md`. We're not trying to win on 0.99% × £30; we're trying to be break-even by year 1 and profitable by year 2 the same way Plum, Moneybox, and Acorns are.
 
 ---
 

@@ -53,15 +53,91 @@ User → Mickle GBP business account
 
 | Layer | Provider | Fee |
 |---|---|---|
-| GBP collection | TrueLayer / GoCardless / Stripe Open Banking | £0–£0.20 per deposit |
+| GBP collection | TrueLayer / GoCardless / Stripe Open Banking | £0.20 flat per deposit |
 | FX + USDC purchase | Kraken Pro (taker) | 0.16% |
 | Solana withdrawal | Kraken | ~$1 flat (amortised across cohort) |
 | Jupiter swap | Jupiter | 0.10% |
 | Slippage buffer | — | 0.10–0.30% |
-| **Mickle margin** | — | **0.50–0.70%** |
-| **User-visible fee** | — | **0.99%** (single line, no asterisks) |
 
-This is the maths that lets Mickle hit a true 0.99% on £1/day at scale.
+### Honest unit economics — why one revenue leg isn't enough
+
+| Top-up | Hard cost | 0.99% revenue | Net per top-up |
+|---|---|---|---|
+| £10 | £0.26 | £0.10 | **−£0.16** |
+| £30 | £0.35 | £0.30 | **−£0.05** |
+| £90 | £0.62 | £0.89 | **+£0.27** |
+
+The flat £0.20 Open Banking fee crushes anything below ~£35. Plus per-user
+KYC at signup is ~£1.50 (Onfido/Veriff), which at 30% deposit-conversion
+pencils to ~£5 effective customer-acquisition cost. The 0.99% transaction
+fee alone cannot recover that on a £1/day cadence.
+
+Every successful UK peer has reached the same conclusion. Acorns moved
+to a $3–9/month subscription. Plum charges £2.99/month. Moneybox £1/month
++ 0.45% AUM. Trading 212 makes its money on FX margin + stock lending +
+cash interest, not transaction fees.
+
+## Revenue model — three legs, single 0.99% headline
+
+The user-visible price stays **0.99% per deposit, no subscription**. Behind it:
+
+### Leg 1 — Deposit fee (the headline)
+
+0.99% on every top-up. £10–£25 deposits subsidise themselves; £30+ deposits
+are net positive at ~£0.05–£0.50 per transaction. This is the line in the
+deck and on the deposit modal.
+
+### Leg 2 — Float yield (the silent leg)
+
+Between the moment USDC lands in the Mickle treasury and the moment the
+daily swap converts it to SPYx, the balance earns yield. On Solana,
+**Kamino USDC vaults pay ~4.5% APY** as of April 2026 (verifiable on
+DeFiLlama). At £10M of float, that's ~£450k/year of pure income with
+no user-facing change.
+
+This does not contradict "no AUM gating" — Mickle never charges the user
+for keeping their position. Yield is captured on the *cohort float* (the
+buffer between deposit and swap), which is Mickle's working capital, not
+the user's invested principal.
+
+| Float scale | Annual yield (4.5% APY) |
+|---|---|
+| £100k | £4.5k |
+| £1M | £45k |
+| £10M | £450k |
+| £100M | £4.5M |
+
+This is the leg that makes the model investable.
+
+### Leg 3 — Streak Premium (optional subscription, not in v1 UI)
+
+A future tier — **£0.99/month** — unlocks once a user has contributed
+more than £30 lifetime. Premium adds:
+- Push reminders (so the streak doesn't break)
+- Multi-asset baskets (S&P 500 + tokenized gold + tokenized treasuries)
+- Tax-year CSV export
+- Early-access milestone NFTs
+
+Same shape as Plum / Moneybox premium. Locks in a per-user revenue floor
+once the user is engaged, without any change to the daily ritual itself.
+
+### Combined LTV at 12 months (modelled)
+
+Assumptions: avg user tops up £30 × 4 / year, 30% subscribe to Streak
+Premium after first £30, average float held = 30 days × daily contribution.
+
+| Source | Per-user / year |
+|---|---|
+| Deposit fees (4 × £30 × 0.99%) | £1.19 |
+| Float yield (avg £15 held × 4.5% × 12mo) | £0.81 |
+| Streak Premium (30% × £11.88) | £3.56 |
+| **Total per-user / year** | **£5.56** |
+| Hard CAC (KYC + variable) | £5.00 |
+| **Net LTV — year 1** | **£0.56** |
+
+Year 1 break-even, net-positive in year 2 onwards. The model only works
+because of leg 2 (float yield) and leg 3 (subscription). Leg 1 alone is
+underwater for the target audience.
 
 ### CEX provider comparison (April 2026)
 
@@ -113,6 +189,7 @@ Recommendation: **Griffin** — they're the closest cultural fit (API-first, fin
 
 - **2026-04-30** — chose Transak for the hackathon demo. Production path documented here. EMI partnership conversation deferred until Mickle wins the Colosseum Consumer track or raises seed.
 - **2026-04-30** — pooled treasury (one position, pro-rata share) chosen over per-user positions to keep on-chain costs viable at small deposit sizes.
+- **2026-04-30** — moved from a single-leg 0.99% transaction-fee model to the three-leg revenue model above (deposit fee + float yield + Streak Premium). The single-leg model was structurally underwater at £10–£25 top-ups; without leg 2 (float yield via Kamino USDC vaults) and leg 3 (£0.99/mo Streak Premium), Mickle could not recover hard CAC on its target audience. Reframes the deck's "no AUM gating" line — yield is captured on cohort *float* (working capital), never on the user's invested principal.
 
 ## Open questions
 

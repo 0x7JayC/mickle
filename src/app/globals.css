@@ -50,6 +50,12 @@ body {
   font-size: 17px;
   line-height: 1.47;
   letter-spacing: -0.012em;
+  /* Respect iPhone safe areas (notch / Dynamic Island / home indicator) */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Prevent rubber-band over-scroll inside the Capacitor WebView */
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Calm mode: opt-in via .calm-bg on a route subtree (e.g. /app dashboard).

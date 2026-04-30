@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeShell from "@/components/ThemeShell";
@@ -17,6 +17,20 @@ export const metadata: Metadata = {
   title: "Mickle — Every little makes a mickle",
   description:
     "DCA into a tokenized S&P basket on Solana. $1 a day. Global. On-chain. Watch consistency compound.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Mickle",
+    statusBarStyle: "black-translucent",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#fdf6ef",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  userScalable: false,
 };
 
 export default function RootLayout({

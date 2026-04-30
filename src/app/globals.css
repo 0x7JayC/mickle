@@ -48,6 +48,12 @@ body {
   overflow-x: hidden;
 }
 
+/* Calm mode: opt-in via .calm-bg on a route subtree (e.g. /app dashboard).
+   Hides the vivid ambient layers and uses a solid cream background so glass
+   cards have real contrast. */
+body:has(.calm-bg) .ambient-fixed { opacity: 0 !important; }
+body:has(.calm-bg) { background: #faf6ee; }
+
 /* Fixed full-page ambient layer (cross-fades on theme switch) */
 .ambient-fixed {
   position: fixed;

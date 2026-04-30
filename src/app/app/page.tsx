@@ -7,6 +7,9 @@ import Link from "next/link";
 import MiniTimeMachine from "@/components/MiniTimeMachine";
 import { getTodaysParable } from "@/lib/parables";
 import DepositModal from "@/components/DepositModal";
+import ActivityFeed from "@/components/ActivityFeed";
+import OnboardingBanner from "@/components/OnboardingBanner";
+import SettingsDrawer from "@/components/SettingsDrawer";
 
 type DbUser = {
   id: string;
@@ -58,6 +61,9 @@ export default function App() {
   >([]);
   const [demoEnabled, setDemoEnabled] = useState(false);
   const [celebration, setCelebration] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Bumped after any state change that should refresh the activity feed
+  const [activityKey, setActivityKey] = useState(0);
 
   const wallet = solanaWallets[0]?.address ?? null;
 
@@ -220,6 +226,7 @@ export default function App() {
       const { user: u } = await r.json();
       const prevStreak = dbUser?.streak_count ?? 0;
       setDbUser(u);
+      setActivityKey((k) => k + 1);
       const newStreak = u.streak_count;
       // Celebration when crossing a milestone threshold
       const crossed = [7, 30, 100].find((t) => prevStreak < t && newStreak >= t);
@@ -258,6 +265,7 @@ export default function App() {
     if (!r.ok) return;
     const { user: u } = await r.json();
     setDbUser(u);
+    setActivityKey((k) => k + 1);
     const crossed = [7, 30, 100].find((t) => prevStreak < t && target >= t);
     if (crossed) {
       setCelebration(
@@ -282,6 +290,7 @@ export default function App() {
     if (r.ok) {
       const { user: u } = await r.json();
       setDbUser(u);
+      setActivityKey((k) => k + 1);
       setTapToast(`+£${gbp} top-up recorded (demo).`);
       setTimeout(() => setTapToast(null), 4000);
     }
@@ -302,10 +311,14 @@ export default function App() {
             Top up
           </button>
           <button
-            onClick={logout}
-            className="text-sm text-muted hover:text-foreground px-2 sm:px-3 py-1.5"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Account settings"
+            className="text-foreground/55 hover:text-foreground px-2 sm:px-3 py-1.5"
           >
-            Sign out
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
           </button>
         </div>
       </nav>
@@ -332,6 +345,13 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* First-run welcome — disappears after first tap or top-up */}
+      <OnboardingBanner
+        streak={streak}
+        contributed={contributed}
+        onTopUp={() => setDepositOpen(true)}
+      />
 
       {/* Ritual — the hero. Single accent tint, hairline border, no shadow. */}
       <section
@@ -442,6 +462,19 @@ export default function App() {
         />
       )}
 
+      <SettingsDrawer
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        email={email}
+        contributed={contributed}
+        streak={streak}
+        walletCount={allWallets.length}
+        onSignOut={() => {
+          setSettingsOpen(false);
+          logout();
+        }}
+      />
+
       {tapToast && (
         <div
           role="status"
@@ -497,6 +530,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Recent activity — taps, deposits, milestones, batches */}
+      <ActivityFeed refreshKey={activityKey} />
 
       {/* Wallets — Solana embedded by default, plus any linked Solana or Base wallet */}
       <details

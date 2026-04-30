@@ -1,0 +1,120 @@
+"use client";
+
+import { usePrivy } from "@privy-io/react-auth";
+
+export default function SettingsDrawer({
+  open,
+  onClose,
+  email,
+  contributed,
+  streak,
+  walletCount,
+  onSignOut,
+}: {
+  open: boolean;
+  onClose: () => void;
+  email: string;
+  contributed: number;
+  streak: number;
+  walletCount: number;
+  onSignOut: () => void;
+}) {
+  const { linkEmail, user } = usePrivy();
+  if (!open) return null;
+  const fmtGbp = (v: number) =>
+    v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
+  const emails = (user?.linkedAccounts ?? []).filter((a) => a.type === "email") as {
+    address?: string;
+  }[];
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center px-4 py-6 bg-black/40 backdrop-blur-md fade-up"
+      style={{ animationDuration: "0.25s" }}
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Account settings"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-[18px] w-full max-w-md p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(12,10,20,0.35)]"
+      >
+        <div className="flex items-start justify-between mb-1">
+          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+            Account
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="text-foreground/40 hover:text-foreground text-2xl leading-none -mt-1 -mr-1 px-2"
+          >
+            ×
+          </button>
+        </div>
+        <h2 className="text-display text-2xl sm:text-3xl font-bold tracking-tight mb-5">
+          Settings
+        </h2>
+
+        <Section label="Signed in as">
+          <div className="flex items-center justify-between gap-3">
+            <code className="font-mono text-[14px] text-foreground/85 break-all">{email}</code>
+            <button
+              onClick={() => linkEmail()}
+              className="shrink-0 text-[12px] text-accent font-semibold hover:underline"
+            >
+              {emails.length > 1 ? "Manage" : "Add another"}
+            </button>
+          </div>
+        </Section>
+
+        <Section label="Lifetime">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat k="Streak" v={`${streak}`} suffix="days" />
+            <Stat k="Contributed" v={fmtGbp(contributed)} />
+            <Stat k="Wallets" v={`${walletCount}`} suffix={walletCount === 1 ? "wallet" : "wallets"} />
+            <Stat k="Member since" v={joinedLabel(user?.createdAt)} />
+          </div>
+        </Section>
+
+        <Section label="Danger zone">
+          <button
+            onClick={onSignOut}
+            className="w-full text-[14px] font-semibold text-foreground/70 hover:text-foreground border border-foreground/15 rounded-full px-5 py-2.5 transition"
+          >
+            Sign out
+          </button>
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+function Section({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-5">
+      <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-2">
+        {label}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Stat({ k, v, suffix }: { k: string; v: string; suffix?: string }) {
+  return (
+    <div className="rounded-[18px] border border-foreground/10 px-3 py-2.5">
+      <div className="text-[10px] uppercase tracking-[0.18em] font-mono text-foreground/55 mb-0.5">
+        {k}
+      </div>
+      <div className="text-[15px] font-bold tracking-tight tabular-nums">
+        {v}
+        {suffix && <span className="text-[12px] font-normal text-foreground/55 ml-1">{suffix}</span>}
+      </div>
+    </div>
+  );
+}
+
+function joinedLabel(d: Date | string | undefined): string {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+}

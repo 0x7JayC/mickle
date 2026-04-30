@@ -11,7 +11,7 @@ Real-time dashboard for the daily-$1 ritual. Goal: ship a working end-to-end loo
 | Price feed | **Jupiter Price API v3** (free, no key) + **Pyth Hermes** for SPY underlying | Jupiter for SPL token USD; Pyth for the equity peg. |
 | Swap | **Jupiter Swap API** (server-side, batched) | One swap per cohort/day, not per tap. |
 | NFT milestones | **Metaplex Core** (`@metaplex-foundation/mpl-core`) | Single-instruction mint, ~80% cheaper than Token Metadata, no Merkle tree. |
-| Deposit on-ramp v1 | **Solana Pay QR** + Privy `signTransaction` | Manual USDC in; replace with fiat on-ramp later. |
+| Fiat on-ramp | **Transak** (Open Banking GBP → USDC, Solana) | Hosted widget; bank-transfer fee ~1%. Card ~3%. |
 
 ## Data model (Supabase)
 
@@ -74,7 +74,7 @@ RLS: users can read only their own rows. Server (service role) writes deposits/t
 | Time Machine from real principal | already built — feed live value | 30 min |
 | Daily parable | static | done |
 | Upcoming milestone (day 30 → NFT) | Supabase + Metaplex Core mint | ½ day |
-| Deposit USDC button | Privy + Solana Pay QR | ½ day |
+| Deposit £ → SPYx (auto‑swap) | Transak hosted widget | ½ day |
 | Execute swap on tap | Jupiter API, server-side daily batch | 1 day |
 
 **Total: ~5 working days.**
@@ -87,6 +87,50 @@ RLS: users can read only their own rows. Server (service role) writes deposits/t
 4. **Day 4 — The swap engine.** Cron (Vercel) runs daily: aggregate yesterday's taps, execute one Jupiter swap with the treasury wallet, write `swap_batches`, distribute SPYx pro-rata. Or: skip pro-rata for v1 and treat the treasury as the position-of-record (simpler, ship faster).
 5. **Day 5 — Milestones + polish.** Day-30 streak → Metaplex Core mint to user wallet, milestone card in dashboard, Realtime toast on mint. Decide one palette, remove `/compare` + switcher.
 
+## Money flow (GBP-first, crypto invisible)
+
+The user only ever sees GBP. USDC and SPYx are invisible plumbing.
+
+```
+£10 / £30 / £90 top-up
+        ↓
+  Open Banking (Transak)         ~1% on-ramp fee
+        ↓
+   USDC on Solana
+        ↓
+   Internal ledger: each £1 tap debits user balance, no on-chain tx
+        ↓
+   Daily treasury swap (one Jupiter trade for the cohort)   ~0.1% + slippage
+        ↓
+   SPYx position (pooled, user sees their share)
+        ↓
+   On withdrawal: SPYx → USDC → Open Banking GBP-out          ~1% off-ramp
+```
+
+**Why batch?** A £1 → USDC swap costs more in on-chain + on-ramp fees than the deposit itself. Pre-funding 30 / 90 days at once amortises the ~1% on-ramp across 30–90 taps.
+
+## Fees
+
+**Headline: 0.99% per deposit. No subscriptions. No exit fee.**
+
+One number, one sentence. Survivable for Mickle, undercuts every consumer crypto app, comparable to Trading 212's 0.15% FX (we're more expensive but our product is fundamentally different — fractional global access, not zero-fee broker race).
+
+**Hard costs absorbed:**
+
+| Component | Cost | Notes |
+|---|---|---|
+| On-ramp (Transak Open Banking) | ~1.0% | Charged once per top-up, not per tap |
+| Jupiter swap | ~0.1% | Plus pool slippage ~0.1–0.3% |
+| Mickle margin | ~0.5% | What's left after the above |
+| **User-visible fee** | **0.99%** | Single line, no asterisks |
+
+For comparison:
+- Robinhood: 0% commission + ~0.6% FX margin (UK users effectively pay ~0.6%)
+- Trading 212: 0.15% FX (UK)
+- Revolut free: 1.49% on stocks
+- Coinbase retail: 1.49% spread
+- MoonPay card: 3.99–4.99%
+
 ## Open decisions
 
 - **Pooled vs per-user position.** Pooled (treasury holds all SPYx, users see their share) is dramatically simpler and avoids per-tap on-chain cost. Per-user requires a swap per tap or a complex distribution. **Recommend pooled for v1.**
@@ -95,4 +139,4 @@ RLS: users can read only their own rows. Server (service role) writes deposits/t
 
 ## Out of scope (v1)
 
-Fiat on-ramp, push notifications, social/leaderboards, multi-asset baskets, withdrawal flow.
+Push notifications, social/leaderboards, multi-asset baskets, GBP withdrawal flow (Transak supports it but adds KYC friction; ship deposit only for the hackathon demo).

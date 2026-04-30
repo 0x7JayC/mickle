@@ -6,6 +6,7 @@ import { useWallets as useSolanaWallets } from "@privy-io/react-auth/solana";
 import Link from "next/link";
 import MiniTimeMachine from "@/components/MiniTimeMachine";
 import { getTodaysParable } from "@/lib/parables";
+import DepositModal from "@/components/DepositModal";
 
 type DbUser = {
   id: string;
@@ -31,6 +32,7 @@ export default function App() {
   const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
+  const [depositOpen, setDepositOpen] = useState(false);
 
   const wallet = wallets[0]?.address ?? null;
 
@@ -154,9 +156,17 @@ export default function App() {
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a]" />
           <span className="font-semibold tracking-tight">Mickle</span>
         </Link>
-        <button onClick={logout} className="text-sm text-muted hover:text-foreground px-3 py-1.5">
-          Sign out
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setDepositOpen(true)}
+            className="glass-button-primary px-4 py-1.5 text-sm font-semibold"
+          >
+            Top up
+          </button>
+          <button onClick={logout} className="text-sm text-muted hover:text-foreground px-3 py-1.5">
+            Sign out
+          </button>
+        </div>
       </nav>
 
       {/* Greeting + streak inline — wallet is no longer the first thing on screen */}
@@ -255,6 +265,14 @@ export default function App() {
         </div>
         <MiniTimeMachine />
       </section>
+
+      {depositOpen && (
+        <DepositModal
+          wallet={wallet}
+          email={user?.email?.address ?? null}
+          onClose={() => setDepositOpen(false)}
+        />
+      )}
 
       {/* Wallet — demoted to expandable footer (it's not what users come here for) */}
       <details

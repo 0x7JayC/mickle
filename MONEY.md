@@ -75,6 +75,18 @@ This is the maths that lets Mickle hit a true 0.99% on £1/day at scale.
 
 **Recommendation:** primary on Kraken Pro, secondary on Coinbase Advanced for redundancy. Avoid Bybit/Binance for UK regulatory reasons.
 
+### Coinbase / Kraken as identity (future)
+
+Distinct from the treasury role above. Once we're past EMI partnership, add **Sign in with Coinbase** and **Sign in with Kraken** as Privy OAuth identity providers (not wallet connectors).
+
+Why it matters:
+- ~10M users already have a verified Coinbase account with £/$ on it.
+- After OAuth they grant a read-scope token; Mickle sees "user has £200 idle on Coinbase."
+- Deposit shortcut: "Wire £30 from your Coinbase balance directly to Mickle — no Open Banking step." Coinbase Advanced supports outbound bank-to-third-party crypto withdrawals via internal transfer, sub-1% all-in.
+- Same shape for Kraken (more UK-native, FCA registered).
+
+Implementation order: ship after Privy + EMI are live. Privy supports custom OAuth providers via the `customAuth` config — Coinbase OAuth flow is documented at coinbase.com/cloud/products/sign-in. Kraken does not have a public OAuth flow today; would require partnership.
+
 ## Regulatory layer (the actual blocker)
 
 The moment Mickle holds user GBP for any duration, you are subject to FCA Electronic Money Institution (EMI) rules.

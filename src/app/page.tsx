@@ -42,7 +42,6 @@ export default function Home() {
             £1 a day. S&amp;P 500 exposure. Global.
           </p>
           <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
-            Solana · SPYx · Jupiter
           </p>
           <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-12">
             <Link href="/app" className="glass-button-primary px-7 py-3.5 font-semibold">

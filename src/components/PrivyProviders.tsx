@@ -2,6 +2,7 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { toSolanaWalletConnectors } from "@privy-io/react-auth/solana";
+import { base, mainnet } from "viem/chains";
 
 const solanaConnectors = toSolanaWalletConnectors();
 
@@ -24,10 +25,28 @@ export default function PrivyProviders({ children }: { children: React.ReactNode
       appId={appId}
       config={{
         loginMethods: ["email", "google", "wallet"],
-        appearance: { theme: "light", accentColor: "#ff7a59" },
+        appearance: {
+          theme: "light",
+          accentColor: "#ff7a59",
+          // Surface Coinbase Wallet first for the Base / Coinbase audience.
+          walletList: [
+            "phantom",
+            "coinbase_wallet",
+            "metamask",
+            "wallet_connect",
+            "rainbow",
+            "backpack",
+            "solflare",
+          ],
+        },
         embeddedWallets: {
           solana: { createOnLogin: "users-without-wallets" },
+          ethereum: { createOnLogin: "off" },
         },
+        // Base is the headline EVM chain (Coinbase users land here by default).
+        // Mainnet is included so Coinbase Wallet doesn't reject the session.
+        defaultChain: base,
+        supportedChains: [base, mainnet],
         externalWallets: { solana: { connectors: solanaConnectors } },
       }}
     >

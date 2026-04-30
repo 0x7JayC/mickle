@@ -14,24 +14,35 @@ export default function DepositModal({
   wallet,
   email,
   onClose,
+  onConfirmDemo,
 }: {
   wallet: string | null;
   email: string | null;
   onClose: () => void;
+  onConfirmDemo?: (gbp: number) => void;
 }) {
   const [amount, setAmount] = useState(30);
+  const [confirming, setConfirming] = useState(false);
   const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
   const env = process.env.NEXT_PUBLIC_TRANSAK_ENV || "STAGING";
+  const isDemo = !apiKey;
 
   const fee = amount * FEE_PCT;
   const net = amount - fee;
 
-  const start = () => {
-    if (!apiKey || !wallet) return;
+  const start = async () => {
+    if (isDemo) {
+      setConfirming(true);
+      await new Promise((r) => setTimeout(r, 700));
+      onConfirmDemo?.(amount);
+      onClose();
+      return;
+    }
+    if (!wallet) return;
     const base =
       env === "PRODUCTION" ? "https://global.transak.com" : "https://global-stg.transak.com";
     const params = new URLSearchParams({
-      apiKey,
+      apiKey: apiKey!,
       cryptoCurrencyCode: "USDC",
       network: "solana",
       fiatCurrency: "GBP",
@@ -45,8 +56,6 @@ export default function DepositModal({
     window.open(`${base}/?${params.toString()}`, "transak", "width=480,height=720");
     onClose();
   };
-
-  const ready = !!apiKey && !!wallet;
 
   return (
     <div
@@ -76,11 +85,27 @@ export default function DepositModal({
         <h2 className="text-display text-2xl sm:text-3xl font-bold tracking-tight mb-1">
           How many days?
         </h2>
-        <p className="text-[14px] text-foreground/65 mb-6 leading-relaxed">
+        <p className="text-[14px] text-foreground/65 mb-5 leading-relaxed">
           Pre-fund your streak. £1 routes into the S&amp;P 500 each day you tap.
         </p>
 
-        <div className="grid grid-cols-3 gap-2 mb-6">
+        {isDemo && (
+          <div className="rounded-2xl border border-amber-200/70 bg-amber-50 px-4 py-3 mb-5 flex items-start gap-3">
+            <span className="text-amber-600 text-base leading-none mt-0.5">⚠</span>
+            <div>
+              <div className="text-[12px] font-semibold text-amber-900 mb-0.5">
+                Demo mode · no real money
+              </div>
+              <p className="text-[11px] text-amber-900/80 leading-relaxed">
+                Production routes GBP through Open Banking to a Kraken treasury
+                (~0.2% all-in). See <code className="font-mono">MONEY.md</code> for
+                architecture.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 mb-5">
           {PRESETS.map((p) => {
             const active = amount === p.gbp;
             return (
@@ -104,7 +129,7 @@ export default function DepositModal({
           })}
         </div>
 
-        <div className="rounded-2xl border border-foreground/10 p-4 mb-6 bg-foreground/[0.025]">
+        <div className="rounded-2xl border border-foreground/10 p-4 mb-5 bg-foreground/[0.025]">
           <Row label="Top up" value={`£${amount.toFixed(2)}`} />
           <Row label="Fee · 0.99%" value={`−£${fee.toFixed(2)}`} muted />
           <div className="h-px bg-foreground/10 my-2" />
@@ -113,19 +138,22 @@ export default function DepositModal({
 
         <button
           onClick={start}
-          disabled={!ready}
+          disabled={confirming || (!isDemo && !wallet)}
           className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {!apiKey
-            ? "Transak not configured"
-            : !wallet
-              ? "Provisioning wallet…"
-              : `Continue · £${amount}`}
+          {confirming
+            ? "Recording demo top-up…"
+            : isDemo
+              ? `Simulate £${amount} top-up`
+              : !wallet
+                ? "Provisioning wallet…"
+                : `Continue · £${amount}`}
         </button>
 
         <p className="text-[11px] text-foreground/50 mt-4 leading-relaxed text-center">
-          Pay by UK bank transfer or card. Funds settle to USDC on Solana,
-          then auto-swap into SPYx (tokenized S&amp;P 500) on your daily tap.
+          {isDemo
+            ? "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in."
+            : "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into SPYx on your daily tap."}
         </p>
       </div>
     </div>

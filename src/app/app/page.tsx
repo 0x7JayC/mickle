@@ -13,6 +13,67 @@ import OnboardingBanner from "@/components/OnboardingBanner";
 import SettingsDrawer from "@/components/SettingsDrawer";
 import QuoteOfDay from "@/components/QuoteOfDay";
 import { SiteNav } from "@/components/SiteNav";
+import { useLang, t, type Dict } from "@/lib/i18n";
+
+const dict: Dict = {
+  redirecting: { en: "Redirecting…", zh: "跳转中…" },
+  loading: { en: "Loading…", zh: "加载中…" },
+  late: { en: "Late night", zh: "深夜好" },
+  morning: { en: "Good morning", zh: "早上好" },
+  afternoon: { en: "Good afternoon", zh: "下午好" },
+  evening: { en: "Good evening", zh: "晚上好" },
+  topUp: { en: "Top up", zh: "充值" },
+  accountSettings: { en: "Account settings", zh: "账户设置" },
+  streak: { en: "Streak", zh: "连续打卡" },
+  todaysRitual: { en: "Today's ritual", zh: "今日仪式" },
+  doneToday: { en: "Done for today.", zh: "今天已完成。" },
+  tapOnce: { en: "Tap once for £1.", zh: "轻点一次,投入 £1。" },
+  alreadyTappedAria: { en: "Already tapped today", zh: "今天已打卡" },
+  tapAria: { en: "Tap £1 into your S&P 500 position", zh: "投入 £1 到你的 S&P 500 持仓" },
+  recording: { en: "Recording…", zh: "记录中…" },
+  tapped: { en: "✓ Tapped", zh: "✓ 已打卡" },
+  tapBtn: { en: "£1 · Tap", zh: "£1 · 投入" },
+  treasury: { en: "Treasury", zh: "金库" },
+  swapped: { en: "swapped", zh: "已兑换" },
+  view: { en: "View ↗", zh: "查看 ↗" },
+  milestoneEarned: { en: "Milestone earned", zh: "里程碑已达成" },
+  soulboundMintedShort: { en: "Soulbound NFT minted", zh: "已铸造灵魂绑定 NFT" },
+  soulboundMinted: { en: "Soulbound NFT minted to your wallet", zh: "灵魂绑定 NFT 已铸造到你的钱包" },
+  earnedTotal: { en: "earned total", zh: "已累计获得" },
+  allInBag: { en: "every milestone in the bag", zh: "全部里程碑已达成" },
+  nextMilestone: { en: "Next milestone", zh: "下一个里程碑" },
+  ofDays: { en: "of {n} days", zh: "/ 共 {n} 天" },
+  contributed: { en: "Contributed", zh: "已投入" },
+  emptyContributed: { en: "Top up to start your streak", zh: "充值后开始你的连续打卡" },
+  totalDeposited: { en: "Total deposited to date", zh: "累计存入金额" },
+  position: { en: "Position", zh: "持仓" },
+  live: { en: "Live", zh: "实时" },
+  notConfigured: { en: "SPYx mint not configured yet", zh: "SPYx 铸造尚未配置" },
+  liveAfterTap: { en: "Live once your first tap settles", zh: "首次打卡结算后实时更新" },
+  perShare: { en: "/ share", zh: "/ 股" },
+  timeMachine: { en: "Time Machine", zh: "时间机器" },
+  moveSlider: { en: "Move the slider", zh: "拖动滑块" },
+  wallets: { en: "Wallets", zh: "钱包" },
+  connected: { en: "{n} connected", zh: "已连接 {n} 个" },
+  provisioning: { en: "Provisioning…", zh: "创建中…" },
+  embedded: { en: "Embedded", zh: "内嵌" },
+  connectWallet: { en: "+ Connect Solana wallet (Phantom · Backpack · Solflare)", zh: "+ 连接 Solana 钱包(Phantom · Backpack · Solflare)" },
+  demoJump: { en: "Demo · jump to", zh: "演示 · 跳到" },
+  day: { en: "Day", zh: "第" },
+  tapErr: { en: "Couldn't record your tap. Try again.", zh: "打卡未成功,请重试。" },
+  day1Toast: { en: "Day 1. The hardest one is now behind you.", zh: "第 1 天。最难的一步已经迈出。" },
+  weekToast: { en: "{n} days. Quietly compounding.", zh: "已连续 {n} 天。悄悄复利。" },
+  dayToast: { en: "Day {n} · keep showing up.", zh: "第 {n} 天 · 继续坚持。" },
+  topUpToast: { en: "+£{n} top-up recorded (demo).", zh: "已记录 +£{n} 充值(演示)。" },
+  weekOne: { en: "Week one", zh: "第一周" },
+  theMickle: { en: "The mickle", zh: "the mickle" },
+  theMuckle: { en: "The muckle", zh: "the muckle" },
+  celebWeek: { en: "Week one · 🌱", zh: "第一周 · 🌱" },
+  celebMickle: { en: "The mickle · 🔥", zh: "the mickle · 🔥" },
+  celebMuckle: { en: "The muckle · 💎", zh: "the muckle · 💎" },
+};
+
+const fmt = (s: string, n: number | string) => s.replace("{n}", String(n));
 
 type DbUser = {
   id: string;
@@ -32,6 +93,7 @@ type Position = {
 
 
 export default function App() {
+  const lang = useLang();
   const router = useRouter();
   const { ready, authenticated, user, logout, linkWallet, getAccessToken } = usePrivy();
   // Sign out → land on the marketing site, not the unauthenticated /app
@@ -150,7 +212,7 @@ export default function App() {
     if (typeof window !== "undefined") router.replace("/");
     return (
       <main className="flex-1 flex items-center justify-center">
-        <div className="text-muted">Redirecting…</div>
+        <div className="text-muted">{t(dict, "redirecting", lang)}</div>
       </main>
     );
   }
@@ -158,7 +220,7 @@ export default function App() {
   if (!ready) {
     return (
       <main className="flex-1 flex items-center justify-center">
-        <div className="text-muted">Loading…</div>
+        <div className="text-muted">{t(dict, "loading", lang)}</div>
       </main>
     );
   }
@@ -170,7 +232,14 @@ export default function App() {
   const streak = dbUser?.streak_count ?? 0;
   const contributed = Number(dbUser?.total_contributed_gbp ?? 0);
   const hour = new Date().getHours();
-  const greeting = hour < 5 ? "Late night" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greeting =
+    hour < 5
+      ? t(dict, "late", lang)
+      : hour < 12
+      ? t(dict, "morning", lang)
+      : hour < 18
+      ? t(dict, "afternoon", lang)
+      : t(dict, "evening", lang);
   const parable = getTodaysParable(Math.max(streak, 1));
 
   const onTap = async () => {
@@ -184,7 +253,7 @@ export default function App() {
         headers: { authorization: `Bearer ${token}` },
       });
       if (!r.ok) {
-        setTapToast("Couldn't record your tap. Try again.");
+        setTapToast(t(dict, "tapErr", lang));
         return;
       }
       const { user: u } = await r.json();
@@ -197,19 +266,19 @@ export default function App() {
       if (crossed) {
         setCelebration(
           crossed === 7
-            ? "Week one · 🌱"
+            ? t(dict, "celebWeek", lang)
             : crossed === 30
-              ? "The mickle · 🔥"
-              : "The muckle · 💎",
+              ? t(dict, "celebMickle", lang)
+              : t(dict, "celebMuckle", lang),
         );
         setTimeout(() => setCelebration(null), 4500);
       }
       setTapToast(
         newStreak === 1
-          ? "Day 1. The hardest one is now behind you."
+          ? t(dict, "day1Toast", lang)
           : newStreak % 7 === 0
-          ? `${newStreak} days. Quietly compounding.`
-          : `Day ${newStreak} · keep showing up.`,
+          ? fmt(t(dict, "weekToast", lang), newStreak)
+          : fmt(t(dict, "dayToast", lang), newStreak),
       );
     } finally {
       setTapping(false);
@@ -234,10 +303,10 @@ export default function App() {
     if (crossed) {
       setCelebration(
         crossed === 7
-          ? "Week one · 🌱"
+          ? t(dict, "celebWeek", lang)
           : crossed === 30
-            ? "The mickle · 🔥"
-            : "The muckle · 💎",
+            ? t(dict, "celebMickle", lang)
+            : t(dict, "celebMuckle", lang),
       );
       setTimeout(() => setCelebration(null), 4500);
     }
@@ -255,7 +324,7 @@ export default function App() {
       const { user: u } = await r.json();
       setDbUser(u);
       setActivityKey((k) => k + 1);
-      setTapToast(`+£${gbp} top-up recorded (demo).`);
+      setTapToast(fmt(t(dict, "topUpToast", lang), gbp));
       setTimeout(() => setTapToast(null), 4000);
     }
   };
@@ -267,11 +336,11 @@ export default function App() {
           onClick={() => setDepositOpen(true)}
           className="glass-button-primary px-3 sm:px-5 py-1.5 sm:py-2 text-sm font-semibold"
         >
-          Top up
+          {t(dict, "topUp", lang)}
         </button>
         <button
           onClick={() => setSettingsOpen(true)}
-          aria-label="Account settings"
+          aria-label={t(dict, "accountSettings", lang)}
           className="text-foreground/55 hover:text-foreground px-2 sm:px-3 py-1.5"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -294,7 +363,7 @@ export default function App() {
         </div>
         <div className="text-right shrink-0">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Streak
+            {t(dict, "streak", lang)}
           </span>
           <div className="font-mono font-bold text-2xl sm:text-4xl text-accent leading-none mt-1 tabular-nums">
             {streak}
@@ -324,18 +393,18 @@ export default function App() {
         }}
       >
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
-          Today&apos;s ritual
+          {t(dict, "todaysRitual", lang)}
         </span>
         <h2 className="text-display text-3xl sm:text-4xl font-bold mt-2 mb-6 tracking-tight">
-          {tappedToday ? "Done for today." : "Tap once for £1."}
+          {tappedToday ? t(dict, "doneToday", lang) : t(dict, "tapOnce", lang)}
         </h2>
         <button
           onClick={onTap}
           disabled={tappedToday || tapping}
-          aria-label={tappedToday ? "Already tapped today" : "Tap £1 into your S&P 500 position"}
+          aria-label={tappedToday ? t(dict, "alreadyTappedAria", lang) : t(dict, "tapAria", lang)}
           className="glass-button-primary px-10 py-5 font-bold text-xl w-full max-w-xs mx-auto block disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-[0.98]"
         >
-          {tapping ? "Recording…" : tappedToday ? "✓ Tapped" : "£1 · Tap"}
+          {tapping ? t(dict, "recording", lang) : tappedToday ? t(dict, "tapped", lang) : t(dict, "tapBtn", lang)}
         </button>
         <p className="text-[13px] text-foreground/55 mt-5 italic max-w-xs mx-auto leading-relaxed">
           {parable.text}
@@ -353,14 +422,14 @@ export default function App() {
         <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-foreground/[0.04] border border-foreground/10 mb-6 text-[12px]">
           <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden />
           <span className="font-mono uppercase tracking-[0.16em] text-foreground/55 shrink-0">
-            Treasury
+            {t(dict, "treasury", lang)}
           </span>
           <span className="text-foreground/75 truncate">
-            {new Date(lastBatch.executed_at).toLocaleDateString("en-GB", {
+            {new Date(lastBatch.executed_at).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", {
               day: "numeric",
               month: "short",
             })}{" "}
-            · ${Number(lastBatch.total_usdc).toFixed(2)} swapped
+            · ${Number(lastBatch.total_usdc).toFixed(2)} {t(dict, "swapped", lang)}
             {lastBatch.spyx_received
               ? ` · ${Number(lastBatch.spyx_received).toFixed(4)} SPYx`
               : ""}
@@ -372,7 +441,7 @@ export default function App() {
               rel="noreferrer"
               className="ml-auto shrink-0 text-accent font-semibold hover:underline"
             >
-              View ↗
+              {t(dict, "view", lang)}
             </a>
           )}
         </div>
@@ -387,10 +456,10 @@ export default function App() {
       <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
         <div className="flex items-center justify-between gap-3 mb-5">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Time Machine
+            {t(dict, "timeMachine", lang)}
           </span>
           <span className="text-[11px] font-mono text-foreground/45 hidden sm:inline">
-            Move the slider
+            {t(dict, "moveSlider", lang)}
           </span>
         </div>
         <TimeMachine />
@@ -447,10 +516,10 @@ export default function App() {
             style={{ animation: "fade-up 0.6s cubic-bezier(0.2,0.7,0.2,1) both" }}
           >
             <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-white/60 mb-1">
-              Milestone earned
+              {t(dict, "milestoneEarned", lang)}
             </div>
             <div className="text-2xl font-bold tracking-tight">{celebration}</div>
-            <div className="text-[12px] text-white/60 mt-1">Soulbound NFT minted</div>
+            <div className="text-[12px] text-white/60 mt-1">{t(dict, "soulboundMintedShort", lang)}</div>
           </div>
         </div>
       )}
@@ -458,7 +527,7 @@ export default function App() {
       {demoEnabled && (
         <div className="fixed bottom-20 right-4 z-[65] glass-strong rounded-[18px] p-3 shadow-[0_12px_32px_-8px_rgba(12,10,20,0.25)]">
           <div className="text-[10px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-2">
-            Demo · jump to
+            {t(dict, "demoJump", lang)}
           </div>
           <div className="flex gap-2">
             {[0, 7, 30, 100].map((d) => (
@@ -467,7 +536,7 @@ export default function App() {
                 onClick={() => onDemoSimulate(d)}
                 className="px-3 py-1.5 rounded-full text-[12px] font-mono font-semibold border border-foreground/15 hover:border-accent/40 hover:bg-accent/5 transition tabular-nums"
               >
-                Day {d}
+                {lang === "zh" ? `第 ${d} 天` : `Day ${d}`}
               </button>
             ))}
           </div>
@@ -484,10 +553,10 @@ export default function App() {
       >
         <summary className="flex items-center justify-between cursor-pointer list-none gap-3">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Wallets
+            {t(dict, "wallets", lang)}
           </span>
           <span className="text-[13px] text-foreground/70 font-mono truncate">
-            {allWallets.length > 0 ? `${allWallets.length} connected` : "Provisioning…"}
+            {allWallets.length > 0 ? fmt(t(dict, "connected", lang), allWallets.length) : t(dict, "provisioning", lang)}
           </span>
           <span className="text-foreground/40 text-xs ml-auto">{walletShown ? "−" : "+"}</span>
         </summary>
@@ -504,7 +573,7 @@ export default function App() {
               />
               <div className="min-w-0 flex-1">
                 <div className="text-[11px] uppercase tracking-[0.18em] font-mono text-foreground/55">
-                  {w.embedded ? `Embedded · ${w.label}` : w.label}
+                  {w.embedded ? `${t(dict, "embedded", lang)} · ${w.label}` : w.label}
                 </div>
                 <code className="block font-mono text-[13px] text-foreground/85 break-all leading-tight mt-1">
                   {w.address}
@@ -516,7 +585,7 @@ export default function App() {
             onClick={() => linkWallet()}
             className="w-full mt-1 text-[13px] font-semibold text-accent border border-accent/30 hover:bg-accent/5 rounded-full px-4 py-2 transition"
           >
-            + Connect Solana wallet (Phantom · Backpack · Solflare)
+            {t(dict, "connectWallet", lang)}
           </button>
         </div>
       </details>
@@ -525,10 +594,11 @@ export default function App() {
   );
 }
 
-const MILESTONE_KINDS: { kind: string; days: number; label: string; emoji: string }[] = [
-  { kind: "day_7", days: 7, label: "Week one", emoji: "🌱" },
-  { kind: "day_30", days: 30, label: "The mickle", emoji: "🔥" },
-  { kind: "day_100", days: 100, label: "The muckle", emoji: "💎" },
+type MilestoneKind = { kind: string; days: number; labelKey: "weekOne" | "theMickle" | "theMuckle"; emoji: string };
+const MILESTONE_KINDS: MilestoneKind[] = [
+  { kind: "day_7", days: 7, labelKey: "weekOne", emoji: "🌱" },
+  { kind: "day_30", days: 30, labelKey: "theMickle", emoji: "🔥" },
+  { kind: "day_100", days: 100, labelKey: "theMuckle", emoji: "💎" },
 ];
 
 function MilestoneCard({
@@ -575,10 +645,11 @@ function EarnedCard({
   milestoneCount,
   all = false,
 }: {
-  kind: { kind: string; days: number; label: string; emoji: string };
+  kind: MilestoneKind;
   milestoneCount: number;
   all?: boolean;
 }) {
+  const lang = useLang();
   return (
     <section
       className="rounded-[18px] p-5 sm:p-6 border"
@@ -597,15 +668,15 @@ function EarnedCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
-            Milestone earned
+            {t(dict, "milestoneEarned", lang)}
           </div>
           <div className="text-lg sm:text-xl font-bold tracking-tight mt-0.5">
-            Day {kind.days} · {kind.label}
+            {lang === "zh" ? `第 ${kind.days} 天` : `Day ${kind.days}`} · {t(dict, kind.labelKey, lang)}
           </div>
           <div className="text-[12px] text-foreground/60 mt-1">
-            Soulbound NFT minted to your wallet
-            {milestoneCount > 1 ? ` · ${milestoneCount} earned total` : ""}
-            {all ? " · every milestone in the bag" : ""}
+            {t(dict, "soulboundMinted", lang)}
+            {milestoneCount > 1 ? ` · ${milestoneCount} ${t(dict, "earnedTotal", lang)}` : ""}
+            {all ? ` · ${t(dict, "allInBag", lang)}` : ""}
           </div>
         </div>
       </div>
@@ -618,17 +689,18 @@ function ProgressCard({
   target,
 }: {
   streak: number;
-  target: { kind: string; days: number; label: string; emoji: string };
+  target: MilestoneKind;
 }) {
+  const lang = useLang();
   const progress = Math.min(streak / target.days, 1);
   return (
     <section className="glass-strong rounded-[18px] p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-3">
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-          Next milestone
+          {t(dict, "nextMilestone", lang)}
         </span>
         <span className="text-[12px] font-semibold text-accent whitespace-nowrap">
-          Day {target.days} · {target.label}
+          {lang === "zh" ? `第 ${target.days} 天` : `Day ${target.days}`} · {t(dict, target.labelKey, lang)}
         </span>
       </div>
       <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
@@ -641,35 +713,36 @@ function ProgressCard({
         />
       </div>
       <div className="text-[12px] text-foreground/55 mt-2 font-mono">
-        {streak} of {target.days} days
+        {lang === "zh" ? `${streak} / 共 ${target.days} 天` : `${streak} of ${target.days} days`}
       </div>
     </section>
   );
 }
 
 function ContributedStat({ gbp }: { gbp: number }) {
-  const fmt = (v: number) =>
+  const lang = useLang();
+  const fmtGbp = (v: number) =>
     v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
   const empty = gbp <= 0;
   return (
     <div className="glass-strong rounded-[18px] p-5">
       <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-3">
-        Contributed
+        {t(dict, "contributed", lang)}
       </div>
       {empty ? (
         <>
           <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">£0</div>
           <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">
-            Top up to start your streak
+            {t(dict, "emptyContributed", lang)}
           </div>
         </>
       ) : (
         <>
           <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-            {fmt(gbp)}
+            {fmtGbp(gbp)}
           </div>
           <div className="text-[12px] text-foreground/55 mt-2 leading-relaxed">
-            Total deposited to date
+            {t(dict, "totalDeposited", lang)}
           </div>
         </>
       )}
@@ -678,6 +751,7 @@ function ContributedStat({ gbp }: { gbp: number }) {
 }
 
 function PositionStat({ position }: { position: Position | null }) {
+  const lang = useLang();
   // Display in GBP since users think in £. Quote stays in USD because the
   // S&P 500 is USD-priced; that's a per-share fact, not a UI choice.
   const USD_TO_GBP = 0.79;
@@ -693,11 +767,11 @@ function PositionStat({ position }: { position: Position | null }) {
     <div className="glass-strong rounded-[18px] p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-          Position
+          {t(dict, "position", lang)}
         </span>
         {position && position.configured && (
           <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-emerald-700/80">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> {t(dict, "live", lang)}
           </span>
         )}
       </div>
@@ -709,7 +783,7 @@ function PositionStat({ position }: { position: Position | null }) {
           <div className="text-[12px] text-foreground/55 mt-2 font-mono tabular-nums">
             {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} SPYx
             {position?.usdPrice
-              ? ` · ${fmtUsd(position.usdPrice)} / share`
+              ? ` · ${fmtUsd(position.usdPrice)} ${t(dict, "perShare", lang)}`
               : ""}
           </div>
         </>
@@ -718,8 +792,8 @@ function PositionStat({ position }: { position: Position | null }) {
           <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">—</div>
           <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">
             {position && !position.configured
-              ? "SPYx mint not configured yet"
-              : "Live once your first tap settles"}
+              ? t(dict, "notConfigured", lang)
+              : t(dict, "liveAfterTap", lang)}
           </div>
         </>
       )}

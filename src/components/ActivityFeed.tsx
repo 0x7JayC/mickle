@@ -2,6 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
+import { useLang, t, type Dict, type Lang } from "@/lib/i18n";
+
+const dict: Dict = {
+  activity: { en: "Activity", zh: "动态" },
+  events: { en: "events", zh: "条" },
+  event: { en: "event", zh: "条" },
+  justNow: { en: "just now", zh: "刚刚" },
+  minAgo: { en: "{n}m ago", zh: "{n} 分钟前" },
+  hrAgo: { en: "{n}h ago", zh: "{n} 小时前" },
+  dayAgo: { en: "{n}d ago", zh: "{n} 天前" },
+};
+
+const fmtN = (s: string, n: number) => s.replace("{n}", String(n));
 
 type ActivityItem = {
   type: "tap" | "deposit" | "milestone" | "batch";
@@ -25,19 +38,20 @@ const COLOR: Record<ActivityItem["type"], string> = {
   batch: "#0c0a14",
 };
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string, lang: Lang): string {
   const ms = Date.now() - new Date(iso).getTime();
   const min = Math.floor(ms / 60_000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
+  if (min < 1) return t(dict, "justNow", lang);
+  if (min < 60) return fmtN(t(dict, "minAgo", lang), min);
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
+  if (hr < 24) return fmtN(t(dict, "hrAgo", lang), hr);
   const d = Math.floor(hr / 24);
-  if (d < 7) return `${d}d ago`;
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  if (d < 7) return fmtN(t(dict, "dayAgo", lang), d);
+  return new Date(iso).toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", { day: "numeric", month: "short" });
 }
 
 export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
+  const lang = useLang();
   const { authenticated, getAccessToken } = usePrivy();
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [open, setOpen] = useState(false);
@@ -65,10 +79,10 @@ export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
     >
       <summary className="flex items-center justify-between cursor-pointer list-none gap-3">
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-          Activity
+          {t(dict, "activity", lang)}
         </span>
         <span className="text-[13px] text-foreground/70 truncate">
-          {items.length} event{items.length === 1 ? "" : "s"}
+          {items.length} {items.length === 1 ? t(dict, "event", lang) : t(dict, "events", lang)}
         </span>
         <span className="text-foreground/40 text-xs ml-auto">{open ? "−" : "+"}</span>
       </summary>
@@ -97,7 +111,7 @@ export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
                   {it.amount}
                 </div>
               )}
-              <div className="text-[11px] text-foreground/45 font-mono">{timeAgo(it.at)}</div>
+              <div className="text-[11px] text-foreground/45 font-mono">{timeAgo(it.at, lang)}</div>
             </div>
           </div>
         ))}

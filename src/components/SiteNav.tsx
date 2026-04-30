@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { LangToggle } from "./LangToggle";
+import { useLang, t, type Dict } from "@/lib/i18n";
+
+const dict: Dict = {
+  how: { en: "How", zh: "如何运作" },
+  treasury: { en: "Treasury", zh: "金库" },
+};
 
 // Single source of truth for the floating glass nav. Used on every
 // public page (landing, treasury, dashboard) so the chrome reads as
@@ -11,6 +17,7 @@ import { LangToggle } from "./LangToggle";
 // material. Higher transparency, top specular gleam, lensing brightness.
 // Theme-aware via --glass-* tokens, so all five palettes look right.
 export function SiteNav({ children }: { children?: React.ReactNode }) {
+  const lang = useLang();
   return (
     <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4">
       <div className="max-w-6xl mx-auto liquid-glass px-2 sm:px-3 py-2 flex items-center justify-between gap-2">
@@ -23,13 +30,13 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
             href="/#how"
             className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
           >
-            How
+            {t(dict, "how", lang)}
           </Link>
           <Link
             href="/treasury"
             className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
           >
-            Treasury
+            {t(dict, "treasury", lang)}
           </Link>
           <LangToggle />
           {children}

@@ -1,6 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useLang, t, type Dict } from "@/lib/i18n";
+
+const dict: Dict = {
+  daily: { en: "Daily", zh: "每日" },
+  projected: { en: "Projected", zh: "预测" },
+  contributed: { en: "Contributed", zh: "已投入" },
+  compounding: { en: "Compounding", zh: "复利收益" },
+  inHorizon: { en: "In {h}", zh: "{h} 后" },
+};
+
+const fmtH = (s: string, h: string) => s.replace("{h}", h);
 
 const HISTORICAL_SP_CAGR = 0.102;
 
@@ -35,6 +46,7 @@ function fmtMoney(n: number) {
 }
 
 export default function TimeMachine() {
+  const lang = useLang();
   const [daily, setDaily] = useState(1);
   const [horizon, setHorizon] = useState<Horizon>(HORIZONS[4]);
 
@@ -77,7 +89,7 @@ export default function TimeMachine() {
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3 mb-7">
         <div className="glass-pill flex items-center gap-3 pl-4 pr-4 py-2.5">
-          <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">Daily</span>
+          <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">{t(dict, "daily", lang)}</span>
           <span className="text-foreground font-mono text-lg font-semibold tabular-nums">£{daily}</span>
           <input
             type="range"
@@ -146,20 +158,20 @@ export default function TimeMachine() {
         <div className="flex items-center gap-5 text-xs text-muted mt-2 px-1">
           <span className="flex items-center gap-1.5">
             <span className="inline-block w-3.5 h-0.5 rounded-full bg-gradient-to-r from-[#ff7a59] via-[#f5b94a] to-[#6d5ef5]" />
-            Projected
+            {t(dict, "projected", lang)}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block w-3.5 h-px border-t border-dashed border-current opacity-40" />
-            Contributed
+            {t(dict, "contributed", lang)}
           </span>
         </div>
       </div>
 
       {/* Stats — single label word so 3-col fits cleanly on mobile */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-5">
-        <Stat label={`In ${horizon.label}`} value={fmtMoney(future)} variant="primary" />
-        <Stat label="Contributed" value={fmtMoney(contributed)} />
-        <Stat label="Compounding" value={fmtMoney(growth)} variant="positive" />
+        <Stat label={fmtH(t(dict, "inHorizon", lang), horizon.label)} value={fmtMoney(future)} variant="primary" />
+        <Stat label={t(dict, "contributed", lang)} value={fmtMoney(contributed)} />
+        <Stat label={t(dict, "compounding", lang)} value={fmtMoney(growth)} variant="positive" />
       </div>
 
       <p className="text-xs text-subtle mt-5 max-w-prose leading-relaxed">

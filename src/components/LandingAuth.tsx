@@ -3,6 +3,14 @@
 import { useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
+import { useLang, t, type Dict } from "@/lib/i18n";
+
+const dict: Dict = {
+  startStreak: { en: "Start your streak →", zh: "开始连续打卡 →" },
+  connectWallet: { en: "Connect Solana wallet", zh: "连接 Solana 钱包" },
+  start: { en: "Start", zh: "开始" },
+  openApp: { en: "Open app →", zh: "打开 App →" },
+};
 
 // Lives on the landing. Two CTAs:
 //   • "Start your streak" → opens the full Privy modal (email · Apple ·
@@ -12,6 +20,7 @@ import { useRouter } from "next/navigation";
 // Once authenticated, push to /app. While auth is in-flight Privy
 // shows its own modal — we don't need a loading state here.
 export function LandingAuth() {
+  const lang = useLang();
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
 
@@ -27,13 +36,13 @@ export function LandingAuth() {
         onClick={() => login()}
         className="glass-button-primary px-7 py-3.5 font-semibold"
       >
-        Start your streak →
+        {t(dict, "startStreak", lang)}
       </button>
       <button
         onClick={() => login({ loginMethods: ["wallet"] })}
         className="glass-button px-7 py-3.5 font-semibold text-foreground"
       >
-        Connect Solana wallet
+        {t(dict, "connectWallet", lang)}
       </button>
     </div>
   );
@@ -41,6 +50,7 @@ export function LandingAuth() {
 
 // Compact version for the nav. Same Privy login() call, smaller pill.
 export function LandingNavCta() {
+  const lang = useLang();
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
 
@@ -53,7 +63,7 @@ export function LandingNavCta() {
       onClick={() => login()}
       className="glass-button-primary px-5 py-2 text-sm font-semibold"
     >
-      Start
+      {t(dict, "start", lang)}
     </button>
   );
 }
@@ -63,6 +73,7 @@ export function LandingNavCta() {
 // them to the dashboard; if signed out, opens the Privy modal directly
 // so they don't need to bounce through the landing first.
 export function OpenAppButton({ className = "", children }: { className?: string; children?: React.ReactNode }) {
+  const lang = useLang();
   const { ready, authenticated, login } = usePrivy();
   const router = useRouter();
 
@@ -85,7 +96,7 @@ export function OpenAppButton({ className = "", children }: { className?: string
       onClick={onClick}
       className={className || "text-sm font-semibold text-foreground/70 hover:text-foreground"}
     >
-      {children ?? "Open app →"}
+      {children ?? t(dict, "openApp", lang)}
     </button>
   );
 }

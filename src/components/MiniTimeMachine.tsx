@@ -1,6 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
+import { useLang, t, type Dict } from "@/lib/i18n";
+
+const dict: Dict = {
+  inYears: { en: "In {n}y", zh: "{n} 年后" },
+  contributed: { en: "Contributed", zh: "已投入" },
+};
+
+const fmtN = (s: string, n: number) => s.replace("{n}", String(n));
 
 const CAGR = 0.102;
 
@@ -18,6 +26,7 @@ function fmt(n: number) {
 }
 
 export default function MiniTimeMachine({ years = 30, daily = 1 }: { years?: number; daily?: number }) {
+  const lang = useLang();
   const points = useMemo(() => {
     const months = years * 12;
     const step = Math.max(1, Math.floor(months / 60));
@@ -65,11 +74,11 @@ export default function MiniTimeMachine({ years = 30, daily = 1 }: { years?: num
       </svg>
       <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
         <div>
-          <div className="opacity-60 uppercase tracking-widest text-[9px] font-semibold">In {years}y</div>
+          <div className="opacity-60 uppercase tracking-widest text-[9px] font-semibold">{fmtN(t(dict, "inYears", lang), years)}</div>
           <div className="font-mono font-bold text-lg" style={{ color: "var(--accent)" }}>{fmt(future)}</div>
         </div>
         <div>
-          <div className="opacity-60 uppercase tracking-widest text-[9px] font-semibold">Contributed</div>
+          <div className="opacity-60 uppercase tracking-widest text-[9px] font-semibold">{t(dict, "contributed", lang)}</div>
           <div className="font-mono font-bold text-lg">{fmt(contributed)}</div>
         </div>
       </div>

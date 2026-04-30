@@ -60,56 +60,55 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
             </Link>
           )}
 
-          {/* Mobile menu toggle — 3×3 dot grid */}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-label={t(dict, "menu", lang)}
-            aria-expanded={open}
-            className="sm:hidden p-2 rounded-full text-foreground/70 hover:text-foreground active:scale-95 transition"
-          >
-            <DotGridIcon />
-          </button>
+          {/* Mobile menu toggle — 3×3 dot grid; dropdown anchors under the trigger */}
+          <div className="sm:hidden relative">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={t(dict, "menu", lang)}
+              aria-expanded={open}
+              className="p-2 rounded-full text-foreground/70 hover:text-foreground active:scale-95 transition"
+            >
+              <DotGridIcon />
+            </button>
+            {open && (
+              <div
+                className="absolute right-0 top-[calc(100%+14px)] min-w-[180px] liquid-glass-panel nav-menu-drop p-1.5"
+                role="menu"
+              >
+                <Link
+                  href="/#how"
+                  onClick={close}
+                  role="menuitem"
+                  className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+                >
+                  {t(dict, "how", lang)}
+                </Link>
+                <Link
+                  href="/treasury"
+                  onClick={close}
+                  role="menuitem"
+                  className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+                >
+                  {t(dict, "treasury", lang)}
+                </Link>
+                {showAccount && (
+                  <Link
+                    href="/app"
+                    onClick={close}
+                    role="menuitem"
+                    className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+                  >
+                    {t(dict, "account", lang)}
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
 
           <LangToggle />
           {children}
         </div>
-
-        {/* Mobile dropdown — sits just below the nav pill, Liquid Glass panel */}
-        {open && (
-          <div
-            className="sm:hidden absolute right-2 top-[calc(100%+10px)] min-w-[200px] liquid-glass-panel nav-menu-drop p-1.5"
-            role="menu"
-          >
-            <Link
-              href="/#how"
-              onClick={close}
-              role="menuitem"
-              className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
-            >
-              {t(dict, "how", lang)}
-            </Link>
-            <Link
-              href="/treasury"
-              onClick={close}
-              role="menuitem"
-              className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
-            >
-              {t(dict, "treasury", lang)}
-            </Link>
-            {showAccount && (
-              <Link
-                href="/app"
-                onClick={close}
-                role="menuitem"
-                className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
-              >
-                {t(dict, "account", lang)}
-              </Link>
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Backdrop — closes the menu when tapping anywhere outside */}
       {open && (

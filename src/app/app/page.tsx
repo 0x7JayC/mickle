@@ -32,7 +32,7 @@ type Position = {
 
 export default function App() {
   const router = useRouter();
-  const { ready, authenticated, user, login, logout, linkWallet, getAccessToken } = usePrivy();
+  const { ready, authenticated, user, logout, linkWallet, getAccessToken } = usePrivy();
   // Sign out → land on the marketing site, not the unauthenticated /app
   // welcome modal. Wraps logout so settings drawer + nav share the same
   // post-logout destination.
@@ -55,7 +55,6 @@ export default function App() {
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
-  const [loggingIn, setLoggingIn] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
   const [horizon, setHorizon] = useState<number>(10);
   const [tapping, setTapping] = useState(false);
@@ -79,7 +78,6 @@ export default function App() {
 
   useEffect(() => {
     if (!authenticated) return;
-    setLoggingIn(false);
     (async () => {
       const token = await getAccessToken();
       if (!token) return;
@@ -145,66 +143,22 @@ export default function App() {
     };
   }, [authenticated, dbUser?.wallet, getAccessToken]);
 
-  if (!ready) {
+  // Single source of truth for auth UI is the landing page. If someone
+  // hits /app while signed out, bounce them to / so they see the same
+  // CTAs (Start your streak · Connect Solana wallet) as everyone else.
+  if (ready && !authenticated) {
+    if (typeof window !== "undefined") router.replace("/");
     return (
       <main className="flex-1 flex items-center justify-center">
-        <div className="text-muted">Loading…</div>
+        <div className="text-muted">Redirecting…</div>
       </main>
     );
   }
 
-  if (!authenticated) {
-    const onContinue = () => {
-      setLoggingIn(true);
-      login();
-    };
+  if (!ready) {
     return (
-      <main className="flex-1 relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center px-6 pointer-events-none select-none">
-          <h1 className="text-display text-7xl sm:text-9xl font-extrabold leading-[0.9] text-center opacity-30 blur-[2px]">
-            Every little
-            <br />
-            makes a mickle.
-          </h1>
-        </div>
-        <div className="absolute inset-0 bg-[var(--glass-tint-deep)] backdrop-blur-2xl" />
-        <div className="relative min-h-full flex items-center justify-center px-4 py-10">
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="glass-strong p-9 sm:p-10 max-w-sm w-full text-center fade-up shadow-[0_24px_60px_-12px_rgba(12,10,20,0.25),inset_0_1px_0_var(--glass-stroke-inner)]"
-            style={{ animationDuration: "0.5s" }}
-          >
-            <div className="w-12 h-12 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-[#ff8a6b] to-[#f5b94a] shadow-[0_8px_24px_-4px_rgba(255,122,89,0.5),inset_0_1px_0_rgba(255,255,255,0.5)]" />
-            <h1 className="text-display text-2xl sm:text-3xl font-bold mb-2 tracking-tight">
-              Welcome to Mickle.
-            </h1>
-            <p className="text-[15px] text-muted mb-7 leading-relaxed">
-              {loggingIn
-                ? "Provisioning your Solana wallet…"
-                : "Sign in with email. A Solana wallet appears in 5 seconds. No seed phrase."}
-            </p>
-            <button
-              onClick={onContinue}
-              disabled={loggingIn}
-              className="glass-button-primary px-7 py-3.5 font-semibold w-full disabled:opacity-70"
-            >
-              {loggingIn ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Spinner /> One moment…
-                </span>
-              ) : (
-                "Continue with email"
-              )}
-            </button>
-            <Link
-              href="/"
-              className="block mt-5 text-xs uppercase tracking-[0.18em] font-mono text-subtle hover:text-foreground transition"
-            >
-              ← Back
-            </Link>
-          </div>
-        </div>
+      <main className="flex-1 flex items-center justify-center">
+        <div className="text-muted">Loading…</div>
       </main>
     );
   }
@@ -791,11 +745,3 @@ function PositionStat({ position }: { position: Position | null }) {
   );
 }
 
-function Spinner() {
-  return (
-    <span
-      className="inline-block w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"
-      aria-hidden
-    />
-  );
-}

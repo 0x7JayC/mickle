@@ -7,11 +7,11 @@ const HISTORICAL_SP_CAGR = 0.102;
 type Horizon = { years: number; label: string };
 
 const HORIZONS: Horizon[] = [
-  { years: 1, label: "1 yr" },
-  { years: 5, label: "5 yrs" },
-  { years: 10, label: "10 yrs" },
-  { years: 20, label: "20 yrs" },
-  { years: 30, label: "30 yrs" },
+  { years: 1, label: "1Y" },
+  { years: 2, label: "2Y" },
+  { years: 3, label: "3Y" },
+  { years: 5, label: "5Y" },
+  { years: 10, label: "10Y" },
 ];
 
 function projectFutureValue(daily: number, years: number, rate = HISTORICAL_SP_CAGR) {
@@ -34,7 +34,7 @@ function fmtMoney(n: number) {
 
 export default function TimeMachine() {
   const [daily, setDaily] = useState(1);
-  const [horizon, setHorizon] = useState<Horizon>(HORIZONS[3]);
+  const [horizon, setHorizon] = useState<Horizon>(HORIZONS[4]);
 
   const future = useMemo(() => projectFutureValue(daily, horizon.years), [daily, horizon]);
   const contributed = useMemo(() => projectContributed(daily, horizon.years), [daily, horizon]);
@@ -94,11 +94,12 @@ export default function TimeMachine() {
               <button
                 key={h.years}
                 onClick={() => setHorizon(h)}
-                className={`px-3.5 py-1.5 text-sm rounded-full transition font-medium ${
+                className={`px-3.5 py-1.5 text-sm rounded-full font-mono font-semibold tabular-nums transition ${
                   active
                     ? "bg-foreground text-white shadow-[0_4px_12px_rgba(12,10,20,0.3)]"
                     : "text-muted hover:text-foreground"
                 }`}
+                aria-pressed={active}
               >
                 {h.label}
               </button>

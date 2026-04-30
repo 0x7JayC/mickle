@@ -1,6 +1,7 @@
 import Link from "next/link";
 import TimeMachine from "@/components/TimeMachine";
 import { ThemeDots } from "@/components/ThemeShell";
+import { LandingAuth, LandingNavCta } from "@/components/LandingAuth";
 
 export default function Home() {
   return (
@@ -20,9 +21,7 @@ export default function Home() {
               Treasury
             </Link>
             <ThemeDots className="hidden sm:flex mr-1" />
-            <Link href="/app" className="glass-button-primary px-5 py-2 text-sm font-semibold">
-              Start
-            </Link>
+            <LandingNavCta />
           </div>
         </div>
       </nav>
@@ -43,12 +42,10 @@ export default function Home() {
           </p>
           <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
           </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-12">
-            <Link href="/app" className="glass-button-primary px-7 py-3.5 font-semibold">
-              Start your streak →
-            </Link>
-            <a href="#how" className="glass-button px-7 py-3.5 font-semibold text-foreground">
-              How it works
+          <LandingAuth />
+          <div className="flex justify-center mb-12 sm:mb-12">
+            <a href="#how" className="text-sm font-mono uppercase tracking-[0.2em] text-muted hover:text-foreground transition">
+              How it works ↓
             </a>
           </div>
         </div>

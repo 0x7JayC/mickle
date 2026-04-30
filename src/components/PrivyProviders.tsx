@@ -7,18 +7,11 @@ const solanaConnectors = toSolanaWalletConnectors();
 
 export default function PrivyProviders({ children }: { children: React.ReactNode }) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID;
-  if (!appId) {
-    return (
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="glass-strong p-8 max-w-md text-center">
-          <h2 className="text-xl font-semibold mb-2">Privy not configured</h2>
-          <p className="text-sm text-muted">
-            Set <code className="font-mono">NEXT_PUBLIC_PRIVY_APP_ID</code> in <code className="font-mono">.env.local</code>.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Pass-through if Privy isn't configured. The landing renders without
+  // auth; usePrivy() callers gracefully degrade (`ready` stays false,
+  // login button hides). Keeps prerender working in environments
+  // without the env var.
+  if (!appId) return <>{children}</>;
   return (
     <PrivyProvider
       appId={appId}

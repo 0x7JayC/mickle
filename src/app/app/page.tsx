@@ -33,6 +33,7 @@ export default function App() {
   const [walletShown, setWalletShown] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
+  const [horizon, setHorizon] = useState<number>(10);
 
   const wallet = wallets[0]?.address ?? null;
 
@@ -256,14 +257,33 @@ export default function App() {
         </div>
       </section>
 
-      {/* Time Machine — fed by user's projection */}
+      {/* Time Machine — projection with year selector */}
       <section className="glass rounded-[24px] p-5 sm:p-7 mb-6">
-        <div className="text-center mb-4">
+        <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Your projection · $1 / day
           </span>
+          <div className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] p-1 border border-foreground/10">
+            {[1, 2, 3, 5, 10].map((y) => {
+              const active = horizon === y;
+              return (
+                <button
+                  key={y}
+                  onClick={() => setHorizon(y)}
+                  className={`px-3 py-1 rounded-full text-[12px] font-mono font-semibold transition tabular-nums ${
+                    active
+                      ? "bg-white text-foreground shadow-[0_2px_6px_rgba(12,10,20,0.08)]"
+                      : "text-foreground/55 hover:text-foreground"
+                  }`}
+                  aria-pressed={active}
+                >
+                  {y}Y
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <MiniTimeMachine />
+        <MiniTimeMachine years={horizon} />
       </section>
 
       {depositOpen && (

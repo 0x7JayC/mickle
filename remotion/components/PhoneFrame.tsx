@@ -1,20 +1,16 @@
-// Placeholder device frame. Renders an iPhone-shaped surround so the user
-// can drop a screen recording (or screenshot) into `src` later. If `src`
-// is unset, shows a labeled placeholder so the storyboard reads even
-// before footage is captured.
-import { COLORS, FONTS } from "../brand";
-import { Img, staticFile } from "remotion";
+// iPhone-shaped surround. Renders any React content inside the screen.
+// Used by Demo.tsx with the in-Remotion screen mocks at remotion/screens/.
+import { COLORS } from "../brand";
 
 export function PhoneFrame({
   height = 720,
-  src,
-  label,
+  children,
 }: {
   height?: number;
-  src?: string;
-  label?: string;
+  children?: React.ReactNode;
 }) {
-  const aspect = 19.5 / 9; // iPhone 15 Pro
+  // iPhone 15 Pro aspect (19.5:9 portrait → height/width = 19.5/9)
+  const aspect = 19.5 / 9;
   const screenH = height - 24;
   const screenW = screenH / aspect;
   const totalW = screenW + 24;
@@ -28,7 +24,7 @@ export function PhoneFrame({
         background: "#1d1d1f",
         boxShadow:
           "0 40px 80px -24px rgba(12,10,20,0.35), inset 0 0 0 2px rgba(255,255,255,0.08)",
-        position: "relative",
+        flexShrink: 0,
       }}
     >
       <div
@@ -39,35 +35,9 @@ export function PhoneFrame({
           background: COLORS.bg,
           overflow: "hidden",
           position: "relative",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
         }}
       >
-        {src ? (
-          <Img
-            src={staticFile(src)}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <div
-            style={{
-              fontFamily: FONTS.mono,
-              fontSize: 18,
-              fontWeight: 600,
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: COLORS.inkSubtle,
-              padding: 24,
-              textAlign: "center",
-              lineHeight: 1.5,
-            }}
-          >
-            Screen
-            <br />
-            {label ?? "recording"}
-          </div>
-        )}
+        {children}
       </div>
     </div>
   );

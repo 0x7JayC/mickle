@@ -1,84 +1,128 @@
-import { Sequence } from "remotion";
+import { Sequence, useCurrentFrame, useVideoConfig, interpolate, Easing } from "remotion";
 import { Stage } from "../components/Stage";
 import { Display } from "../components/Display";
 import { Kicker } from "../components/Kicker";
 import { FadeUp } from "../components/FadeUp";
 import { PhoneFrame } from "../components/PhoneFrame";
 import { COLORS, FONTS } from "../brand";
+import { SignInScreen } from "../screens/SignIn";
+import { TopUpScreen } from "../screens/TopUp";
+import { TapScreen } from "../screens/Tap";
+import { MilestoneScreen } from "../screens/Milestone";
+import { ActivityScreen } from "../screens/Activity";
 
-// 0:30 – 0:55 — The product demo. Five beats, each labelled. Phone
-// placeholder swaps for a real screen recording later.
-// Asset = optional path under public/. When unset, PhoneFrame renders a
-// labelled placeholder so the storyboard reads even before footage is
-// captured. To swap in real screen recordings later, drop a PNG into
-// `public/demo-signin.png` (etc.) and set `asset` here.
-const STEPS: { label: string; body: string; asset?: string }[] = [
-  { label: "Sign in", body: "Apple ID. Wallet appears in 5 seconds." },
-  { label: "Top up", body: "£30 covers 30 days of the ritual." },
-  { label: "Tap", body: "£1 into the S&P 500. Streak begins." },
-  { label: "Day 30", body: "The mickle 🔥 — soulbound NFT minted." },
-  { label: "Receipt", body: "Activity ledger — every event in order." },
+const STEPS = [
+  { label: "Sign in", body: "Apple ID. Wallet appears in 5 seconds.", Screen: SignInScreen },
+  { label: "Top up", body: "£30 covers 30 days of the ritual.", Screen: TopUpScreen },
+  { label: "Tap", body: "£1 into the S&P 500. Streak begins.", Screen: TapScreen },
+  { label: "Day 30", body: "The mickle 🔥 — soulbound NFT minted.", Screen: MilestoneScreen },
+  { label: "Receipt", body: "Activity ledger — every event in order.", Screen: ActivityScreen },
 ];
 
+// 0:30 – 0:55 — Numbered ritual on the left, phone screens cycling on
+// the right. Switching is frame-based (no nested Sequences) so the flex
+// row never collapses.
 export function Demo({ duration }: { duration: number }) {
-  // Each beat lasts ~150 frames (5s) with overlap
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const beat = Math.floor(duration / STEPS.length);
+  const activeIdx = Math.min(STEPS.length - 1, Math.floor(frame / beat));
+  const Active = STEPS[activeIdx].Screen;
+
+  // Cross-fade phone content between beats: last 8f of each beat
+  const localFrame = frame - activeIdx * beat;
+  const fadeOut = interpolate(
+    localFrame,
+    [beat - 8, beat],
+    [1, activeIdx < STEPS.length - 1 ? 0 : 1],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.inOut(Easing.ease) },
+  );
+
+  void fps; // (kept for future timing tweaks)
+
   return (
     <Sequence durationInFrames={duration} name="Demo">
       <Stage>
-        <div style={{ width: "100%", maxWidth: 1700, margin: "0 auto", display: "flex", gap: 64, alignItems: "center" }}>
-          {/* Left column: text steps */}
-          <div style={{ flex: 1 }}>
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 1700,
+            margin: "0 auto",
+            display: "flex",
+            gap: 64,
+            alignItems: "center",
+          }}
+        >
+          {/* Left column — text steps */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <FadeUp delay={4}>
               <Kicker>The ritual</Kicker>
             </FadeUp>
             <div style={{ height: 24 }} />
             <FadeUp delay={14}>
-              <Display size={80}>One tap.<br />Once a day.</Display>
+              <Display size={80}>
+                One tap.
+                <br />
+                Once a day.
+              </Display>
             </FadeUp>
             <div style={{ height: 56 }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-              {STEPS.map((s, i) => (
-                <FadeUp key={i} delay={36 + i * 28}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 24 }}>
-                    <span
+            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              {STEPS.map((s, i) => {
+                const isActive = i === activeIdx;
+                return (
+                  <FadeUp key={i} delay={36 + i * 18}>
+                    <div
                       style={{
-                        fontFamily: FONTS.mono,
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: COLORS.accent,
-                        letterSpacing: "0.18em",
-                        minWidth: 64,
+                        display: "flex",
+                        alignItems: "baseline",
+                        gap: 24,
+                        opacity: isActive ? 1 : 0.45,
+                        transition: "opacity 0.3s",
                       }}
                     >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <div style={{ fontFamily: FONTS.body, fontSize: 30, fontWeight: 600, color: COLORS.ink }}>
-                        {s.label}
-                      </div>
-                      <div style={{ fontFamily: FONTS.body, fontSize: 22, color: COLORS.inkMuted, marginTop: 4 }}>
-                        {s.body}
+                      <span
+                        style={{
+                          fontFamily: FONTS.mono,
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: COLORS.accent,
+                          letterSpacing: "0.18em",
+                          minWidth: 64,
+                        }}
+                      >
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <div style={{ fontFamily: FONTS.body, fontSize: 30, fontWeight: 700, color: COLORS.ink }}>
+                          {s.label}
+                        </div>
+                        <div
+                          style={{
+                            fontFamily: FONTS.body,
+                            fontSize: 22,
+                            color: COLORS.inkMuted,
+                            marginTop: 4,
+                          }}
+                        >
+                          {s.body}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </FadeUp>
-              ))}
+                  </FadeUp>
+                );
+              })}
             </div>
           </div>
-          {/* Right column: phone placeholder, cycles through assets */}
-          <div style={{ flexShrink: 0 }}>
-            {STEPS.map((s, i) => {
-              const start = i * beat;
-              return (
-                <Sequence key={i} from={start} durationInFrames={beat + 18} name={`Phone-${i}`}>
-                  <FadeUp delay={0} exit={beat - 6}>
-                    <PhoneFrame height={720} src={s.asset} label={s.label} />
-                  </FadeUp>
-                </Sequence>
-              );
-            })}
-          </div>
+
+          {/* Right column — single phone, content swaps with frame */}
+          <FadeUp delay={20}>
+            <div style={{ opacity: fadeOut }}>
+              <PhoneFrame height={720}>
+                <Active />
+              </PhoneFrame>
+            </div>
+          </FadeUp>
         </div>
       </Stage>
     </Sequence>

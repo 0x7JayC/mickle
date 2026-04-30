@@ -109,6 +109,7 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
           <LangToggle />
           {children}
         </div>
+      </div>
 
       {/* Backdrop — closes the menu when tapping anywhere outside */}
       {open && (

@@ -24,8 +24,8 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
   const close = () => setOpen(false);
 
   return (
-    <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4">
-      <div className="max-w-6xl mx-auto liquid-glass px-2 sm:px-3 py-2 flex items-center justify-between gap-2 relative">
+    <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4 relative">
+      <div className="max-w-6xl mx-auto liquid-glass px-2 sm:px-3 py-2 flex items-center justify-between gap-2">
         <Link
           href="/"
           onClick={close}
@@ -53,48 +53,49 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
             </>
           )}
 
-          {/* Mobile menu — only renders when there are links to show */}
+          {/* Mobile menu trigger — dropdown lives outside the nav pill below */}
           {showLinks && (
-            <div className="sm:hidden relative">
-              <button
-                type="button"
-                onClick={() => setOpen((v) => !v)}
-                aria-label={t(dict, "menu", lang)}
-                aria-expanded={open}
-                className="p-2 rounded-full text-foreground/70 hover:text-foreground active:scale-95 transition"
-              >
-                <DotGridIcon />
-              </button>
-              {open && (
-                <div
-                  className="absolute right-0 top-[calc(100%+14px)] min-w-[180px] liquid-glass-panel nav-menu-drop p-1.5"
-                  role="menu"
-                >
-                  <Link
-                    href="/app"
-                    onClick={close}
-                    role="menuitem"
-                    className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
-                  >
-                    {t(dict, "account", lang)}
-                  </Link>
-                  <Link
-                    href="/treasury"
-                    onClick={close}
-                    role="menuitem"
-                    className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
-                  >
-                    {t(dict, "treasury", lang)}
-                  </Link>
-                </div>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-label={t(dict, "menu", lang)}
+              aria-expanded={open}
+              className="sm:hidden p-2 rounded-full text-foreground/70 hover:text-foreground active:scale-95 transition"
+            >
+              <DotGridIcon />
+            </button>
           )}
 
           <LangToggle />
           {children}
         </div>
       </div>
+
+      {/* Mobile dropdown — anchored to the outer nav so it lands cleanly
+          below the pill, not inside the centred dot-button wrapper. */}
+      {showLinks && open && (
+        <div
+          className="sm:hidden absolute right-4 sm:right-6 top-full mt-3 min-w-[180px] liquid-glass-panel nav-menu-drop p-1.5"
+          role="menu"
+        >
+          <Link
+            href="/app"
+            onClick={close}
+            role="menuitem"
+            className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+          >
+            {t(dict, "account", lang)}
+          </Link>
+          <Link
+            href="/treasury"
+            onClick={close}
+            role="menuitem"
+            className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+          >
+            {t(dict, "treasury", lang)}
+          </Link>
+        </div>
+      )}
 
       {/* Backdrop — closes the menu when tapping anywhere outside */}
       {open && (

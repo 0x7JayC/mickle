@@ -340,14 +340,21 @@
 @media (max-width: 720px) {
   .scrolly-beat .grid {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    padding: 140px 24px 80px;
+    grid-template-rows: auto auto auto 1fr;
+    padding: 120px 24px 100px;
+    gap: 16px;
   }
   .scrolly-stat-card {
     max-width: 100%;
   }
+  .scrolly-stat-card.bottom {
+    grid-row: 2;
+  }
   .scrolly-hero {
     grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+    gap: 16px;
   }
   .scrolly-hero .head {
     font-size: clamp(36px, 10vw, 56px);

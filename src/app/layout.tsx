@@ -48,8 +48,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/cover.png",
-        width: 1200,
-        height: 630,
+        width: 1920,
+        height: 1080,
         alt: "Mickle — Every little makes a mickle. £1 a day. The S&P 500. On Solana.",
       },
     ],

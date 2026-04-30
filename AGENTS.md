@@ -54,13 +54,13 @@ User experience overrides technical preference, code cleanliness, and architectu
 - **Root-cause analysis:** don't comment out errors to make code run. Find and fix the underlying issue.
 - **Security:** keys, tokens, passwords never enter the codebase. Use `.env.local` (gitignored) and Vercel env.
 - **Git messages:** English, intent-focused (the why), not implementation logs.
-- **Deployment:** use project-specific commands (see below). `git push` is for cross-device sync — it is not deployment. Do **not** push automatically. Push only when Jay explicitly asks.
+- **Deployment:** push to `main` triggers a Vercel deploy. **Auto-push** after committing — Jay treats `git push` as part of "ship it." If a change should not deploy, say so explicitly *before* committing.
 
 ## Project-specific (Mickle)
 
 - **Stack:** Next.js 16 (App Router, Turbopack) · Tailwind v4 · Supabase · Privy · Jupiter · Capacitor (iOS).
 - **Live URL:** `mickle-gamma.vercel.app` (production deploy of `main`).
-- **Vercel auto-deploys** every push to `main` — for that reason, only push when explicitly asked.
+- **Vercel auto-deploys** every push to `main`. Push is the ship signal — auto-push after every successful commit unless told otherwise.
 - **Local dev:** `npm run dev` → `localhost:3000`.
 - **iOS shell:** `npm run ios:add && npm run ios:open` (see `MOBILE.md`).
 - **Money architecture:** documented in `MONEY.md`. Don't change the fee story without updating that file first (Documentation First rule).

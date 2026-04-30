@@ -11,7 +11,7 @@ const STACK = [
   { kicker: "Swap", name: "Jupiter" },
   { kicker: "Asset", name: "Backed SPYx" },
   { kicker: "Proof", name: "Metaplex Core" },
-  { kicker: "Cron", name: "Vercel" },
+  { kicker: "Float yield", name: "Kamino" },
 ];
 
 // 1:10 – 1:25 — The stack. Six tiles, even rhythm.

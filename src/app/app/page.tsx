@@ -15,12 +15,20 @@ type DbUser = {
   last_tap_date: string | null;
 };
 
+type Position = {
+  balance: number;
+  usdPrice: number | null;
+  usdValue: number;
+  configured: boolean;
+};
+
 const MILESTONE_DAYS = 30;
 
 export default function App() {
   const { ready, authenticated, user, login, logout, getAccessToken } = usePrivy();
   const { wallets } = useSolanaWallets();
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
+  const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
@@ -42,6 +50,28 @@ export default function App() {
       }
     })();
   }, [authenticated, wallet, getAccessToken]);
+
+  // Live SPYx position — refresh every 30s while the dashboard is open
+  useEffect(() => {
+    if (!authenticated || !dbUser?.wallet) return;
+    let cancelled = false;
+    const load = async () => {
+      const token = await getAccessToken();
+      if (!token) return;
+      const r = await fetch("/api/position", {
+        headers: { authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
+      if (!r.ok || cancelled) return;
+      setPosition(await r.json());
+    };
+    load();
+    const t = setInterval(load, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(t);
+    };
+  }, [authenticated, dbUser?.wallet, getAccessToken]);
 
   if (!ready) {
     return (
@@ -186,9 +216,9 @@ export default function App() {
         </p>
       </section>
 
-      {/* Stats — no pending badges, real empty-state copy */}
+      {/* Stats — Position is live; Contributed wires up Day 3 */}
       <div className="grid sm:grid-cols-2 gap-3 mb-6">
-        <Stat label="Position" empty="Live once your first tap settles" />
+        <PositionStat position={position} />
         <Stat label="Contributed" empty="Total deposited to date" />
       </div>
 
@@ -256,6 +286,50 @@ function Stat({ label, empty }: { label: string; empty: string }) {
       </div>
       <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">—</div>
       <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">{empty}</div>
+    </div>
+  );
+}
+
+function PositionStat({ position }: { position: Position | null }) {
+  const usd = position?.usdValue ?? 0;
+  const balance = position?.balance ?? 0;
+  const live = !!position && position.configured && usd > 0;
+  const fmtUsd = (v: number) =>
+    v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+  return (
+    <div className="glass-strong rounded-3xl p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+          Position
+        </span>
+        {position && position.configured && (
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.16em] text-emerald-700/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+          </span>
+        )}
+      </div>
+      {live ? (
+        <>
+          <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+            {fmtUsd(usd)}
+          </div>
+          <div className="text-[12px] text-foreground/55 mt-2 font-mono tabular-nums">
+            {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} SPYx
+            {position?.usdPrice
+              ? ` · ${fmtUsd(position.usdPrice)} / share`
+              : ""}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-3xl font-bold tracking-tight text-foreground/30 tabular-nums">—</div>
+          <div className="text-[12px] text-foreground/50 mt-2 leading-relaxed">
+            {position && !position.configured
+              ? "SPYx mint not configured yet"
+              : "Live once your first tap settles"}
+          </div>
+        </>
+      )}
     </div>
   );
 }

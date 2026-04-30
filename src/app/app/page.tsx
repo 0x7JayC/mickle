@@ -5,7 +5,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { useWallets as useSolanaWallets } from "@privy-io/react-auth/solana";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import MiniTimeMachine from "@/components/MiniTimeMachine";
+import TimeMachine from "@/components/TimeMachine";
 import { getTodaysParable } from "@/lib/parables";
 import DepositModal from "@/components/DepositModal";
 import ActivityFeed from "@/components/ActivityFeed";
@@ -57,7 +57,6 @@ export default function App() {
   const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
   const [depositOpen, setDepositOpen] = useState(false);
-  const [horizon, setHorizon] = useState<number>(10);
   const [tapping, setTapping] = useState(false);
   const [tapToast, setTapToast] = useState<string | null>(null);
   const [lastBatch, setLastBatch] = useState<{
@@ -382,33 +381,19 @@ export default function App() {
       {/* Milestones — earned card if Day 30 reached, else progress bar */}
       <MilestoneCard streak={streak} milestones={milestones} />
 
-      {/* Time Machine — projection with year selector */}
+      {/* Time Machine — full version with daily slider + horizons + 3-stat row.
+          Moved here from the old landing now that the scrollytelling is the
+          marketing surface. Lets the user play with their own daily figure. */}
       <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-5">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            Your projection · £1 / day
+            Time Machine
           </span>
-          <div className="inline-flex items-center gap-1 rounded-full bg-foreground/[0.06] p-1 border border-foreground/10 self-start sm:self-auto">
-            {[1, 2, 3, 5, 10].map((y) => {
-              const active = horizon === y;
-              return (
-                <button
-                  key={y}
-                  onClick={() => setHorizon(y)}
-                  className={`px-2.5 sm:px-3 py-1 rounded-full text-[12px] font-mono font-semibold transition tabular-nums ${
-                    active
-                      ? "bg-white text-foreground shadow-[0_2px_6px_rgba(12,10,20,0.08)]"
-                      : "text-foreground/55 hover:text-foreground"
-                  }`}
-                  aria-pressed={active}
-                >
-                  {y}Y
-                </button>
-              );
-            })}
-          </div>
+          <span className="text-[11px] font-mono text-foreground/45 hidden sm:inline">
+            Move the slider
+          </span>
         </div>
-        <MiniTimeMachine years={horizon} />
+        <TimeMachine />
       </section>
 
       {depositOpen && (

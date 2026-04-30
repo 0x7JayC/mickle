@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import { usePrivy } from "@privy-io/react-auth";
-import { useRouter } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { LandingNavCta } from "@/components/LandingAuth";
 import "./scrolly.css";
@@ -56,15 +55,7 @@ function beatOpacity(i: number, p: number) {
 }
 
 export default function Home() {
-  const router = useRouter();
-  const { ready, authenticated, login } = usePrivy();
-
-  // Auto-redirect authenticated visitors to the dashboard so signed-in
-  // users don't get bounced through the marketing flow on every visit.
-  useEffect(() => {
-    if (ready && authenticated) router.push("/app");
-  }, [ready, authenticated, router]);
-
+  const { login } = usePrivy();
   const onCta = () => login();
 
   // Refs for the parts the scroll handler mutates directly. Keeping

@@ -318,6 +318,42 @@ body::after {
   border-radius: 999px;
 }
 
+/* ===== Liquid Glass — Apple's iOS 26 / macOS 26 chrome material =====
+   A heightened variant of glass-pill, used for the primary site nav.
+   What makes it "liquid" rather than just "frosted":
+     · Higher transparency so content behind shows through clearly
+     · brightness(108%) — the optical lensing of real glass
+     · Top specular gleam (the ::before gradient) — light hitting glass
+     · Bottom inset shadow — suggests glass thickness / refraction
+   Fully theme-aware: edge highlight + tint inherit from --glass-* vars,
+   so it works on light/dark/coral/midnight palettes without overrides. */
+.liquid-glass {
+  position: relative;
+  isolation: isolate;
+  background: var(--glass-tint-deep);
+  backdrop-filter: blur(30px) saturate(180%) brightness(108%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(108%);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-inner),
+    inset 0 -1px 0 rgba(10,10,10,0.05),
+    0 1px 0 rgba(255,255,255,0.4),
+    0 10px 28px rgba(12, 10, 20, 0.10);
+  border-radius: 999px;
+}
+.liquid-glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 55%);
+  pointer-events: none;
+  z-index: -1;
+}
+/* Dark theme — flip the gleam to a subtle white-on-dark sheen, soften it. */
+.theme-a5 .liquid-glass::before {
+  background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 55%);
+}
+
 .glass-button {
   background: linear-gradient(180deg, rgba(255,255,255,0.4), rgba(255,255,255,0.15));
   backdrop-filter: blur(24px) saturate(180%);

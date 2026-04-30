@@ -1,147 +1,476 @@
-import TimeMachine from "@/components/TimeMachine";
-import { LandingAuth, LandingNavCta } from "@/components/LandingAuth";
+"use client";
+
+import { useEffect, useRef } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { useRouter } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
+import { LandingNavCta } from "@/components/LandingAuth";
+import "./scrolly.css";
+
+// 8-beat scrollytelling landing. Three full-bleed video layers (intro,
+// main, outro) plus three cat-loop overlays bound to specific beats.
+// Scroll progress drives:
+//   - which video layer is visible
+//   - main.mp4 currentTime (lerped)
+//   - which beat's typography is on screen
+//   - the progress rail
+// Port of public/scrolly/index.html into a single client component so
+// the brand chrome (SiteNav, Privy auth) wires in cleanly.
+
+const BEATS_TOTAL = 8;
+const FADE = 0.025;
+const INTRO_END = 0.005;
+const OUTRO_START = 0.98;
+const SEEK_THRESHOLD = 1 / 15; // ~67ms — 2 frames at 30 fps
+
+const BEAT_EYEBROWS = [
+  "MEET MICKLE",
+  "THE PROBLEM",
+  "REALITY CHECK",
+  "WHAT IF",
+  "THE WAY",
+  "HOW IT WORKS",
+  "THE PROOF",
+  "START TODAY",
+];
+
+const CAT_BEATS = [1, 5, 6]; // beats covered by cat-yawn / cat-fly / cat-float
+
+function clamp(x: number, a: number, b: number) {
+  return Math.max(a, Math.min(b, x));
+}
+
+function beatOpacity(i: number, p: number) {
+  const start = i / BEATS_TOTAL;
+  const end = (i + 1) / BEATS_TOTAL;
+  const leftFade = i === 0 ? 0 : FADE;
+  const rightFade = i === BEATS_TOTAL - 1 ? 0 : FADE;
+  if (p < start - leftFade || p > end + rightFade) return 0;
+  if (leftFade && p < start + leftFade) {
+    return clamp((p - (start - leftFade)) / (2 * leftFade), 0, 1);
+  }
+  if (rightFade && p > end - rightFade) {
+    return clamp((end + rightFade - p) / (2 * rightFade), 0, 1);
+  }
+  return 1;
+}
 
 export default function Home() {
+  const router = useRouter();
+  const { ready, authenticated, login } = usePrivy();
+
+  // Auto-redirect authenticated visitors to the dashboard so signed-in
+  // users don't get bounced through the marketing flow on every visit.
+  useEffect(() => {
+    if (ready && authenticated) router.push("/app");
+  }, [ready, authenticated, router]);
+
+  const onCta = () => login();
+
+  // Refs for the parts the scroll handler mutates directly. Keeping
+  // imperative DOM access here (instead of React state) so the rAF
+  // throttled scroll loop never triggers a render.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const introRef = useRef<HTMLVideoElement | null>(null);
+  const mainRef = useRef<HTMLVideoElement | null>(null);
+  const outroRef = useRef<HTMLVideoElement | null>(null);
+  const catRefs = useRef<(HTMLVideoElement | null)[]>([null, null, null]);
+  const beatRefs = useRef<(HTMLElement | null)[]>(Array(BEATS_TOTAL).fill(null));
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const hintRef = useRef<HTMLDivElement | null>(null);
+  const eyebrowRef = useRef<HTMLDivElement | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const scroller = scrollerRef.current;
+    const vIntro = introRef.current;
+    const vMain = mainRef.current;
+    const vOutro = outroRef.current;
+    const beats = beatRefs.current;
+    const rail = railRef.current;
+    const hint = hintRef.current;
+    const eyebrow = eyebrowRef.current;
+    if (!root || !scroller || !vIntro || !vMain || !vOutro || !rail || !hint || !eyebrow) return;
+
+    const railTicks = Array.from(rail.children) as HTMLElement[];
+    let viewportH = window.innerHeight;
+    let lastBeat = -1;
+    let hintGone = false;
+    let mainTarget = 0;
+
+    const measure = () => {
+      viewportH = window.innerHeight;
+    };
+
+    const getProgress = () => {
+      const total = scroller.offsetHeight - viewportH;
+      return total > 0 ? clamp(window.scrollY / total, 0, 1) : 0;
+    };
+
+    const setStage = (p: number) => {
+      vIntro.dataset.active = p < INTRO_END ? "true" : "false";
+      vOutro.dataset.active = p > OUTRO_START ? "true" : "false";
+      vMain.dataset.active = p >= INTRO_END && p <= OUTRO_START ? "true" : "false";
+    };
+
+    const setMainTarget = (p: number) => {
+      if (!isFinite(vMain.duration) || vMain.duration <= 0) return;
+      const span = OUTRO_START - INTRO_END;
+      const local = clamp((p - INTRO_END) / span, 0, 1);
+      mainTarget = local * vMain.duration;
+    };
+
+    const syncMain = () => {
+      if (!isFinite(vMain.duration) || vMain.duration <= 0) return;
+      const cur = vMain.currentTime;
+      if (Math.abs(mainTarget - cur) > SEEK_THRESHOLD) {
+        try {
+          vMain.currentTime = mainTarget;
+        } catch (e) {
+          void e;
+        }
+      }
+    };
+
+    const render = () => {
+      const p = getProgress();
+      setStage(p);
+      setMainTarget(p);
+      syncMain();
+
+      for (let i = 0; i < BEATS_TOTAL; i++) {
+        const op = beatOpacity(i, p);
+        const el = beats[i];
+        if (!el) continue;
+        el.dataset.active = op > 0.01 ? "true" : "false";
+        el.style.opacity = String(op);
+      }
+
+      catRefs.current.forEach((el, idx) => {
+        if (!el) return;
+        const op = beatOpacity(CAT_BEATS[idx], p);
+        el.style.opacity = String(op);
+        if (op > 0.05) {
+          if (el.paused) el.play().catch(() => {});
+        } else if (!el.paused) {
+          el.pause();
+        }
+      });
+
+      const active = clamp(Math.floor(p * BEATS_TOTAL), 0, BEATS_TOTAL - 1);
+      if (active !== lastBeat) {
+        eyebrow.textContent = BEAT_EYEBROWS[active];
+        railTicks.forEach((t, i) => t.classList.toggle("on", i <= active));
+        lastBeat = active;
+      }
+
+      if (!hintGone && p > 0.01) {
+        hint.classList.add("gone");
+        hintGone = true;
+      }
+    };
+
+    let pending = false;
+    let scrollIdleTimer = 0 as ReturnType<typeof setTimeout> | 0;
+    root.dataset.scrolling = "false";
+
+    const onScroll = () => {
+      if (root.dataset.scrolling !== "true") {
+        root.dataset.scrolling = "true";
+      }
+      clearTimeout(scrollIdleTimer as ReturnType<typeof setTimeout>);
+      scrollIdleTimer = setTimeout(() => {
+        root.dataset.scrolling = "false";
+      }, 140);
+
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        render();
+        pending = false;
+      });
+    };
+
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    vMain.addEventListener("loadedmetadata", render);
+    vMain.addEventListener("canplay", render);
+
+    // iOS Safari sometimes blocks autoplay until first user gesture.
+    const tryPlay = (v: HTMLVideoElement) => {
+      const promise = v.play();
+      if (promise && promise.catch) promise.catch(() => {});
+    };
+    [vIntro, vOutro].forEach(tryPlay);
+    const onGesture = () => [vIntro, vOutro].forEach(tryPlay);
+    window.addEventListener("touchstart", onGesture, { once: true, passive: true });
+    window.addEventListener("click", onGesture, { once: true });
+
+    render();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      vMain.removeEventListener("loadedmetadata", render);
+      vMain.removeEventListener("canplay", render);
+      window.removeEventListener("touchstart", onGesture);
+      window.removeEventListener("click", onGesture);
+      clearTimeout(scrollIdleTimer as ReturnType<typeof setTimeout>);
+    };
+  }, []);
+
   return (
-    <main className="flex-1">
+    <div ref={rootRef} className="scrolly-root">
+      {/* Layer 1 — full-bleed video stack */}
+      <div className="scrolly-stage" ref={stageRef} aria-hidden>
+        <video ref={introRef} src="/scrolly/intro-loop.mp4" autoPlay loop muted playsInline preload="auto" data-active="true" />
+        <video ref={mainRef} src="/scrolly/main.mp4" muted playsInline preload="auto" />
+        <video
+          ref={(el) => {
+            catRefs.current[0] = el;
+          }}
+          className="cat-layer"
+          src="/scrolly/cat-yawn.mp4"
+          loop
+          muted
+          playsInline
+          preload="auto"
+        />
+        <video
+          ref={(el) => {
+            catRefs.current[1] = el;
+          }}
+          className="cat-layer"
+          src="/scrolly/cat-flycatch.mp4"
+          loop
+          muted
+          playsInline
+          preload="auto"
+        />
+        <video
+          ref={(el) => {
+            catRefs.current[2] = el;
+          }}
+          className="cat-layer"
+          src="/scrolly/cat-float.mp4"
+          loop
+          muted
+          playsInline
+          preload="auto"
+        />
+        <video ref={outroRef} src="/scrolly/outro-loop.mp4" autoPlay loop muted playsInline preload="auto" />
+      </div>
+
+      {/* Top nav — shared with /app and /treasury */}
       <SiteNav>
         <LandingNavCta />
       </SiteNav>
 
-      {/* Hero — tighter sub-copy, tech stack as footnote */}
-      <section className="px-4 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-8 max-w-6xl mx-auto w-full">
-        <div className="fade-up text-center">
-          <span className="inline-block glass-pill px-4 py-1.5 text-xs uppercase tracking-[0.18em] font-semibold text-foreground/70 mb-8">
-            The patience product crypto doesn&apos;t have
-          </span>
-          <h1 className="text-display text-6xl sm:text-8xl font-extrabold leading-[0.95] mb-7">
-            Every little
-            <br />
-            makes a mickle.
-          </h1>
-          <p className="text-xl sm:text-3xl text-foreground/80 max-w-2xl mx-auto mb-3 font-normal tracking-tight">
-            £1 a day. S&amp;P 500 exposure. Global.
-          </p>
-          <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
-          </p>
-          <LandingAuth />
-          <div className="flex justify-center mb-12 sm:mb-12">
-            <a href="#how" className="text-sm font-mono uppercase tracking-[0.2em] text-muted hover:text-foreground transition">
-              How it works ↓
-            </a>
+      {/* Layer 3 — scroll-driven beats */}
+      <div className="scrolly-scroller" ref={scrollerRef}>
+        <div className="scrolly-sticky">
+          <div className="scrolly-icon-cluster">
+            <div className="pills" aria-hidden>
+              <div className="dot o">⬢</div>
+              <div className="dot k">✦</div>
+              <div className="dot p">◐</div>
+            </div>
+            <div className="scrolly-eyebrow" ref={eyebrowRef}>
+              {BEAT_EYEBROWS[0]}
+            </div>
           </div>
-        </div>
 
-        {/* Time Machine — the hero artifact */}
-        <div className="fade-up" style={{ animationDelay: "0.18s" }}>
-          <div className="text-center mb-5">
-            <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">
-              The Time Machine
-            </span>
-          </div>
-          <div className="glass-strong p-5 sm:p-8">
-            <TimeMachine />
-          </div>
+          <Beat
+            i={0}
+            refCb={(el) => (beatRefs.current[0] = el)}
+            statTop={{ label: "Customers Globally", num: "100", plus: "o", desc: "100+ humans now feeding the cat £1 a day." }}
+            statBottom={{ label: "Happy Customers", num: "10K", plus: "p", desc: "Less anxiety. More index funds. Allegedly." }}
+            head={<>HI. I&apos;M<Star />MICKLE</>}
+            cta="Learn More →"
+            meta={<><strong>£1 a day.</strong> Run by a cat who reads the FT.</>}
+            onCta={onCta}
+          />
+          <Beat
+            i={1}
+            refCb={(el) => (beatRefs.current[1] = el)}
+            statTop={{ label: "Minimum deposit", num: "£500", plus: "o", desc: "What most brokers ask. Tough luck if you have £30 a month spare." }}
+            head={<>INVESTING<Star />IS COMPLICATED</>}
+            meta={<>Jargon, minimums, vibes — <strong>most people give up before they start.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={2}
+            refCb={(el) => (beatRefs.current[2] = el)}
+            statTop={{ label: "What £1 actually buys", num: "0.3", unit: "lattes", plus: "o", desc: "A third of a London latte. Not enough to wake you up." }}
+            head={<>£1?<Star />HARDLY ANYTHING</>}
+            meta={<>Won&apos;t get you a London latte. <strong>We&apos;ve heard that one.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={3}
+            refCb={(el) => (beatRefs.current[3] = el)}
+            statTop={{ label: "S&P 500", num: "500", unit: "co.", plus: "p", desc: "The world's most profitable. Sliced thin enough that £1 fits." }}
+            head={<>WHAT IF £1<Star />BOUGHT S&amp;P 500</>}
+            cta="Show me the math →"
+            meta={<>A daily slice of the world&apos;s 500 biggest companies. <strong>In your pocket.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={4}
+            refCb={(el) => (beatRefs.current[4] = el)}
+            statTop={{ label: "Things we don't do", num: "0", unit: "fomo", plus: "o", desc: "No memecoins. No \"gems\". No vibes. Just an index." }}
+            head={<>NO PUMPS<Star />NO DUMPS</>}
+            meta={<>The boring asset class. In tiny servings. <strong>On purpose.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={5}
+            refCb={(el) => (beatRefs.current[5] = el)}
+            statTop={{ label: "Mickle handles", num: "3", unit: "steps", plus: "p", desc: "Charge → Buy → Allocate. You don't lift a paw." }}
+            head={<>AUTO<Star />POOLED<Star />FAIR</>}
+            meta={<>We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={6}
+            refCb={(el) => (beatRefs.current[6] = el)}
+            statTop={{ label: "After 4 years", num: "£1,500", plus: "o", desc: "£1/day × 4 years × 7% average. Maths, not vibes." }}
+            head={<>4 YEARS<Star />£1,500</>}
+            cta="See the full curve →"
+            meta={<>Compounding isn&apos;t magic. <strong>It&apos;s the £1 you didn&apos;t skip.</strong></>}
+            onCta={onCta}
+          />
+          <Beat
+            i={7}
+            refCb={(el) => (beatRefs.current[7] = el)}
+            statTop={{ label: "Best time to start", num: "Today", plus: "p", suffix: ".", desc: "Not Monday. Not payday. The cat is waiting." }}
+            head={<>TODAY<Star />BEATS TOMORROW</>}
+            cta="Join Mickle →"
+            meta={<>Tomorrow-you will thank today-you. <strong>Probably loudly.</strong></>}
+            onCta={onCta}
+            signature
+          />
         </div>
-      </section>
-
-      {/* How — vertical, scannable, with icons (review point B) */}
-      <section id="how" className="px-4 sm:px-6 py-10 sm:py-14 max-w-3xl mx-auto w-full">
-        <div className="text-center mb-8 sm:mb-10">
-          <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">A daily ritual</span>
-          <h2 className="text-display text-4xl sm:text-6xl font-bold mt-3">How it works.</h2>
-        </div>
-        <div className="flex flex-col gap-3">
-          <Step n="01" icon="✉" title="Sign in with email" body="A Solana wallet appears in 5 seconds. No seed phrase. No app store." />
-          <Step n="02" icon="£" title="Tap once a day for £1" body="Funds route via Jupiter into SPYx — tokenized SPDR S&P 500." />
-          <Step n="03" icon="↗" title="Watch consistency compound" body="Live Time Machine. A streak. A daily parable. The opposite of degen." />
-        </div>
-      </section>
-
-      {/* Why — solid styling, no glass/gradient text. Was rendering invisibly. */}
-      <section id="why" className="px-4 sm:px-6 py-10 sm:py-14 max-w-5xl mx-auto w-full relative">
-        <div className="max-w-3xl mb-6 sm:mb-10">
-          <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">
-            Why on‑chain
-          </span>
-          <h2 className="text-4xl sm:text-6xl font-extrabold mt-3 mb-6 tracking-tight text-foreground leading-[0.95]">
-            This only works on‑chain.
-          </h2>
-        </div>
-
-        <div
-          className="rounded-[18px] p-7 sm:p-10 mb-4 border"
-          style={{
-            background: "rgba(255,122,89,0.12)",
-            borderColor: "rgba(255,122,89,0.28)",
-          }}
-        >
-          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            The unlock
-          </span>
-          <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mt-2 mb-3 text-foreground">
-            £1 fractional S&amp;P, in 60+ countries.
-          </h3>
-          <p className="text-base sm:text-lg text-foreground/75 leading-relaxed max-w-2xl">
-            No brokerage. No minimums. No market hours. Robinhood doesn&apos;t work in Lagos.
-            eToro&apos;s spread eats £1 deposits. UK ISAs are tax wrappers. Mickle is the rail.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Why title="24/7 ritual" body="A daily ritual must work any time. Tokenized equities trade around the clock." />
-          <Why title="Portable proof" body="Your streak is a soulbound credential. Composable. Verifiable." />
-          <Why title="Aligned revenue" body="Jupiter platform fees scale with use, not with locked assets." />
-        </div>
-      </section>
-
-      {/* Footer with surfaced legal banner (review point F) — bottom CTA removed (review point D) */}
-      <footer className="px-4 sm:px-6 py-12 max-w-6xl mx-auto w-full">
-        <div className="rounded-2xl border border-amber-200/60 bg-amber-50/60 backdrop-blur-md px-5 py-3 mb-5 flex items-start gap-3">
-          <span className="text-amber-600 text-base leading-none mt-0.5">⚠</span>
-          <p className="text-[13px] text-amber-900/80 leading-relaxed">
-            Not available to UK or US retail investors. SPYx is issued by Backed Finance under EU prospectus.
-            Not investment advice. Past performance is not indicative of future results.
-          </p>
-        </div>
-        <div className="glass-pill px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-sm">
-          <span className="text-muted">© Mickle · Every little makes a mickle.</span>
-          <div className="flex gap-5 text-subtle">
-            <span>Solana</span>
-            <span>SPYx</span>
-            <span>Jupiter</span>
-          </div>
-        </div>
-      </footer>
-    </main>
-  );
-}
-
-function Step({ n, icon, title, body }: { n: string; icon: string; title: string; body: string }) {
-  return (
-    <div className="glass p-5 sm:p-6 flex items-start gap-5 fade-up">
-      <div
-        className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-[0_8px_20px_-4px_rgba(255,122,89,0.4),inset_0_1px_0_rgba(255,255,255,0.4)]"
-        style={{ background: "var(--accent)" }}
-        aria-hidden
-      >
-        {icon}
       </div>
-      <div className="flex-1 min-w-0">
-        <div className="font-mono text-[11px] text-foreground/55 mb-1 tracking-[0.22em] font-semibold">{n}</div>
-        <h3 className="text-lg sm:text-xl font-semibold mb-1.5 tracking-tight">{title}</h3>
-        <p className="text-[15px] text-foreground/70 leading-relaxed">{body}</p>
+
+      <div className="scrolly-rail" ref={railRef} aria-hidden>
+        {Array.from({ length: BEATS_TOTAL }).map((_, i) => (
+          <div className="tick" key={i} />
+        ))}
+      </div>
+
+      <div className="scrolly-hint" ref={hintRef}>
+        Scroll to begin
       </div>
     </div>
   );
 }
 
-function Why({ title, body }: { title: string; body: string }) {
+function Star() {
+  return <span className="star">✦</span>;
+}
+
+function Beat({
+  i,
+  refCb,
+  statTop,
+  statBottom,
+  head,
+  cta,
+  meta,
+  onCta,
+  signature,
+}: {
+  i: number;
+  refCb: (el: HTMLElement | null) => void;
+  statTop: { label: string; num: string; unit?: string; suffix?: string; plus: "o" | "p"; desc: string };
+  statBottom?: { label: string; num: string; unit?: string; suffix?: string; plus: "o" | "p"; desc: string };
+  head: React.ReactNode;
+  cta?: string;
+  meta?: React.ReactNode;
+  onCta: () => void;
+  signature?: boolean;
+}) {
   return (
-    <div className="rounded-[18px] p-6 bg-white/70 border border-foreground/10 backdrop-blur-md">
-      <h3 className="text-base font-semibold mb-2 text-foreground tracking-tight">{title}</h3>
-      <p className="text-[14px] text-foreground/70 leading-relaxed">{body}</p>
+    <section className="scrolly-beat" data-beat={i} ref={refCb}>
+      <div className="grid">
+        <StatCard {...statTop} />
+        <div className="scrolly-hero">
+          <h1 className="head">{head}</h1>
+          <div className="actions">
+            {cta && (
+              <a
+                className="primary"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onCta();
+                }}
+              >
+                {cta}
+              </a>
+            )}
+            {meta && <div className="meta">{meta}</div>}
+          </div>
+        </div>
+        {statBottom && <StatCard {...statBottom} bottom />}
+      </div>
+      {signature && (
+        <svg className="scrolly-signature" width="180" height="48" viewBox="0 0 180 48" fill="none">
+          <path
+            d="M4 30 C 22 12, 38 40, 56 22 S 90 8, 110 28 S 150 42, 176 18"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M120 36 q 8 -8 18 -2 t 22 -4"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      )}
+    </section>
+  );
+}
+
+function StatCard({
+  label,
+  num,
+  unit,
+  suffix,
+  plus,
+  desc,
+  bottom = false,
+}: {
+  label: string;
+  num: string;
+  unit?: string;
+  suffix?: string;
+  plus: "o" | "p";
+  desc: string;
+  bottom?: boolean;
+}) {
+  return (
+    <div className={`scrolly-stat-card${bottom ? " bottom" : ""}`}>
+      <div className="label">{label}</div>
+      <div className="num">
+        {num}
+        {suffix ? <span className={`plus-${plus}`}>{suffix}</span> : null}
+        {unit ? <span className={`plus-${plus}`}>{unit}</span> : null}
+        {!suffix && !unit ? <span className={`plus-${plus}`}>+</span> : null}
+      </div>
+      <div className="desc">{desc}</div>
     </div>
   );
 }

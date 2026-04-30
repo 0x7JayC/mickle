@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Mickle — Scale Your Future With Daily £1 Precision</title>
+<meta name="description" content="Mickle. Daily £1 into S&P 500. Hosted on Solana." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800;900&display=swap" />
+<style>
+  /* =========================================================
+     DESIGN TOKENS — derived from the Logify reference
+     paper-warm canvas · ink black · orange/purple accents
+     ========================================================= */
+  :root {
+    --bg:           #f3f1ec;     /* paper-warm canvas */
+    --ink:          #0a0a0a;     /* near-black headlines */
+    --ink-muted:    #2a2a2a;     /* description body — dark enough to read on video */
+    --hairline:     rgba(10,10,10,0.08);
+    --accent-orange:#ff6a1a;     /* ✦ accent in headlines, signature */
+    --accent-purple:#6c4cff;     /* + suffix on stat numbers, pill arrows */
+    --glass-fill:   rgba(255,255,255,0.55);
+    --glass-stroke: rgba(255,255,255,0.85);
+
+    --font-display: 'Inter', 'PingFang SC', 'HarmonyOS Sans SC',
+                    'Source Han Sans CN', -apple-system, system-ui, sans-serif;
+
+    --fade: 500ms cubic-bezier(.22,.61,.36,1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: var(--font-display);
+    font-feature-settings: 'ss01', 'ss03', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* paper texture — extremely subtle, matches reference */
+  body::before {
+    content:'';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(at 20% 30%, rgba(0,0,0,0.025), transparent 60%),
+      radial-gradient(at 80% 70%, rgba(0,0,0,0.02), transparent 60%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* =========================================================
+     LAYER 1 — three video layers, all mounted, opacity-driven
+     ========================================================= */
+  .stage {
+    position: fixed; inset: 0;
+    z-index: 0;
+    background: var(--bg);
+  }
+  .stage video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--fade);
+    will-change: opacity;
+  }
+  .stage video[data-active="true"] { opacity: 1; }
+  /* cat layers don't use data-active toggle — their opacity is
+     computed continuously from scroll, so disable CSS transition
+     to avoid double-smoothing */
+  .stage video.cat-layer { transition: none; }
+
+  /* gentle vignette so typography always reads */
+  .stage::after {
+    content:'';
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(243,241,236,0.4) 0%, transparent 18%, transparent 70%, rgba(243,241,236,0.55) 100%);
+    pointer-events: none;
+  }
+
+  /* =========================================================
+     LAYER 2 — top nav (fixed), mirrors Logify's chrome
+     ========================================================= */
+  /* =========================================================
+     Apple Liquid Glass — the resting state of the nav.
+     - High transparency so the video shows through
+     - Edge highlight ring (border)
+     - Inset top gleam (specular highlight, like light hitting glass)
+     - Inset bottom shadow (suggests glass thickness / refraction)
+     - Soft outer drop (lifts the pill off the canvas)
+     During scroll: drop the heavy backdrop-filter and revert to solid
+     so frame budget isn't blown by re-sampling moving video pixels.
+     ========================================================= */
+  nav.top {
+    position: fixed; top: 16px; left: 16px; right: 16px;
+    z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.84);
+    border: 1px solid rgba(255,255,255,0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.7),
+      inset 0 -1px 0 rgba(10,10,10,0.04),
+      0 1px 0 rgba(255,255,255,0.35),
+      0 10px 28px rgba(10,10,10,0.08);
+    isolation: isolate;
+  }
+  /* top specular gleam — only when not scrolling, so it has the live
+     glass feel without blowing perf during scroll */
+  nav.top::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, rgba(255,255,255,0.42) 0%, rgba(255,255,255,0) 55%);
+    pointer-events: none;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+  body[data-scrolling="false"] nav.top {
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.40) 0%,
+      rgba(255,255,255,0.18) 50%,
+      rgba(255,255,255,0.32) 100%);
+    backdrop-filter: blur(30px) saturate(180%) brightness(108%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(108%);
+    border-color: rgba(255,255,255,0.6);
+  }
+  body[data-scrolling="false"] nav.top::before { opacity: 1; }
+  nav.top .brand {
+    font-size: 20px; font-weight: 800; letter-spacing: -0.02em;
+  }
+  nav.top .links { display: flex; gap: 28px; }
+  nav.top .links a {
+    color: var(--ink); text-decoration: none;
+    font-size: 14px; font-weight: 600; letter-spacing: -0.01em;
+    opacity: 0.9;
+    transition: opacity 160ms ease;
+  }
+  nav.top .links a:hover { opacity: 1; }
+  nav.top .cta { display: flex; gap: 8px; align-items: center; }
+  nav.top .cta a {
+    text-decoration: none;
+    font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+    padding: 8px 18px; border-radius: 9999px;
+    transition: transform 120ms ease, background-color 160ms ease;
+  }
+  /* Liquid Glass ghost — sits on the glass nav, picks up its translucency */
+  nav.top .cta .signup {
+    background: rgba(255,255,255,0.5);
+    color: var(--ink);
+    border: 1px solid rgba(255,255,255,0.65);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  nav.top .cta .signup:hover { background: rgba(255,255,255,0.7); }
+  /* solid anchor — the visual stop in a glassy nav */
+  nav.top .cta .login {
+    background: var(--ink); color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 1px 2px rgba(10,10,10,0.2);
+  }
+  nav.top .cta a:active { transform: scale(0.96); }
+
+  /* language toggle — sub-pill embedded in the Liquid Glass nav.
+     The "well" picks up the same translucent treatment, the active
+     half gets a solid ink fill so the current language is unambiguous. */
+  .lang-toggle {
+    display: inline-flex; align-items: center;
+    background: rgba(10,10,10,0.05);
+    border: 1px solid rgba(10,10,10,0.06);
+    border-radius: 9999px;
+    padding: 3px;
+    margin-right: 4px;
+    box-shadow: inset 0 1px 0 rgba(10,10,10,0.04);
+  }
+  .lang-toggle button {
+    appearance: none; -webkit-appearance: none;
+    border: 0; background: transparent; cursor: pointer;
+    color: var(--ink); opacity: 0.55;
+    font-family: inherit;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 5px 11px; border-radius: 9999px;
+    transition: background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 120ms ease;
+    line-height: 1;
+  }
+  .lang-toggle button:hover { opacity: 0.85; }
+  .lang-toggle button[aria-pressed="true"] {
+    background: var(--ink);
+    color: #fff;
+    opacity: 1;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.14), 0 1px 2px rgba(10,10,10,0.2);
+  }
+  .lang-toggle button:active { transform: scale(0.94); }
+
+  @media (max-width: 720px) {
+    nav.top { padding: 10px 16px; }
+    nav.top .links { display: none; }
+  }
+
+  /* =========================================================
+     LAYER 3 — beat content (sticky stage + 8 frames)
+     ========================================================= */
+  .scroller {
+    position: relative;
+    height: 800vh;            /* drives scroll progress; 800vh = 8 beats × 100vh */
+    z-index: 10;
+  }
+  .sticky {
+    position: sticky; top: 0;
+    height: 100vh; width: 100%;
+    overflow: hidden;
+  }
+
+  /* eyebrow / icon row — top-left of each beat */
+  .icon-cluster {
+    position: absolute;
+    top: 96px; left: 6vw;
+    display: flex; align-items: center; gap: 14px;
+    z-index: 12;
+  }
+  .icon-cluster .pills {
+    display: flex; gap: 0;
+    background: rgba(255,255,255,0.86);
+    border-radius: 9999px;
+    padding: 6px;
+    border: 1px solid var(--hairline);
+  }
+  body[data-scrolling="false"] .icon-cluster .pills {
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .icon-cluster .pills .dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px;
+  }
+  .icon-cluster .pills .dot.o { background: var(--accent-orange); }
+  .icon-cluster .pills .dot.k { background: var(--ink); }
+  .icon-cluster .pills .dot.p { background: var(--accent-purple); }
+
+  /* eyebrow label — small all-caps tag */
+  .eyebrow {
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  }
+
+  /* beat frames — 8 of them, stacked, opacity-controlled */
+  .beat {
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity var(--fade);
+    pointer-events: none;
+    will-change: opacity;
+    z-index: 11;
+  }
+  .beat[data-active="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .beat .grid {
+    position: absolute; inset: 0;
+    padding: 160px 6vw 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 24px;
+  }
+
+  /* left-column floating stat card — Logify language.
+     backdrop-filter is the single most expensive op during scroll
+     (it has to re-sample changing video pixels every frame), so it's
+     gated behind body[data-scrolling="false"] — when the user stops
+     scrolling, the frost comes back. */
+  .stat-card {
+    align-self: start; justify-self: start;
+    background: rgba(255,255,255,0.78);
+    border: 1px solid var(--glass-stroke);
+    border-radius: 18px;
+    padding: 22px 26px;
+    max-width: 320px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 8px 30px rgba(10,10,10,0.04);
+  }
+  body[data-scrolling="false"] .stat-card {
+    background: var(--glass-fill);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+  }
+  .stat-card .label {
+    font-size: 13px; font-weight: 500; color: var(--ink-muted);
+    letter-spacing: -0.005em;
+  }
+  .stat-card .num {
+    font-size: 56px; font-weight: 800; letter-spacing: -0.04em;
+    margin-top: 6px; color: var(--ink);
+    line-height: 1;
+  }
+  .stat-card .num .plus-o { color: var(--accent-orange); }
+  .stat-card .num .plus-p { color: var(--accent-purple); }
+  .stat-card .desc {
+    margin-top: 14px;
+    font-size: 14px; font-weight: 600; color: var(--ink);
+    letter-spacing: -0.01em; line-height: 1.4;
+  }
+  .stat-card.bottom {
+    align-self: end;
+  }
+
+  /* cat layers — full-bleed loops that take over during their beat.
+     Same opacity-driven model as intro/main/outro, just anchored to a beat zone. */
+
+  /* right-column hero headline */
+  .hero {
+    grid-column: 2;
+    align-self: center;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+  .hero .head {
+    font-size: clamp(48px, 7.6vw, 116px);
+    font-weight: 800;
+    line-height: 0.96;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    /* hard cap: EN max 3 lines, ZH max 2 lines (set per html[lang] below) */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  html[lang="en"]    .hero .head { -webkit-line-clamp: 3; line-clamp: 3; }
+  html[lang="zh-CN"] .hero .head { -webkit-line-clamp: 2; line-clamp: 2; }
+  .hero .head .star {
+    display: inline-block;
+    color: var(--accent-orange);
+    transform: translateY(-0.05em);
+    margin: 0 0.05em;
+    font-weight: 900;
+  }
+  .hero .head .toggle-pill {
+    display: inline-flex; align-items: center;
+    background: var(--ink); color: #fff;
+    border-radius: 9999px;
+    padding: 6px 14px;
+    font-size: 0.18em; font-weight: 700;
+    letter-spacing: 0.15em;
+    transform: translateY(-0.18em);
+    margin: 0 0.08em;
+    vertical-align: middle;
+  }
+  .hero .head .arrow-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #fff; border: 1px solid var(--hairline);
+    width: 0.85em; height: 0.5em; border-radius: 9999px;
+    transform: translateY(-0.05em);
+    margin-left: 0.1em;
+    vertical-align: middle;
+  }
+  .hero .head .arrow-pill::after {
+    content: '→';
+    color: var(--accent-purple);
+    font-size: 0.35em;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .hero .actions {
+    display: flex; align-items: center; gap: 24px;
+    flex-wrap: wrap;
+  }
+  .hero .actions .primary {
+    background: var(--ink); color: #fff;
+    border: 0; border-radius: 12px;
+    padding: 14px 22px;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.005em;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 10px;
+    transition: transform 120ms ease;
+  }
+  .hero .actions .primary:active { transform: scale(0.97); }
+  /* meta floats over video — full ink, weight 500, soft white halo for contrast */
+  .hero .actions .meta {
+    font-size: 15px; color: var(--ink); font-weight: 500;
+    letter-spacing: -0.01em; line-height: 1.5;
+    max-width: 380px;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.55);
+  }
+  .hero .actions .meta strong { color: var(--ink); font-weight: 800; }
+
+  /* description column (currently unused — kept for future beats) */
+  .desc-block {
+    grid-column: 2;
+    align-self: end; justify-self: end;
+    max-width: 460px;
+    color: var(--ink); font-weight: 500;
+    font-size: 15px;
+    line-height: 1.55; letter-spacing: -0.005em;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.55);
+  }
+
+  /* signature flourish — bottom-right of beat 8 */
+  .signature {
+    position: absolute;
+    right: 6vw; bottom: 18vh;
+    color: var(--accent-orange);
+    pointer-events: none;
+  }
+
+  /* progress rail — bottom-fixed, shows where in the story you are */
+  .rail {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    display: flex; gap: 8px;
+    background: rgba(255,255,255,0.86);
+    border: 1px solid var(--hairline);
+    border-radius: 9999px;
+    padding: 10px 14px;
+  }
+  body[data-scrolling="false"] .rail {
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .rail .tick {
+    width: 22px; height: 4px; border-radius: 2px;
+    background: rgba(10,10,10,0.15);
+    transition: background 240ms ease;
+  }
+  .rail .tick.on { background: var(--ink); }
+
+  /* hint to scroll on first load — sits over video, needs lift */
+  .hint {
+    position: fixed;
+    bottom: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 55;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--ink);
+    font-size: 13px; font-weight: 700; letter-spacing: -0.005em;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+    opacity: 1;
+    transition: opacity 400ms ease;
+  }
+  .hint.gone { opacity: 0; }
+  .hint::before { content: '↓'; font-size: 16px; }
+
+  /* mobile — collapse to single column */
+  @media (max-width: 720px) {
+    .beat .grid {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto;
+      padding: 140px 24px 80px;
+    }
+    .stat-card { max-width: 100%; }
+    .hero { grid-column: 1; }
+    .hero .head { font-size: clamp(40px, 13vw, 64px); }
+    .desc-block { grid-column: 1; max-width: 100%; }
+    .icon-cluster { top: 80px; left: 24px; }
+  }
+
+  /* respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .stage video { transition: opacity 0s; }
+    .beat { transition: opacity 0s; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- LAYER 1: full-bleed video layers
+       intro · main · cat-yawn · cat-fly · cat-float · outro
+       all stacked, opacity-driven; cat layers cover main during their beat -->
+  <div class="stage" aria-hidden="true">
+    <video id="v-intro"
+           src="intro-loop.mp4"
+           autoplay loop muted playsinline preload="auto"
+           data-active="true"></video>
+    <video id="v-main"
+           src="main.mp4"
+           muted playsinline preload="auto"></video>
+    <video id="v-cat-yawn" class="cat-layer"
+           src="cat-yawn.mp4"
+           loop muted playsinline preload="auto"></video>
+    <video id="v-cat-fly" class="cat-layer"
+           src="cat-flycatch.mp4"
+           loop muted playsinline preload="auto"></video>
+    <video id="v-cat-float" class="cat-layer"
+           src="cat-float.mp4"
+           loop muted playsinline preload="auto"></video>
+    <video id="v-outro"
+           src="outro-loop.mp4"
+           autoplay loop muted playsinline preload="auto"></video>
+  </div>
+
+  <!-- LAYER 2: top nav -->
+  <nav class="top" aria-label="Primary">
+    <div class="brand">Mickle</div>
+    <div class="links">
+      <a href="#" data-i18n="nav.about">About</a>
+      <a href="#" data-i18n="nav.how">How it works</a>
+      <a href="#" data-i18n="nav.pricing">Pricing</a>
+      <a href="#" data-i18n="nav.faq">FAQ</a>
+      <a href="#" data-i18n="nav.help">Help</a>
+    </div>
+    <div class="cta">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="zh" aria-pressed="false">中</button>
+      </div>
+      <a href="#" class="signup" data-i18n="nav.signup">Sign Up</a>
+      <a href="#" class="login"  data-i18n="nav.login">Log In</a>
+    </div>
+  </nav>
+
+  <!-- LAYER 3: scroll-driven beats -->
+  <div class="scroller">
+    <div class="sticky">
+
+      <!-- Decorative top-left icon cluster + eyebrow (constant across beats) -->
+      <div class="icon-cluster" id="iconCluster">
+        <div class="pills" aria-hidden="true">
+          <div class="dot o">⬢</div>
+          <div class="dot k">✦</div>
+          <div class="dot p">◐</div>
+        </div>
+        <div class="eyebrow" id="eyebrowLive">MEET MICKLE</div>
+      </div>
+
+      <!-- 8 BEATS — each a full layout frame, opacity-driven -->
+
+      <!-- BEAT 1 -->
+      <section class="beat" data-beat="0">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b1.s1.label">Customers Globally</div>
+            <div class="num">100<span class="plus-o">+</span></div>
+            <div class="desc" data-i18n="b1.s1.desc">100+ humans now feeding the cat £1 a day.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b1.head">HI. I'M<span class="star">✦</span>MICKLE</h1>
+            <div class="actions">
+              <a class="primary" href="#" data-i18n="b1.cta">Learn More →</a>
+              <div class="meta" data-i18n="b1.meta"><strong>£1 a day.</strong> Run by a cat who reads the FT.</div>
+            </div>
+          </div>
+          <div class="stat-card bottom">
+            <div class="label" data-i18n="b1.s2.label">Happy Customers</div>
+            <div class="num">10K<span class="plus-p">+</span></div>
+            <div class="desc" data-i18n="b1.s2.desc">Less anxiety. More index funds. Allegedly.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 2 -->
+      <section class="beat" data-beat="1">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b2.s.label">Minimum deposit</div>
+            <div class="num">£500<span class="plus-o">+</span></div>
+            <div class="desc" data-i18n="b2.s.desc">What most brokers ask. Tough luck if you have £30 a month spare.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b2.head">INVESTING<span class="star">✦</span>IS COMPLICATED</h1>
+            <div class="actions">
+              <div class="meta" data-i18n="b2.meta">Jargon, minimums, vibes — <strong>most people give up before they start.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 3 -->
+      <section class="beat" data-beat="2">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b3.s.label">What £1 actually buys</div>
+            <div class="num">0.3<span class="plus-o" data-i18n="b3.s.unit">lattes</span></div>
+            <div class="desc" data-i18n="b3.s.desc">A third of a London latte. Not enough to wake you up.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b3.head">£1?<span class="star">✦</span>HARDLY ANYTHING</h1>
+            <div class="actions">
+              <div class="meta" data-i18n="b3.meta">Won't get you a London latte. <strong>We've heard that one.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 4 -->
+      <section class="beat" data-beat="3">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b4.s.label">S&amp;P 500</div>
+            <div class="num">500<span class="plus-p" data-i18n="b4.s.unit">co.</span></div>
+            <div class="desc" data-i18n="b4.s.desc">The world's most profitable. Sliced thin enough that £1 fits.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b4.head">WHAT IF £1<span class="star">✦</span>BOUGHT S&amp;P 500</h1>
+            <div class="actions">
+              <a class="primary" href="#" data-i18n="b4.cta">Show me the math →</a>
+              <div class="meta" data-i18n="b4.meta">A daily slice of the world's 500 biggest companies. <strong>In your pocket.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 5 -->
+      <section class="beat" data-beat="4">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b5.s.label">Things we don't do</div>
+            <div class="num">0<span class="plus-o" data-i18n="b5.s.unit">fomo</span></div>
+            <div class="desc" data-i18n="b5.s.desc">No memecoins. No "gems". No vibes. Just an index.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b5.head">NO PUMPS<span class="star">✦</span>NO DUMPS</h1>
+            <div class="actions">
+              <div class="meta" data-i18n="b5.meta">The boring asset class. In tiny servings. <strong>On purpose.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 6 -->
+      <section class="beat" data-beat="5">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b6.s.label">Mickle handles</div>
+            <div class="num">3<span class="plus-p" data-i18n="b6.s.unit">steps</span></div>
+            <div class="desc" data-i18n="b6.s.desc">Charge → Buy → Allocate. You don't lift a paw.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b6.head">AUTO<span class="star">✦</span>POOLED<span class="star">✦</span>FAIR</h1>
+            <div class="actions">
+              <div class="meta" data-i18n="b6.meta">We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 7 -->
+      <section class="beat" data-beat="6">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b7.s.label">After 4 years</div>
+            <div class="num">£1,500<span class="plus-o">+</span></div>
+            <div class="desc" data-i18n="b7.s.desc">£1/day × 4 years × 7% average. Maths, not vibes.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b7.head">4 YEARS<span class="star">✦</span>£1,500</h1>
+            <div class="actions">
+              <a class="primary" href="#" data-i18n="b7.cta">See the full curve →</a>
+              <div class="meta" data-i18n="b7.meta">Compounding isn't magic. <strong>It's the £1 you didn't skip.</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BEAT 8 -->
+      <section class="beat" data-beat="7">
+        <div class="grid">
+          <div class="stat-card">
+            <div class="label" data-i18n="b8.s.label">Best time to start</div>
+            <div class="num">Today<span class="plus-p">.</span></div>
+            <div class="desc" data-i18n="b8.s.desc">Not Monday. Not payday. The cat is waiting.</div>
+          </div>
+          <div class="hero">
+            <h1 class="head" data-i18n="b8.head">TODAY<span class="star">✦</span>BEATS TOMORROW</h1>
+            <div class="actions">
+              <a class="primary" href="#" data-i18n="b8.cta">Join Mickle →</a>
+              <div class="meta" data-i18n="b8.meta">Tomorrow-you will thank today-you. <strong>Probably loudly.</strong></div>
+            </div>
+          </div>
+        </div>
+        <!-- signature flourish -->
+        <svg class="signature" width="180" height="48" viewBox="0 0 180 48" fill="none">
+          <path d="M4 30 C 22 12, 38 40, 56 22 S 90 8, 110 28 S 150 42, 176 18"
+                stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+          <path d="M120 36 q 8 -8 18 -2 t 22 -4"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- progress rail (8 dots) -->
+  <div class="rail" id="rail" aria-hidden="true">
+    <div class="tick"></div><div class="tick"></div>
+    <div class="tick"></div><div class="tick"></div>
+    <div class="tick"></div><div class="tick"></div>
+    <div class="tick"></div><div class="tick"></div>
+  </div>
+
+  <!-- first-load hint -->
+  <div class="hint" id="hint" data-i18n="hint">Scroll to begin</div>
+
+<script>
+/* ====================================================================
+   Scroll-driven scrollytelling controller.
+   Single source of truth: scrollProgress ∈ [0, 1].
+   - intro-loop autoplay/loop while progress < 0.005
+   - main scroll-driven (currentTime lerped toward target) for 0.005..0.98
+   - outro-loop autoplay/loop while progress > 0.98
+   - 8 beats fade in/out by their scroll segment, with 2.5% crossfade overlap
+   ==================================================================== */
+
+// timestamps map onto main.mp4's actual ~14.33s runtime
+// (display labels only — actual scroll mapping is uniform 1/8 segments)
+const BEATS = [
+  { id: 0, eyebrow: { en: 'MEET MICKLE',   zh: '认识 MICKLE' }, time: '0:00–0:02' },
+  { id: 1, eyebrow: { en: 'THE PROBLEM',   zh: '现状' },        time: '0:02–0:04' },
+  { id: 2, eyebrow: { en: 'REALITY CHECK', zh: '算笔账' },      time: '0:04–0:05' },
+  { id: 3, eyebrow: { en: 'WHAT IF',       zh: '假如呢' },      time: '0:05–0:07' },
+  { id: 4, eyebrow: { en: 'THE WAY',       zh: '我们的方式' },  time: '0:07–0:09' },
+  { id: 5, eyebrow: { en: 'HOW IT WORKS',  zh: '怎么运作' },    time: '0:09–0:11' },
+  { id: 6, eyebrow: { en: 'THE PROOF',     zh: '证据' },        time: '0:11–0:13' },
+  { id: 7, eyebrow: { en: 'START TODAY',   zh: '今天就开始' },  time: '0:13–0:14' },
+];
+
+/* =============== i18n dictionary ===============
+   English copy carries Mickle's voice: dry, self-aware, slightly British,
+   anti-finance-bro. Chinese copy is the original earnest tone. */
+const I18N = {
+  // nav
+  'nav.about':    { en: 'About',         zh: '关于' },
+  'nav.how':      { en: 'How it works',  zh: '如何运作' },
+  'nav.pricing':  { en: 'Pricing',       zh: '价格' },
+  'nav.faq':      { en: 'FAQ',           zh: '常见问题' },
+  'nav.help':     { en: 'Help',          zh: '帮助' },
+  'nav.signup':   { en: 'Sign Up',       zh: '注册' },
+  'nav.login':    { en: 'Log In',        zh: '登录' },
+  'hint':         { en: 'Scroll to begin', zh: '向下滚动开始故事' },
+
+  // Beat 1
+  'b1.head':     { en: 'HI. I\'M<span class="star">✦</span>MICKLE',
+                   zh: '嗨，我是<span class="star">✦</span>MICKLE' },
+  'b1.cta':      { en: 'Learn More →', zh: '了解更多 →' },
+  'b1.meta':     { en: '<strong>£1 a day.</strong> Run by a cat who reads the FT.',
+                   zh: '<strong>每天 £1</strong> 的小习惯，配合一只懂金融的猫。' },
+  'b1.s1.label': { en: 'Customers Globally', zh: '全球用户' },
+  'b1.s1.desc':  { en: '100+ humans now feeding the cat £1 a day.',
+                   zh: '已经有 100+ 用户开始用每天 £1，让未来慢慢长大。' },
+  'b1.s2.label': { en: 'Happy Customers',    zh: '满意客户' },
+  'b1.s2.desc':  { en: 'Less anxiety. More index funds. Allegedly.',
+                   zh: '每天攒一点，不焦虑，不踩坑。' },
+
+  // Beat 2
+  'b2.head':    { en: 'INVESTING<span class="star">✦</span>IS COMPLICATED',
+                  zh: '投资<span class="star">✦</span>太贵 太难' },
+  'b2.meta':    { en: 'Jargon, minimums, vibes — <strong>most people give up before they start.</strong>',
+                  zh: '门槛、术语、波动 — <strong>大多数人卡在第一步。</strong>' },
+  'b2.s.label': { en: 'Minimum deposit', zh: '门槛' },
+  'b2.s.desc':  { en: 'What most brokers ask. Tough luck if you have £30 a month spare.',
+                  zh: '大多数券商最低起投门槛。对每月剩 £30 的人不友好。' },
+
+  // Beat 3
+  'b3.head':    { en: '£1?<span class="star">✦</span>HARDLY ANYTHING',
+                  zh: '£1<span class="star">✦</span>能干什么' },
+  'b3.meta':    { en: 'Won\'t get you a London latte. <strong>We\'ve heard that one.</strong>',
+                  zh: '连一杯拿铁都买不到。<strong>你也这么想过，对吧？</strong>' },
+  'b3.s.label': { en: 'What £1 actually buys', zh: '£1 能买什么' },
+  'b3.s.unit':  { en: 'lattes', zh: '杯' },
+  'b3.s.desc':  { en: 'A third of a London latte. Not enough to wake you up.',
+                  zh: '伦敦一杯拿铁的 1/3。还不够你早晨清醒。' },
+
+  // Beat 4
+  'b4.head':    { en: 'WHAT IF £1<span class="star">✦</span>BOUGHT S&amp;P 500',
+                  zh: '如果 £1<span class="star">✦</span>能买 S&amp;P 500' },
+  'b4.cta':     { en: 'Show me the math →', zh: '看看怎么算 →' },
+  'b4.meta':    { en: 'A daily slice of the world\'s 500 biggest companies. <strong>In your pocket.</strong>',
+                  zh: '每天，把世界 500 强的一小片，<strong>放进你的口袋</strong>。' },
+  'b4.s.label': { en: 'S&amp;P 500', zh: '标普 500' },
+  'b4.s.unit':  { en: 'co.', zh: '家' },
+  'b4.s.desc':  { en: 'The world\'s most profitable. Sliced thin enough that £1 fits.',
+                  zh: '全球最赚钱的 500 家公司。每天，你都买进一小片。' },
+
+  // Beat 5
+  'b5.head':    { en: 'NO PUMPS<span class="star">✦</span>NO DUMPS',
+                  zh: '不躁<span class="star">✦</span>不慌' },
+  'b5.meta':    { en: 'The boring asset class. In tiny servings. <strong>On purpose.</strong>',
+                  zh: '把全球最稳的资产，<strong>按小份额慢慢攒进来</strong>。' },
+  'b5.s.label': { en: 'Things we don\'t do', zh: '不做的事' },
+  'b5.s.unit':  { en: 'fomo', zh: '焦虑' },
+  'b5.s.desc':  { en: 'No memecoins. No "gems". No vibes. Just an index.',
+                  zh: '不投机，不押注，不赌运气。只买全世界都用的指数。' },
+
+  // Beat 6
+  'b6.head':    { en: 'AUTO<span class="star">✦</span>POOLED<span class="star">✦</span>FAIR',
+                  zh: '自动<span class="star">✦</span>集中<span class="star">✦</span>公平' },
+  'b6.meta':    { en: 'We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong>',
+                  zh: 'Mickle 替你扣款、批量买入、按比例分配 — <strong>你只负责坚持</strong>。' },
+  'b6.s.label': { en: 'Mickle handles', zh: '交给 Mickle' },
+  'b6.s.unit':  { en: 'steps', zh: '步' },
+  'b6.s.desc':  { en: 'Charge → Buy → Allocate. You don\'t lift a paw.',
+                  zh: '扣款 → 集中买入 → 按比例分配。你只负责出现。' },
+
+  // Beat 7
+  'b7.head':    { en: '4 YEARS<span class="star">✦</span>£1,500',
+                  zh: '4 年<span class="star">✦</span>1,500 英镑' },
+  'b7.cta':     { en: 'See the full curve →', zh: '看看完整曲线 →' },
+  'b7.meta':    { en: 'Compounding isn\'t magic. <strong>It\'s the £1 you didn\'t skip.</strong>',
+                  zh: '复利不是魔法，<strong>是你每天没忽略的那 £1</strong>。' },
+  'b7.s.label': { en: 'After 4 years', zh: '4 年后' },
+  'b7.s.desc':  { en: '£1/day × 4 years × 7% average. Maths, not vibes.',
+                  zh: '每天 £1 + 平均 7% 年化。复利不是魔法，是没忽略的那 £1。' },
+
+  // Beat 8
+  'b8.head':    { en: 'TODAY<span class="star">✦</span>BEATS TOMORROW',
+                  zh: '今天<span class="star">✦</span>是最好的开始' },
+  'b8.cta':     { en: 'Join Mickle →', zh: '立即加入 Mickle →' },
+  'b8.meta':    { en: 'Tomorrow-you will thank today-you. <strong>Probably loudly.</strong>',
+                  zh: '让 <strong>明天的自己</strong>，感谢今天的你。' },
+  'b8.s.label': { en: 'Best time to start', zh: '最好的开始时间' },
+  'b8.s.desc':  { en: 'Not Monday. Not payday. The cat is waiting.',
+                  zh: '不是明天，不是工资日。是今天。' },
+};
+
+/* current language — persisted in localStorage, defaults to English */
+let currentLang = 'en';
+try {
+  const stored = localStorage.getItem('mickle.lang');
+  if (stored === 'en' || stored === 'zh') currentLang = stored;
+} catch (e) { /* private mode etc. */ }
+
+function setLang(lang) {
+  if (lang !== 'en' && lang !== 'zh') return;
+  currentLang = lang;
+  try { localStorage.setItem('mickle.lang', lang); } catch (e) {}
+
+  document.documentElement.lang = (lang === 'zh') ? 'zh-CN' : 'en';
+
+  // swap every [data-i18n] element via innerHTML (entries may contain inline tags)
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const dict = I18N[key];
+    if (dict && dict[lang]) el.innerHTML = dict[lang];
+  });
+
+  // toggle button visual state
+  document.querySelectorAll('.lang-toggle button').forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.lang === lang ? 'true' : 'false');
+  });
+
+  // refresh the live eyebrow (the BEATS structure is bilingual)
+  lastBeat = -1; // force re-paint of eyebrow on next render
+}
+
+// wire the toggle buttons (initial language applied at the end of the
+// script, after `lastBeat` and other state vars are declared)
+document.querySelectorAll('.lang-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+const N = BEATS.length;
+const FADE = 0.025;          // crossfade zone around segment boundaries
+const INTRO_END   = 0.005;   // below this, intro is shown
+const OUTRO_START = 0.98;    // above this, outro is shown
+const LERP = 0.18;           // currentTime lerp factor — feel smoothness
+
+const vIntro = document.getElementById('v-intro');
+const vMain  = document.getElementById('v-main');
+const vOutro = document.getElementById('v-outro');
+
+// full-bleed cat layers, each tied to one beat's scroll zone
+const CAT_LAYERS = [
+  { el: document.getElementById('v-cat-yawn'),  beat: 1 }, // Beat 2 (zero-indexed)
+  { el: document.getElementById('v-cat-fly'),   beat: 5 }, // Beat 6
+  { el: document.getElementById('v-cat-float'), beat: 6 }, // Beat 7
+];
+
+const beatEls = Array.from(document.querySelectorAll('.beat'));
+const rail   = document.getElementById('rail');
+const railTicks = Array.from(rail.children);
+const eyebrowLive = document.getElementById('eyebrowLive');
+const hint   = document.getElementById('hint');
+
+let scrollerEl, viewportH;
+function measure() {
+  scrollerEl = document.querySelector('.scroller');
+  viewportH = window.innerHeight;
+}
+measure();
+window.addEventListener('resize', measure);
+
+function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+
+function getProgress() {
+  const total = scrollerEl.offsetHeight - viewportH;
+  return total > 0 ? clamp(window.scrollY / total, 0, 1) : 0;
+}
+
+/* opacity for beat i given current scroll progress.
+   Each beat owns segment [i/N, (i+1)/N]. FADE creates a crossfade overlap
+   between adjacent beats, but the very first and very last beat anchor
+   hard to the page edges (no half-faded state at scroll 0 or scroll 1). */
+function beatOpacity(i, p) {
+  const start = i / N;
+  const end   = (i + 1) / N;
+  const leftFade  = (i === 0)     ? 0 : FADE;
+  const rightFade = (i === N - 1) ? 0 : FADE;
+  if (p < start - leftFade || p > end + rightFade) return 0;
+  if (leftFade  && p < start + leftFade)  return clamp((p - (start - leftFade)) / (2 * leftFade), 0, 1);
+  if (rightFade && p > end - rightFade)   return clamp(((end + rightFade) - p) / (2 * rightFade), 0, 1);
+  return 1;
+}
+
+function activeBeatIndex(p) {
+  // segment containing the most weight at p — used for eyebrow + rail
+  return clamp(Math.floor(p * N), 0, N - 1);
+}
+
+/* video opacity logic */
+function setStage(p) {
+  vIntro.dataset.active = (p < INTRO_END) ? 'true' : 'false';
+  vOutro.dataset.active = (p > OUTRO_START) ? 'true' : 'false';
+  vMain.dataset.active  = (p >= INTRO_END && p <= OUTRO_START) ? 'true' : 'false';
+}
+
+/* main video timing target */
+let mainTarget = 0;
+function setMainTarget(p) {
+  if (!isFinite(vMain.duration) || vMain.duration <= 0) return;
+  const span = OUTRO_START - INTRO_END;
+  const local = clamp((p - INTRO_END) / span, 0, 1);
+  mainTarget = local * vMain.duration;
+}
+
+/* Direct seek on scroll — the rAF lerp loop was thrashing the H.264
+   decoder by writing currentTime every 16ms even when scroll was idle.
+   Now: seek runs only inside render() (which is rAF-throttled by scroll),
+   and only when the delta is large enough to be visible (>1 frame). */
+function syncMain() {
+  if (!isFinite(vMain.duration) || vMain.duration <= 0) return;
+  const cur = vMain.currentTime;
+  if (Math.abs(mainTarget - cur) > 1/15) {   // ~67ms threshold (2 frames @ 30fps)
+    try { vMain.currentTime = mainTarget; } catch (e) {}
+  }
+}
+
+/* render — called on every scroll/resize */
+let lastBeat = -1;
+let hintGone = false;
+function render() {
+  const p = getProgress();
+
+  setStage(p);
+  setMainTarget(p);
+  syncMain();
+
+  // beat opacities (typography frames)
+  for (let i = 0; i < N; i++) {
+    const op = beatOpacity(i, p);
+    const el = beatEls[i];
+    el.dataset.active = (op > 0.01) ? 'true' : 'false';
+    el.style.opacity = op;
+  }
+
+  // full-bleed cat layers — opacity tracks their beat,
+  // play only while visible to keep one decoder pipeline at a time
+  for (const layer of CAT_LAYERS) {
+    const op = beatOpacity(layer.beat, p);
+    layer.el.style.opacity = op;
+    if (op > 0.05) {
+      if (layer.el.paused) layer.el.play().catch(() => {});
+    } else {
+      if (!layer.el.paused) layer.el.pause();
+    }
+  }
+
+  // active-beat side effects (eyebrow text, rail ticks)
+  const active = activeBeatIndex(p);
+  if (active !== lastBeat) {
+    eyebrowLive.textContent = BEATS[active].eyebrow[currentLang] || BEATS[active].eyebrow.en;
+    railTicks.forEach((t, i) => t.classList.toggle('on', i <= active));
+    lastBeat = active;
+  }
+
+  // hide first-load hint after the first scroll
+  if (!hintGone && p > 0.01) {
+    hint.classList.add('gone');
+    hintGone = true;
+  }
+}
+
+/* throttle scroll via rAF + toggle data-scrolling on body so CSS can
+   drop backdrop-filter while the user is actively scrolling (it's the
+   single most expensive op when the underlying video is changing). */
+document.body.dataset.scrolling = 'false';
+let pending = false;
+let scrollIdleTimer = 0;
+function onScroll() {
+  if (document.body.dataset.scrolling !== 'true') {
+    document.body.dataset.scrolling = 'true';
+  }
+  clearTimeout(scrollIdleTimer);
+  scrollIdleTimer = setTimeout(() => {
+    document.body.dataset.scrolling = 'false';
+  }, 140);
+
+  if (pending) return;
+  pending = true;
+  requestAnimationFrame(() => { render(); pending = false; });
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+window.addEventListener('resize', onScroll);
+
+/* main video metadata — once duration is known, kick a render */
+vMain.addEventListener('loadedmetadata', render);
+vMain.addEventListener('canplay', render);
+
+/* iOS Safari sometimes blocks autoplay on intro/outro until first user gesture.
+   Force a play attempt; on rejection, retry after first scroll/touch. */
+function tryPlay(v) {
+  const p = v.play();
+  if (p && p.catch) p.catch(() => {/* will be retried by gesture */});
+}
+[vIntro, vOutro].forEach(tryPlay);
+window.addEventListener('touchstart', () => [vIntro, vOutro].forEach(tryPlay), { once: true, passive: true });
+window.addEventListener('click',      () => [vIntro, vOutro].forEach(tryPlay), { once: true });
+
+// apply initial language now that all state vars are declared
+setLang(currentLang);
+
+render();
+</script>
+</body>
+</html>

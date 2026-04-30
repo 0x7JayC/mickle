@@ -77,21 +77,28 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why — lead reason gets hero card, others are equal-weight (review point C) */}
-      <section id="why" className="px-4 sm:px-6 py-10 sm:py-14 max-w-5xl mx-auto w-full">
+      {/* Why — solid styling, no glass/gradient text. Was rendering invisibly. */}
+      <section id="why" className="px-4 sm:px-6 py-10 sm:py-14 max-w-5xl mx-auto w-full relative">
         <div className="max-w-3xl mb-6 sm:mb-10">
-          <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">Why on‑chain</span>
-          <h2 className="text-display text-4xl sm:text-6xl font-bold mt-3 mb-6">
+          <span className="text-xs uppercase tracking-[0.2em] text-muted font-mono">
+            Why on‑chain
+          </span>
+          <h2 className="text-4xl sm:text-6xl font-extrabold mt-3 mb-6 tracking-tight text-foreground leading-[0.95]">
             This only works on‑chain.
           </h2>
         </div>
 
-        {/* Hero reason — single accent, no decorative gradient */}
-        <div className="glass-strong p-7 sm:p-10 mb-4" style={{ background: "rgba(255,122,89,0.10)", borderColor: "rgba(255,122,89,0.25)" }}>
+        <div
+          className="rounded-[18px] p-7 sm:p-10 mb-4 border"
+          style={{
+            background: "rgba(255,122,89,0.12)",
+            borderColor: "rgba(255,122,89,0.28)",
+          }}
+        >
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             The unlock
           </span>
-          <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mt-2 mb-3">
+          <h3 className="text-2xl sm:text-3xl font-bold tracking-tight mt-2 mb-3 text-foreground">
             $1 fractional S&amp;P, in 60+ countries.
           </h3>
           <p className="text-base sm:text-lg text-foreground/75 leading-relaxed max-w-2xl">
@@ -100,7 +107,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Supporting reasons */}
         <div className="grid sm:grid-cols-3 gap-4">
           <Why title="24/7 ritual" body="A daily ritual must work any time. Tokenized equities trade around the clock." />
           <Why title="Portable proof" body="Your streak is a soulbound credential. Composable. Verifiable." />
@@ -151,7 +157,7 @@ function Step({ n, icon, title, body }: { n: string; icon: string; title: string
 
 function Why({ title, body }: { title: string; body: string }) {
   return (
-    <div className="glass p-6">
+    <div className="rounded-[18px] p-6 bg-white/70 border border-foreground/10 backdrop-blur-md">
       <h3 className="text-base font-semibold mb-2 text-foreground tracking-tight">{title}</h3>
       <p className="text-[14px] text-foreground/70 leading-relaxed">{body}</p>
     </div>

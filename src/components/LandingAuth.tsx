@@ -57,3 +57,35 @@ export function LandingNavCta() {
     </button>
   );
 }
+
+// Auth-aware "Open app" button used on /treasury (and any other public
+// page where the user might be signed in or out). If signed in, sends
+// them to the dashboard; if signed out, opens the Privy modal directly
+// so they don't need to bounce through the landing first.
+export function OpenAppButton({ className = "", children }: { className?: string; children?: React.ReactNode }) {
+  const { ready, authenticated, login } = usePrivy();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (ready && authenticated) {
+      // Don't auto-push here — we only want to redirect on click.
+    }
+  }, [ready, authenticated]);
+
+  const onClick = () => {
+    if (authenticated) {
+      router.push("/app");
+    } else {
+      login();
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={className || "text-sm font-semibold text-foreground/70 hover:text-foreground"}
+    >
+      {children ?? "Open app →"}
+    </button>
+  );
+}

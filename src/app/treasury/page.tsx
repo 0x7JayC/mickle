@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { OpenAppButton } from "@/components/LandingAuth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 60;
@@ -64,12 +65,7 @@ export default async function TreasuryPage() {
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 hidden sm:block">
             Treasury · public ledger
           </span>
-          <Link
-            href="/app"
-            className="text-sm font-semibold text-foreground/70 hover:text-foreground shrink-0"
-          >
-            Open app →
-          </Link>
+          <OpenAppButton className="text-sm font-semibold text-foreground/70 hover:text-foreground shrink-0" />
         </div>
       </nav>
 

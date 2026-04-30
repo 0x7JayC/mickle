@@ -46,6 +46,10 @@ body {
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
+  /* Apple discipline: 17px body, 1.47 leading, slight negative tracking. */
+  font-size: 17px;
+  line-height: 1.47;
+  letter-spacing: -0.012em;
 }
 
 /* Calm mode: opt-in via .calm-bg on a route subtree (e.g. /app dashboard).
@@ -53,6 +57,18 @@ body {
    cards have real contrast. */
 body:has(.calm-bg) .ambient-fixed { opacity: 0 !important; }
 body:has(.calm-bg) { background: #faf6ee; }
+
+/* Apple discipline on the dashboard: glass cards become flat white tiles
+   with a hairline border. Glass + shadows are reserved for nav/sticky
+   chrome (.glass-pill) only, per Apple's single-shadow rule. */
+.calm-bg .glass,
+.calm-bg .glass-strong {
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #e5e1d8 !important;
+  box-shadow: none !important;
+}
 
 /* Fixed full-page ambient layer (cross-fades on theme switch) */
 .ambient-fixed {

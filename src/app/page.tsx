@@ -35,7 +35,7 @@ export default function Home() {
             <br />
             makes a mickle.
           </h1>
-          <p className="text-xl sm:text-3xl text-foreground/80 max-w-2xl mx-auto mb-3 font-medium tracking-tight">
+          <p className="text-xl sm:text-3xl text-foreground/80 max-w-2xl mx-auto mb-3 font-normal tracking-tight">
             $1 a day. S&amp;P 500 exposure. Global.
           </p>
           <p className="text-xs sm:text-sm text-subtle font-mono uppercase tracking-[0.2em] mb-12">
@@ -86,8 +86,8 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Hero reason */}
-        <div className="glass-strong p-7 sm:p-10 mb-4 bg-gradient-to-br from-[rgba(255,122,89,0.12)] to-[rgba(109,94,245,0.10)] border-[rgba(255,122,89,0.25)]">
+        {/* Hero reason — single accent, no decorative gradient */}
+        <div className="glass-strong p-7 sm:p-10 mb-4" style={{ background: "rgba(255,122,89,0.10)", borderColor: "rgba(255,122,89,0.25)" }}>
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             The unlock
           </span>
@@ -135,7 +135,7 @@ function Step({ n, icon, title, body }: { n: string; icon: string; title: string
     <div className="glass p-5 sm:p-6 flex items-start gap-5 fade-up">
       <div
         className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shadow-[0_8px_20px_-4px_rgba(255,122,89,0.4),inset_0_1px_0_rgba(255,255,255,0.4)]"
-        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}
+        style={{ background: "var(--accent)" }}
         aria-hidden
       >
         {icon}

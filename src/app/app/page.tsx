@@ -193,15 +193,12 @@ export default function App() {
         </div>
       </header>
 
-      {/* Ritual — the hero, with ceremony */}
+      {/* Ritual — the hero. Single accent tint, hairline border, no shadow. */}
       <section
-        className="relative rounded-[28px] p-7 sm:p-9 mb-6 text-center overflow-hidden border-2"
+        className="relative rounded-[18px] p-7 sm:p-9 mb-6 text-center overflow-hidden border"
         style={{
-          background:
-            "linear-gradient(135deg, rgba(255,122,89,0.16), rgba(245,185,74,0.14) 50%, rgba(109,94,245,0.10))",
-          borderColor: "rgba(255,122,89,0.32)",
-          boxShadow:
-            "inset 0 1px 0 rgba(255,255,255,0.7), 0 24px 60px -16px rgba(255,122,89,0.35)",
+          background: "rgba(255,122,89,0.08)",
+          borderColor: "rgba(255,122,89,0.28)",
         }}
       >
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
@@ -234,7 +231,7 @@ export default function App() {
       </div>
 
       {/* Milestone tracker — Day 30 → NFT */}
-      <section className="glass-strong rounded-[24px] p-5 sm:p-6 mb-6">
+      <section className="glass-strong rounded-[18px] p-5 sm:p-6 mb-6">
         <div className="flex items-center justify-between mb-3">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Next milestone
@@ -248,7 +245,7 @@ export default function App() {
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${Math.max(progress * 100, 2)}%`,
-              background: "linear-gradient(90deg, var(--accent), var(--accent-2))",
+              background: "var(--accent)",
             }}
           />
         </div>
@@ -258,7 +255,7 @@ export default function App() {
       </section>
 
       {/* Time Machine — projection with year selector */}
-      <section className="glass rounded-[24px] p-5 sm:p-7 mb-6">
+      <section className="glass rounded-[18px] p-5 sm:p-7 mb-6">
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
             Your projection · $1 / day
@@ -296,7 +293,7 @@ export default function App() {
 
       {/* Wallet — demoted to expandable footer (it's not what users come here for) */}
       <details
-        className="glass rounded-[20px] px-4 py-3 mt-2 group"
+        className="glass rounded-[18px] px-4 py-3 mt-2 group"
         onToggle={(e) => setWalletShown((e.target as HTMLDetailsElement).open)}
       >
         <summary className="flex items-center justify-between cursor-pointer list-none gap-3">
@@ -318,7 +315,7 @@ export default function App() {
 
 function Stat({ label, empty }: { label: string; empty: string }) {
   return (
-    <div className="glass-strong rounded-3xl p-5">
+    <div className="glass-strong rounded-[18px] p-5">
       <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-3">
         {label}
       </div>
@@ -335,7 +332,7 @@ function PositionStat({ position }: { position: Position | null }) {
   const fmtUsd = (v: number) =>
     v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
   return (
-    <div className="glass-strong rounded-3xl p-5">
+    <div className="glass-strong rounded-[18px] p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
           Position

@@ -68,7 +68,7 @@ export default function DepositModal({
         aria-modal="true"
         aria-label="Top up"
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-[28px] w-full max-w-md p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(12,10,20,0.35)]"
+        className="bg-white rounded-[18px] w-full max-w-md p-6 sm:p-8 shadow-[0_24px_60px_-12px_rgba(12,10,20,0.35)]"
       >
         <div className="flex items-start justify-between mb-1">
           <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
@@ -186,7 +186,7 @@ function Row({
             ? "text-lg font-bold text-foreground"
             : muted
               ? "text-[13px] text-foreground/55"
-              : "text-[14px] text-foreground/85 font-medium"
+              : "text-[14px] text-foreground/85"
         }`}
       >
         {value}

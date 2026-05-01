@@ -161,7 +161,10 @@ export default function DepositModal({
     }
 
     // mode === "wallet" — sign a USDC SPL or native SOL transfer to the treasury.
-    const standardWallet = wallets[0];
+    // Pick the wallet matching the address shown in the dashboard, not just
+    // wallets[0]. With both Privy embedded + an external wallet (e.g. Backpack)
+    // connected, the embedded one is index 0 but is usually empty.
+    const standardWallet = wallets.find((w) => w.address === wallet) ?? wallets[0];
     if (!standardWallet || !wallet || !treasury || !tokenAmount) return;
     setConfirming(true);
     try {

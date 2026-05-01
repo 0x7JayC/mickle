@@ -136,7 +136,15 @@ export default function App() {
   // Bumped after any state change that should refresh the activity feed
   const [activityKey, setActivityKey] = useState(0);
 
-  const wallet = solanaWallets[0]?.address ?? null;
+  // Prefer an externally-connected wallet (Backpack, Phantom, etc.) over the
+  // empty Privy embedded wallet — that's the one the user funded. Fall back
+  // to embedded if no external wallet is linked.
+  const externalWallet = solanaWallets.find(
+    (w) =>
+      "walletClientType" in w &&
+      (w as { walletClientType?: string }).walletClientType !== "privy",
+  );
+  const wallet = externalWallet?.address ?? solanaWallets[0]?.address ?? null;
 
   useEffect(() => {
     if (!authenticated) return;

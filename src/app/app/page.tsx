@@ -339,6 +339,46 @@ export default function App() {
   const onConfirmDemoDeposit = (gbp: number) => recordDeposit(gbp);
   const onConfirmDeposit = (gbp: number, txSig: string) => recordDeposit(gbp, txSig);
 
+  // Coinbase Onramp: get a signed URL from our server and redirect.
+  // The user buys USDC on Apple Pay/card, Coinbase delivers to the
+  // treasury, then redirects back to /app?onramp=success&amount=N.
+  const onLaunchOnramp = async (gbp: number) => {
+    const token = await getAccessToken();
+    if (!token) throw new Error("not signed in");
+    const r = await fetch("/api/onramp/coinbase-url", {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ amount_gbp: gbp }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.error ?? "onramp not available");
+    }
+    const { url } = (await r.json()) as { url: string };
+    window.location.href = url;
+  };
+
+  // Handle the redirect-back: ?onramp=success&amount=5 → credit ledger.
+  // Coinbase delivers USDC to the treasury within 30-60s; we credit the
+  // user immediately for UX, and the on-chain settlement is verifiable
+  // separately via the treasury page's live balance.
+  useEffect(() => {
+    if (!authenticated || typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("onramp") === "success") {
+      const amt = Number(url.searchParams.get("amount"));
+      if (Number.isFinite(amt) && amt > 0) {
+        recordDeposit(amt);
+      }
+      url.searchParams.delete("onramp");
+      url.searchParams.delete("amount");
+      window.history.replaceState({}, "", url.toString());
+    }
+    // recordDeposit closes over getAccessToken which is stable enough; we
+    // intentionally fire once on mount per auth state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated]);
+
   return (
     <>
       <SiteNav>
@@ -482,6 +522,7 @@ export default function App() {
           onClose={() => setDepositOpen(false)}
           onConfirmDemo={onConfirmDemoDeposit}
           onConfirmDeposit={onConfirmDeposit}
+          onLaunchOnramp={onLaunchOnramp}
         />
       )}
 

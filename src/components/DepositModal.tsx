@@ -18,6 +18,10 @@ const dict: Dict = {
   demoBodyTail: { en: " for architecture.", zh: " 了解架构。" },
   walletMode: { en: "Pay from your Solana wallet", zh: "用 Solana 钱包支付" },
   walletBody: { en: "Sign a USDC or SOL transfer from your Solana wallet to the Mickle treasury. No fiat on-ramp needed.", zh: "从你的 Solana 钱包向 Mickle 金库签署 USDC 或 SOL 转账。无需法币入金。" },
+  applePayCta: { en: "Pay £{n} with Apple Pay", zh: "用 Apple Pay 支付 £{n}" },
+  applePayBody: { en: "Card or Apple Pay → USDC, settled to the Mickle treasury via Coinbase. Includes a ~2% on-ramp fee.", zh: "银行卡或 Apple Pay → USDC,通过 Coinbase 结算至 Mickle 金库。包含约 2% 入金费。" },
+  orPayCrypto: { en: "or pay with crypto wallet", zh: "或使用加密钱包支付" },
+  openingOnramp: { en: "Opening Coinbase…", zh: "正在打开 Coinbase…" },
   rateLineUsdc: { en: "≈ {amt} USDC at today's rate", zh: "按今日汇率 ≈ {amt} USDC" },
   rateLineSol: { en: "≈ {amt} SOL at today's rate", zh: "按今日汇率 ≈ {amt} SOL" },
   payToken: { en: "Pay with", zh: "支付方式" },
@@ -60,16 +64,20 @@ export default function DepositModal({
   onClose,
   onConfirmDemo,
   onConfirmDeposit,
+  onLaunchOnramp,
 }: {
   wallet: string | null;
   email: string | null;
   onClose: () => void;
   onConfirmDemo?: (gbp: number) => void;
   onConfirmDeposit?: (gbp: number, txSig: string) => void;
+  onLaunchOnramp?: (gbp: number) => Promise<void>;
 }) {
   const lang = useLang();
   const [amount, setAmount] = useState(30);
   const [confirming, setConfirming] = useState(false);
+  const [openingOnramp, setOpeningOnramp] = useState(false);
+  const [showWalletPath, setShowWalletPath] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gbpUsdRate, setGbpUsdRate] = useState<number | null>(null);
   const [gbpPerSol, setGbpPerSol] = useState<number | null>(null);
@@ -77,6 +85,7 @@ export default function DepositModal({
   const transakKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
   const transakEnv = process.env.NEXT_PUBLIC_TRANSAK_ENV || "STAGING";
   const treasury = process.env.NEXT_PUBLIC_MICKLE_TREASURY;
+  const onrampEnabled = !!process.env.NEXT_PUBLIC_COINBASE_PROJECT_ID;
 
   // Mode: wallet-first (v0). Falls through to Transak if it's wired, else demo.
   const mode: "wallet" | "transak" | "demo" = treasury
@@ -270,7 +279,7 @@ export default function DepositModal({
           </div>
         )}
 
-        {mode === "wallet" && (
+        {mode === "wallet" && (!onrampEnabled || showWalletPath) && (
           <>
             <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-4 py-3 mb-4">
               <div className="text-[12px] font-semibold text-foreground/85 mb-0.5">
@@ -304,6 +313,14 @@ export default function DepositModal({
               </div>
             </div>
           </>
+        )}
+
+        {mode === "wallet" && onrampEnabled && !showWalletPath && (
+          <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-4 py-3 mb-5">
+            <p className="text-[12px] text-foreground/70 leading-relaxed">
+              {t(dict, "applePayBody", lang)}
+            </p>
+          </div>
         )}
 
         <div className="grid grid-cols-3 gap-2 mb-5">
@@ -354,27 +371,57 @@ export default function DepositModal({
           <p className="text-[12px] text-red-600 mb-3 text-center leading-relaxed">{error}</p>
         )}
 
-        <button
-          onClick={start}
-          disabled={
-            confirming ||
-            (mode !== "demo" && !wallet) ||
-            (mode === "wallet" && !tokenAmount)
-          }
-          className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {confirming
-            ? mode === "wallet"
-              ? t(dict, "signing", lang)
-              : t(dict, "recordingDemo", lang)
-            : mode === "demo"
-              ? fmtN(t(dict, "simulate", lang), amount)
-              : !wallet
-                ? t(dict, "provisioning", lang)
-                : mode === "wallet"
-                  ? fmtN(t(dict, token === "USDC" ? "payUsdc" : "paySol", lang), amount)
-                  : fmtN(t(dict, "continue", lang), amount)}
-        </button>
+        {mode === "wallet" && onrampEnabled && !showWalletPath ? (
+          <>
+            <button
+              onClick={async () => {
+                setError(null);
+                setOpeningOnramp(true);
+                try {
+                  await onLaunchOnramp?.(amount);
+                } catch (e) {
+                  setError((e as Error).message ?? "onramp launch failed");
+                } finally {
+                  setOpeningOnramp(false);
+                }
+              }}
+              disabled={openingOnramp}
+              className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50"
+            >
+              {openingOnramp
+                ? t(dict, "openingOnramp", lang)
+                : fmtN(t(dict, "applePayCta", lang), amount)}
+            </button>
+            <button
+              onClick={() => setShowWalletPath(true)}
+              className="block mx-auto mt-3 text-[12px] text-foreground/55 hover:text-foreground underline underline-offset-4"
+            >
+              {t(dict, "orPayCrypto", lang)}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={start}
+            disabled={
+              confirming ||
+              (mode !== "demo" && !wallet) ||
+              (mode === "wallet" && !tokenAmount)
+            }
+            className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {confirming
+              ? mode === "wallet"
+                ? t(dict, "signing", lang)
+                : t(dict, "recordingDemo", lang)
+              : mode === "demo"
+                ? fmtN(t(dict, "simulate", lang), amount)
+                : !wallet
+                  ? t(dict, "provisioning", lang)
+                  : mode === "wallet"
+                    ? fmtN(t(dict, token === "USDC" ? "payUsdc" : "paySol", lang), amount)
+                    : fmtN(t(dict, "continue", lang), amount)}
+          </button>
+        )}
 
         <p className="text-[11px] text-foreground/50 mt-4 leading-relaxed text-center">
           {mode === "demo"

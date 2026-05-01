@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     defaultAsset: "USDC",
     defaultPaymentMethod: "APPLE_PAY",
     partnerUserId,
-    redirectUrl: `${new URL(req.url).origin}/app?onramp=success&amount=${amount}`,
+    redirectUrl: `${new URL(req.url).origin}/dashboard?onramp=success&amount=${amount}`,
   });
 
   return NextResponse.json({

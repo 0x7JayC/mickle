@@ -39,7 +39,7 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
           {showLinks && (
             <>
               <Link
-                href="/app"
+                href="/dashboard"
                 className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
               >
                 {t(dict, "account", lang)}
@@ -79,7 +79,7 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
           role="menu"
         >
           <Link
-            href="/app"
+            href="/dashboard"
             onClick={close}
             role="menuitem"
             className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"

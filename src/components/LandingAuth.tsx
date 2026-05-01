@@ -17,7 +17,7 @@ const dict: Dict = {
 //     Google · Solana wallet)
 //   • "Connect Solana wallet" → opens straight to the wallet picker
 //
-// Once authenticated, push to /app. While auth is in-flight Privy
+// Once authenticated, push to /dashboard. While auth is in-flight Privy
 // shows its own modal — we don't need a loading state here.
 export function LandingAuth() {
   const lang = useLang();
@@ -25,7 +25,7 @@ export function LandingAuth() {
   const router = useRouter();
 
   useEffect(() => {
-    if (ready && authenticated) router.push("/app");
+    if (ready && authenticated) router.push("/dashboard");
   }, [ready, authenticated, router]);
 
   // While auth is in flight or we're about to redirect, render the
@@ -55,7 +55,7 @@ export function LandingNavCta() {
   const router = useRouter();
 
   useEffect(() => {
-    if (ready && authenticated) router.push("/app");
+    if (ready && authenticated) router.push("/dashboard");
   }, [ready, authenticated, router]);
 
   return (
@@ -85,7 +85,7 @@ export function OpenAppButton({ className = "", children }: { className?: string
 
   const onClick = () => {
     if (authenticated) {
-      router.push("/app");
+      router.push("/dashboard");
     } else {
       login();
     }

@@ -21,21 +21,36 @@ const config: Config = {
   showCoinbaseFooter: true,
 };
 
+// Mickle brand palette mapped onto CDP's theme tokens. The Apple
+// Liquid Glass chrome (drawer backdrop blur, soft shadow, rounded
+// container) lives in LandingSignInPanel.tsx — we don't try to
+// recreate it inside CDP's own surfaces.
+//
+// Foreground / background tokens use Mickle's exact hex values from
+// globals.css, and the primary accent is the brand coral instead of
+// CDP's default orange. Border radii lean on CDP's full-pill tokens
+// so buttons match Mickle's glass-button-primary aesthetic.
 const theme: Partial<Theme> = {
+  // Surfaces
   "colors-bg-default": "#ffffff",
-  "colors-bg-alternate": "#eef0f3",
-  "colors-bg-primary": "#e1591b",
-  "colors-bg-secondary": "#eef0f3",
-  "colors-fg-default": "#0a0b0d",
-  "colors-fg-muted": "#5b616e",
-  "colors-fg-primary": "#e1591b",
+  "colors-bg-alternate": "#faf6ee", // Mickle calm-bg cream
+  "colors-bg-primary": "#ff7a59",   // Mickle coral
+  "colors-bg-secondary": "#f4efe6", // soft cream
+  // Foregrounds
+  "colors-fg-default": "#0c0a14",   // Mickle foreground deep
+  "colors-fg-muted": "rgba(12, 10, 20, 0.62)",
+  "colors-fg-primary": "#ff7a59",
   "colors-fg-onPrimary": "#ffffff",
-  "colors-fg-onSecondary": "#0a0b0d",
+  "colors-fg-onSecondary": "#0c0a14",
+  // Status colors — keep CDP defaults; they meet WCAG and aren't
+  // opinionated like the brand accent.
   "colors-fg-positive": "#098551",
   "colors-fg-negative": "#cf202f",
   "colors-fg-warning": "#ed702f",
-  "colors-line-default": "#dcdfe4",
-  "colors-line-heavy": "#9397a0",
+  // Lines — Mickle uses very subtle dividers (foreground @ 8-10%).
+  "colors-line-default": "rgba(12, 10, 20, 0.10)",
+  "colors-line-heavy": "rgba(12, 10, 20, 0.35)",
+  // Border radii — match Mickle's pill-and-card vocabulary.
   "borderRadius-banner": "var(--cdp-web-borderRadius-xl)",
   "borderRadius-cta": "var(--cdp-web-borderRadius-full)",
   "borderRadius-link": "var(--cdp-web-borderRadius-full)",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useIsSignedIn } from "@coinbase/cdp-hooks";
 import { useLang, t, type Dict } from "@/lib/i18n";
@@ -89,9 +89,12 @@ export function LandingNavCta() {
   );
 }
 
-// 'Open app' button used on /treasury. Opens the same inline drawer
-// for signed-out visitors, or routes straight to /dashboard for
-// signed-in ones.
+// 'Open app' / 'Sign in' button used on /treasury. Logic:
+//   - Signed-in & already on /treasury → render nothing. The SiteNav's
+//     inline Dashboard link handles navigation; a duplicate right-side
+//     CTA was reading as a contradiction with the inline links.
+//   - Signed-in elsewhere → 'Open app →' navigates to /dashboard.
+//   - Signed-out → opens the inline sign-in drawer.
 export function OpenAppButton({
   className = "",
   children,
@@ -101,9 +104,14 @@ export function OpenAppButton({
 }) {
   const lang = useLang();
   const router = useRouter();
+  const pathname = usePathname();
   const { isSignedIn } = useIsSignedIn();
   const [open, setOpen] = useState(false);
+
   if (isSignedIn) {
+    // On /treasury the inline Dashboard link is the primary nav.
+    // Don't double up with a right-side CTA pointing at the same place.
+    if (pathname === "/treasury") return null;
     return (
       <button
         onClick={() => router.push("/dashboard")}
@@ -119,7 +127,7 @@ export function OpenAppButton({
         onClick={() => setOpen(true)}
         className={className || "text-sm font-semibold text-foreground/70 hover:text-foreground"}
       >
-        {children ?? t(dict, "openApp", lang)}
+        {children ?? t(dict, "start", lang)}
       </button>
       {open && (
         <LandingSignInPanel

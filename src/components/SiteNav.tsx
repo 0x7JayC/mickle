@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useIsInitialized, useIsSignedIn } from "@coinbase/cdp-hooks";
 import { LangToggle } from "./LangToggle";
@@ -8,7 +9,7 @@ import { useLang, t, type Dict } from "@/lib/i18n";
 
 const dict: Dict = {
   treasury: { en: "Treasury", zh: "金库" },
-  account: { en: "Account", zh: "账户" },
+  dashboard: { en: "Dashboard", zh: "仪表板" },
   menu: { en: "Open menu", zh: "打开菜单" },
 };
 
@@ -18,11 +19,27 @@ const dict: Dict = {
 // mobile collapsed into a 3×3 dot-grid Liquid Glass menu.
 export function SiteNav({ children }: { children?: React.ReactNode }) {
   const lang = useLang();
+  const pathname = usePathname();
   const { isInitialized } = useIsInitialized();
   const { isSignedIn } = useIsSignedIn();
   const showLinks = isInitialized && isSignedIn;
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
+  // Active-page styling so users see where they are.
+  const linkClass = (href: string, mobile = false) => {
+    const active = pathname === href;
+    if (mobile) {
+      return `block px-4 py-3 text-[15px] font-medium rounded-[14px] transition ${
+        active
+          ? "bg-foreground/[0.08] text-foreground"
+          : "text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10]"
+      }`;
+    }
+    return `hidden sm:inline px-3 py-2 text-sm transition rounded-full ${
+      active ? "text-foreground font-semibold" : "text-muted hover:text-foreground"
+    }`;
+  };
 
   return (
     <nav className="sticky top-4 z-50 px-4 sm:px-6 mt-4 relative">
@@ -41,13 +58,15 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
             <>
               <Link
                 href="/dashboard"
-                className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
+                aria-current={pathname === "/dashboard" ? "page" : undefined}
+                className={linkClass("/dashboard")}
               >
-                {t(dict, "account", lang)}
+                {t(dict, "dashboard", lang)}
               </Link>
               <Link
                 href="/treasury"
-                className="hidden sm:inline px-3 py-2 text-sm text-muted hover:text-foreground transition rounded-full"
+                aria-current={pathname === "/treasury" ? "page" : undefined}
+                className={linkClass("/treasury")}
               >
                 {t(dict, "treasury", lang)}
               </Link>
@@ -83,15 +102,17 @@ export function SiteNav({ children }: { children?: React.ReactNode }) {
             href="/dashboard"
             onClick={close}
             role="menuitem"
-            className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+            aria-current={pathname === "/dashboard" ? "page" : undefined}
+            className={linkClass("/dashboard", true)}
           >
-            {t(dict, "account", lang)}
+            {t(dict, "dashboard", lang)}
           </Link>
           <Link
             href="/treasury"
             onClick={close}
             role="menuitem"
-            className="block px-4 py-3 text-[15px] font-medium text-foreground/85 hover:text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.10] rounded-[14px] transition"
+            aria-current={pathname === "/treasury" ? "page" : undefined}
+            className={linkClass("/treasury", true)}
           >
             {t(dict, "treasury", lang)}
           </Link>

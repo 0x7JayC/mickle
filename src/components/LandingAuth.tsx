@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useIsSignedIn } from "@coinbase/cdp-hooks";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
-// Lazy-loaded sign-in drawer. CDP's bundle (~400 KB) is fetched only
-// when the user actually opens the panel. Landing first paint stays
-// fast and static.
+// The drawer is heavy (CDP form internals + assets); load it on first
+// click so it's not in the landing's initial bundle.
 const LandingSignInPanel = dynamic(() => import("./LandingSignInPanel"), {
   ssr: false,
 });
@@ -18,11 +18,24 @@ const dict: Dict = {
   openApp: { en: "Open app →", zh: "打开 App →" },
 };
 
+// Watch CDP auth state on landing so an OAuth round-trip (Google /
+// Apple) lands the user on /dashboard automatically when they return
+// signed in. Without this the drawer's onSuccess callback is gone by
+// the time the redirect comes back and the user sees the landing.
+function useRedirectWhenSignedIn() {
+  const router = useRouter();
+  const { isSignedIn } = useIsSignedIn();
+  useEffect(() => {
+    if (isSignedIn) router.push("/dashboard");
+  }, [isSignedIn, router]);
+}
+
 // Primary CTA used at the bottom of the landing.
 export function LandingAuth() {
   const lang = useLang();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  useRedirectWhenSignedIn();
   return (
     <>
       <div className="flex flex-col items-center gap-3 mb-12 sm:mb-12">
@@ -54,6 +67,7 @@ export function LandingNavCta() {
   const lang = useLang();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  useRedirectWhenSignedIn();
   return (
     <>
       <button
@@ -76,8 +90,8 @@ export function LandingNavCta() {
 }
 
 // 'Open app' button used on /treasury. Opens the same inline drawer
-// for signed-out visitors so they can authenticate without leaving
-// the transparency page.
+// for signed-out visitors, or routes straight to /dashboard for
+// signed-in ones.
 export function OpenAppButton({
   className = "",
   children,
@@ -87,7 +101,18 @@ export function OpenAppButton({
 }) {
   const lang = useLang();
   const router = useRouter();
+  const { isSignedIn } = useIsSignedIn();
   const [open, setOpen] = useState(false);
+  if (isSignedIn) {
+    return (
+      <button
+        onClick={() => router.push("/dashboard")}
+        className={className || "text-sm font-semibold text-foreground/70 hover:text-foreground"}
+      >
+        {children ?? t(dict, "openApp", lang)}
+      </button>
+    );
+  }
   return (
     <>
       <button

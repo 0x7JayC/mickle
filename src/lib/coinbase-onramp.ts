@@ -10,30 +10,44 @@
 //
 // Docs: https://docs.cdp.coinbase.com/onramp/docs/api-initializing
 //
-// Expects COINBASE_API_KEY to be the modern CDP key format — a JSON
-// blob with `name` and `privateKey` fields. Legacy plain-string keys
-// are not supported here; regenerate via portal.cdp.coinbase.com.
+// Credentials precedence (matches lib/cdp-server.ts):
+//   1. COINBASE_API_KEY as a JSON blob — accepts {name, privateKey}
+//      OR {apiKeyId, apiKeySecret}.
+//   2. Individual env vars CDP_API_KEY_ID + CDP_API_KEY_SECRET (the
+//      shape Coinbase tells you to use in their setup error message).
 
 import { SignJWT, importPKCS8 } from "jose";
 
 type CdpKey = { name: string; privateKey: string };
 
 function parseKey(): CdpKey {
+  // Path A — bundled JSON blob.
   const raw = process.env.COINBASE_API_KEY;
-  if (!raw) throw new Error("COINBASE_API_KEY not set");
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch {
-    throw new Error(
-      "COINBASE_API_KEY must be the new CDP JSON format (with name + privateKey). Regenerate at portal.cdp.coinbase.com → API keys.",
-    );
+  if (raw) {
+    try {
+      const j = JSON.parse(raw) as {
+        name?: string;
+        privateKey?: string;
+        apiKeyId?: string;
+        apiKeySecret?: string;
+      };
+      const name = j.name ?? j.apiKeyId;
+      const privateKey = j.privateKey ?? j.apiKeySecret;
+      if (name && privateKey) return { name, privateKey };
+    } catch {
+      // fall through to env-var path
+    }
   }
-  const k = parsed as CdpKey;
-  if (typeof k?.name !== "string" || typeof k?.privateKey !== "string") {
-    throw new Error("COINBASE_API_KEY JSON missing 'name' or 'privateKey'");
-  }
-  return k;
+
+  // Path B — individual env vars. CDP_API_KEY_ID is the JWT subject /
+  // kid; CDP_API_KEY_SECRET is the PEM private key.
+  const id = process.env.CDP_API_KEY_ID;
+  const secret = process.env.CDP_API_KEY_SECRET;
+  if (id && secret) return { name: id, privateKey: secret };
+
+  throw new Error(
+    "CDP credentials not configured. Set COINBASE_API_KEY (JSON download from portal.cdp.coinbase.com) or CDP_API_KEY_ID + CDP_API_KEY_SECRET.",
+  );
 }
 
 async function signCdpJwt({

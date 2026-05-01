@@ -16,9 +16,11 @@ const dict: Dict = {
   demoMode: { en: "Demo mode · no real money", zh: "演示模式 · 无真实资金" },
   demoBody: { en: "Production routes GBP through Open Banking to a Kraken treasury (~0.2% all-in). See ", zh: "正式版通过开放银行将 GBP 路由到 Kraken 金库(全程约 0.2%)。详见 " },
   demoBodyTail: { en: " for architecture.", zh: " 了解架构。" },
-  walletMode: { en: "Pay with USDC", zh: "用 USDC 支付" },
-  walletBody: { en: "Sign a USDC transfer from your Solana wallet to the Mickle treasury. No fiat on-ramp needed.", zh: "从你的 Solana 钱包向 Mickle 金库签署一笔 USDC 转账。无需法币入金。" },
-  rateLine: { en: "≈ {usdc} USDC at today's rate", zh: "按今日汇率 ≈ {usdc} USDC" },
+  walletMode: { en: "Pay from your Solana wallet", zh: "用 Solana 钱包支付" },
+  walletBody: { en: "Sign a USDC or SOL transfer from your Solana wallet to the Mickle treasury. No fiat on-ramp needed.", zh: "从你的 Solana 钱包向 Mickle 金库签署 USDC 或 SOL 转账。无需法币入金。" },
+  rateLineUsdc: { en: "≈ {amt} USDC at today's rate", zh: "按今日汇率 ≈ {amt} USDC" },
+  rateLineSol: { en: "≈ {amt} SOL at today's rate", zh: "按今日汇率 ≈ {amt} SOL" },
+  payToken: { en: "Pay with", zh: "支付方式" },
   days: { en: "days", zh: "天" },
   bestFit: { en: "best fit", zh: "推荐" },
   bestFee: { en: "best fee", zh: "费率最优" },
@@ -29,8 +31,9 @@ const dict: Dict = {
   provisioning: { en: "Provisioning wallet…", zh: "钱包创建中…" },
   continue: { en: "Continue · £{n}", zh: "继续 · £{n}" },
   payUsdc: { en: "Pay £{n} with USDC", zh: "用 USDC 支付 £{n}" },
+  paySol: { en: "Pay £{n} with SOL", zh: "用 SOL 支付 £{n}" },
   signing: { en: "Confirm in wallet…", zh: "请在钱包中确认…" },
-  txError: { en: "Transfer failed. Make sure your wallet has USDC and a little SOL for fees.", zh: "转账失败。请确认钱包有 USDC 以及少量 SOL 作为手续费。" },
+  txError: { en: "Transfer failed. Make sure your wallet has enough balance plus a little SOL for fees.", zh: "转账失败。请确认钱包余额充足,且有少量 SOL 作为手续费。" },
   footerDemo: { en: "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in.", zh: "黑客松演示。正式版替换为 Open Banking + Kraken 金库,全程 0.5% 以下。" },
   footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into SPYx on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库,在每日打卡时自动兑换为 SPYx。" },
   footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into SPYx on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana,每日打卡时自动兑换为 SPYx。" },
@@ -38,6 +41,8 @@ const dict: Dict = {
 
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const USDC_DECIMALS = 6;
+const SOL_DECIMALS = 9;
+type PayToken = "USDC" | "SOL";
 
 const fmtN = (s: string, n: number | string) => s.replace("{n}", String(n));
 
@@ -67,6 +72,8 @@ export default function DepositModal({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gbpUsdRate, setGbpUsdRate] = useState<number | null>(null);
+  const [gbpPerSol, setGbpPerSol] = useState<number | null>(null);
+  const [token, setToken] = useState<PayToken>("USDC");
   const transakKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
   const transakEnv = process.env.NEXT_PUBLIC_TRANSAK_ENV || "STAGING";
   const treasury = process.env.NEXT_PUBLIC_MICKLE_TREASURY;
@@ -81,23 +88,31 @@ export default function DepositModal({
   const { wallets } = useSolanaWallets();
   const { signAndSendTransaction } = useSignAndSendTransaction();
 
-  // GBP→USD reference rate (USDC ≈ USD). Coingecko public endpoint, no key.
+  // GBP→USDC + GBP→SOL reference rates. Coingecko public endpoint, no key.
   useEffect(() => {
     if (mode !== "wallet") return;
     let cancelled = false;
     (async () => {
       try {
         const r = await fetch(
-          "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=gbp",
+          "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin,solana&vs_currencies=gbp",
           { cache: "no-store" },
         );
-        const j = (await r.json()) as { "usd-coin"?: { gbp?: number } };
+        const j = (await r.json()) as {
+          "usd-coin"?: { gbp?: number };
+          solana?: { gbp?: number };
+        };
         const gbpPerUsdc = j["usd-coin"]?.gbp;
-        if (!cancelled && typeof gbpPerUsdc === "number" && gbpPerUsdc > 0) {
-          setGbpUsdRate(gbpPerUsdc);
+        const solGbp = j.solana?.gbp;
+        if (!cancelled) {
+          if (typeof gbpPerUsdc === "number" && gbpPerUsdc > 0) setGbpUsdRate(gbpPerUsdc);
+          if (typeof solGbp === "number" && solGbp > 0) setGbpPerSol(solGbp);
         }
       } catch {
-        if (!cancelled) setGbpUsdRate(0.79); // safe fallback ~ April 2026
+        if (!cancelled) {
+          setGbpUsdRate(0.79); // ~ April 2026 fallback
+          setGbpPerSol(120); // ~ April 2026 fallback (£/SOL)
+        }
       }
     })();
     return () => {
@@ -108,6 +123,8 @@ export default function DepositModal({
   const fee = amount * FEE_PCT;
   const net = amount - fee;
   const usdcAmount = gbpUsdRate ? amount / gbpUsdRate : null;
+  const solAmount = gbpPerSol ? amount / gbpPerSol : null;
+  const tokenAmount = token === "USDC" ? usdcAmount : solAmount;
 
   const start = async () => {
     setError(null);
@@ -143,36 +160,38 @@ export default function DepositModal({
       return;
     }
 
-    // mode === "wallet" — sign a USDC SPL transfer to the treasury.
+    // mode === "wallet" — sign a USDC SPL or native SOL transfer to the treasury.
     const standardWallet = wallets[0];
-    if (!standardWallet || !wallet || !treasury || !usdcAmount) return;
+    if (!standardWallet || !wallet || !treasury || !tokenAmount) return;
     setConfirming(true);
     try {
-      const [
-        { Connection, PublicKey, TransactionMessage, VersionedTransaction },
-        { getAssociatedTokenAddressSync, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction },
-      ] = await Promise.all([
-        import("@solana/web3.js"),
-        import("@solana/spl-token"),
-      ]);
+      const web3 = await import("@solana/web3.js");
+      const { Connection, PublicKey, TransactionMessage, VersionedTransaction, SystemProgram } = web3;
 
       const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
       const conn = new Connection(rpc, "confirmed");
       const owner = new PublicKey(wallet);
       const treasuryPk = new PublicKey(treasury);
-      const mint = new PublicKey(USDC_MINT);
 
-      const srcAta = getAssociatedTokenAddressSync(mint, owner);
-      const destAta = getAssociatedTokenAddressSync(mint, treasuryPk);
-
-      // Lamports = USDC * 10^6, rounded to whole units.
-      const lamports = BigInt(Math.round(usdcAmount * 10 ** USDC_DECIMALS));
-
-      const ixs = [
-        // Idempotent: no-op if treasury ATA already exists, costs ~2k lamports otherwise.
-        createAssociatedTokenAccountIdempotentInstruction(owner, destAta, treasuryPk, mint),
-        createTransferCheckedInstruction(srcAta, mint, destAta, owner, lamports, USDC_DECIMALS),
-      ];
+      let ixs;
+      if (token === "USDC") {
+        const spl = await import("@solana/spl-token");
+        const mint = new PublicKey(USDC_MINT);
+        const srcAta = spl.getAssociatedTokenAddressSync(mint, owner);
+        const destAta = spl.getAssociatedTokenAddressSync(mint, treasuryPk);
+        const lamports = BigInt(Math.round(tokenAmount * 10 ** USDC_DECIMALS));
+        ixs = [
+          // Idempotent: no-op if treasury ATA already exists.
+          spl.createAssociatedTokenAccountIdempotentInstruction(owner, destAta, treasuryPk, mint),
+          spl.createTransferCheckedInstruction(srcAta, mint, destAta, owner, lamports, USDC_DECIMALS),
+        ];
+      } else {
+        // Native SOL — SystemProgram.transfer in lamports.
+        const lamports = Math.round(tokenAmount * 10 ** SOL_DECIMALS);
+        ixs = [
+          SystemProgram.transfer({ fromPubkey: owner, toPubkey: treasuryPk, lamports }),
+        ];
+      }
 
       const { blockhash } = await conn.getLatestBlockhash("confirmed");
       const msg = new TransactionMessage({
@@ -246,14 +265,39 @@ export default function DepositModal({
         )}
 
         {mode === "wallet" && (
-          <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-4 py-3 mb-5">
-            <div className="text-[12px] font-semibold text-foreground/85 mb-0.5">
-              {t(dict, "walletMode", lang)}
+          <>
+            <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-4 py-3 mb-4">
+              <div className="text-[12px] font-semibold text-foreground/85 mb-0.5">
+                {t(dict, "walletMode", lang)}
+              </div>
+              <p className="text-[11px] text-foreground/65 leading-relaxed">
+                {t(dict, "walletBody", lang)}
+              </p>
             </div>
-            <p className="text-[11px] text-foreground/65 leading-relaxed">
-              {t(dict, "walletBody", lang)}
-            </p>
-          </div>
+            <div className="mb-5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-foreground/55 mb-2">
+                {t(dict, "payToken", lang)}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {(["USDC", "SOL"] as const).map((tok) => {
+                  const active = token === tok;
+                  return (
+                    <button
+                      key={tok}
+                      onClick={() => setToken(tok)}
+                      className={`rounded-[14px] py-2.5 text-sm font-semibold tracking-tight transition border-2 ${
+                        active
+                          ? "border-accent bg-accent/5 text-foreground"
+                          : "border-foreground/10 text-foreground/65 hover:border-foreground/25"
+                      }`}
+                    >
+                      {tok}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
 
         <div className="grid grid-cols-3 gap-2 mb-5">
@@ -290,9 +334,12 @@ export default function DepositModal({
           <Row label={t(dict, "fee", lang)} value={`−£${fee.toFixed(2)}`} muted />
           <div className="h-px bg-foreground/10 my-2" />
           <Row label={t(dict, "intoSpx", lang)} value={`£${net.toFixed(2)}`} bold />
-          {mode === "wallet" && usdcAmount && (
+          {mode === "wallet" && tokenAmount && (
             <p className="text-[11px] text-foreground/55 mt-2 text-right tabular-nums">
-              {fmtN(t(dict, "rateLine", lang), usdcAmount.toFixed(2))}
+              {fmtN(
+                t(dict, token === "USDC" ? "rateLineUsdc" : "rateLineSol", lang),
+                token === "USDC" ? tokenAmount.toFixed(2) : tokenAmount.toFixed(4),
+              )}
             </p>
           )}
         </div>
@@ -306,7 +353,7 @@ export default function DepositModal({
           disabled={
             confirming ||
             (mode !== "demo" && !wallet) ||
-            (mode === "wallet" && !usdcAmount)
+            (mode === "wallet" && !tokenAmount)
           }
           className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
         >
@@ -319,7 +366,7 @@ export default function DepositModal({
               : !wallet
                 ? t(dict, "provisioning", lang)
                 : mode === "wallet"
-                  ? fmtN(t(dict, "payUsdc", lang), amount)
+                  ? fmtN(t(dict, token === "USDC" ? "payUsdc" : "paySol", lang), amount)
                   : fmtN(t(dict, "continue", lang), amount)}
         </button>
 

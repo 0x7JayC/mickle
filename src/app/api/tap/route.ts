@@ -24,7 +24,16 @@ export async function POST(req: Request) {
 
   const sb = supabaseAdmin();
   const { data, error } = await sb.rpc("record_tap", { p_privy_id: claims.userId });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // record_tap raises 'insufficient balance' when the user has tapped
+    // through their pre-funded streak. Surface that as 402 so the client
+    // can prompt the user to top up.
+    const insufficient = error.message?.toLowerCase().includes("insufficient balance");
+    return NextResponse.json(
+      { error: error.message },
+      { status: insufficient ? 402 : 500 },
+    );
+  }
 
   return NextResponse.json({ user: data });
 }

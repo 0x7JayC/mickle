@@ -46,6 +46,10 @@ const dict: Dict = {
   contributed: { en: "Contributed", zh: "已投入" },
   emptyContributed: { en: "Top up to start your streak", zh: "充值后开始你的连续打卡" },
   totalDeposited: { en: "Total deposited to date", zh: "累计存入金额" },
+  daysLeft: { en: "Days left", zh: "剩余天数" },
+  daysLeftHint: { en: "Each tap uses £1 from your balance", zh: "每次打卡消耗余额 £1" },
+  daysLeftEmpty: { en: "Top up to keep tapping", zh: "充值后继续打卡" },
+  insufficientBalance: { en: "Top up first — every tap uses £1.", zh: "请先充值 —— 每次打卡需 £1。" },
   position: { en: "Position", zh: "持仓" },
   live: { en: "Live", zh: "实时" },
   notConfigured: { en: "SPYx mint not configured yet", zh: "SPYx 铸造尚未配置" },
@@ -82,6 +86,7 @@ type DbUser = {
   streak_count: number;
   last_tap_date: string | null;
   total_contributed_gbp: number | string;
+  balance_gbp: number | string;
 };
 
 type Position = {
@@ -239,6 +244,8 @@ export default function App() {
   const handle = email.split("@")[0];
   const streak = dbUser?.streak_count ?? 0;
   const contributed = Number(dbUser?.total_contributed_gbp ?? 0);
+  const balance = Number(dbUser?.balance_gbp ?? 0);
+  const daysLeft = Math.floor(balance);
   const hour = new Date().getHours();
   const greeting =
     hour < 5
@@ -261,7 +268,16 @@ export default function App() {
         headers: { authorization: `Bearer ${token}` },
       });
       if (!r.ok) {
-        setTapToast(t(dict, "tapErr", lang));
+        const err = await r.json().catch(() => ({}));
+        const isInsufficient =
+          typeof err?.error === "string" && err.error.includes("insufficient balance");
+        setTapToast(
+          isInsufficient ? t(dict, "insufficientBalance", lang) : t(dict, "tapErr", lang),
+        );
+        if (isInsufficient) {
+          // Surface the deposit modal so the recovery path is one tap away.
+          setTimeout(() => setDepositOpen(true), 800);
+        }
         return;
       }
       const { user: u } = await r.json();
@@ -461,10 +477,10 @@ export default function App() {
         </p>
       </section>
 
-      {/* Stats — Position is live, Contributed reads ledger */}
-      <div className="grid sm:grid-cols-2 gap-3 mb-6">
+      {/* Stats — Position is live, Contributed reads ledger, Days left depletes per tap */}
+      <div className="grid sm:grid-cols-2 gap-3 mb-3">
         <PositionStat position={position} />
-        <ContributedStat gbp={contributed} />
+        <ContributedStat gbp={contributed} balance={balance} daysLeft={daysLeft} />
       </div>
 
       {/* Treasury activity — visible only when a batch has actually run */}
@@ -771,7 +787,15 @@ function ProgressCard({
   );
 }
 
-function ContributedStat({ gbp }: { gbp: number }) {
+function ContributedStat({
+  gbp,
+  balance,
+  daysLeft,
+}: {
+  gbp: number;
+  balance: number;
+  daysLeft: number;
+}) {
   const lang = useLang();
   const fmtGbp = (v: number) =>
     v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
@@ -790,11 +814,24 @@ function ContributedStat({ gbp }: { gbp: number }) {
         </>
       ) : (
         <>
-          <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-            {fmtGbp(gbp)}
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+              {fmtGbp(gbp)}
+            </div>
+            <div
+              className={`text-[12px] font-mono uppercase tracking-[0.18em] tabular-nums ${
+                daysLeft > 0 ? "text-accent" : "text-foreground/50"
+              }`}
+            >
+              {daysLeft > 0
+                ? `· ${daysLeft} ${t(dict, "daysLeft", lang).toLowerCase()}`
+                : `· ${t(dict, "daysLeftEmpty", lang)}`}
+            </div>
           </div>
           <div className="text-[12px] text-foreground/55 mt-2 leading-relaxed">
-            {t(dict, "totalDeposited", lang)}
+            {balance > 0
+              ? `${fmtGbp(balance)} ${t(dict, "daysLeftHint", lang).toLowerCase()}`
+              : t(dict, "totalDeposited", lang)}
           </div>
         </>
       )}

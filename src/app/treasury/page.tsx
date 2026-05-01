@@ -42,7 +42,7 @@ type TreasuryData = {
 
 const dict: Dict = {
   treasury: { en: "Treasury", zh: "金库" },
-  hero: { en: "Receipts, not promises.", zh: "凭证,而非承诺。" },
+  hero: { en: "Proof, not pitches.", zh: "链上为证,无需推销。" },
   sub: {
     en: "Every tap, every deposit, every daily swap. Aggregated across the whole cohort. Open Mickle is a daily ritual; the treasury is the receipt.",
     zh: "每一次打卡、每一笔充值、每一次每日兑换。整个用户群体的汇总数据。Mickle 是每日仪式;金库是它的凭证。",
@@ -67,7 +67,7 @@ const dict: Dict = {
   quoteOnly: { en: "quote only", zh: "仅报价" },
   onchain: { en: "On-chain ↗", zh: "链上查看 ↗" },
   demoQuoted: { en: "Demo · quoted", zh: "演示 · 报价" },
-  footer: { en: "© Mickle · Receipts, not promises.", zh: "© Mickle · 凭证,而非承诺。" },
+  footer: { en: "© Mickle · Proof, not pitches.", zh: "© Mickle · 链上为证,无需推销。" },
   back: { en: "← Back to landing", zh: "← 返回首页" },
   liveOnchain: { en: "Live on-chain", zh: "链上实时" },
   walletShort: { en: "Treasury wallet", zh: "金库钱包" },

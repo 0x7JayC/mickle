@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamicImport from "next/dynamic";
 import { SiteNav } from "@/components/SiteNav";
 import { LandingNavCta } from "@/components/LandingAuth";
+
+// Lazy-loaded inline sign-in drawer — CDP only loads on click.
+const LandingSignInPanel = dynamicImport(
+  () => import("@/components/LandingSignInPanel"),
+  { ssr: false },
+);
 import { useLang, type Lang } from "@/lib/i18n";
 import "./scrolly.css";
 
@@ -54,9 +61,10 @@ function beatOpacity(i: number, p: number) {
 export default function Home() {
   const lang = useLang();
   const router = useRouter();
-  // Scrolly-beat CTAs route straight to /dashboard, where CDP
-  // initializes once and the inline AuthButton handles sign-in.
-  const onCta = () => router.push("/dashboard");
+  const [signInOpen, setSignInOpen] = useState(false);
+  // Scrolly-beat CTAs open the inline sign-in drawer. CDP loads on
+  // first open; subsequent opens reuse the already-loaded bundle.
+  const onCta = () => setSignInOpen(true);
   const langRef = useRef<Lang>(lang);
   langRef.current = lang;
 
@@ -382,6 +390,16 @@ export default function Home() {
       <div className="scrolly-hint" ref={hintRef}>
         {HINT[lang]}
       </div>
+
+      {signInOpen && (
+        <LandingSignInPanel
+          onClose={() => setSignInOpen(false)}
+          onSuccess={() => {
+            setSignInOpen(false);
+            router.push("/dashboard");
+          }}
+        />
+      )}
     </div>
   );
 }

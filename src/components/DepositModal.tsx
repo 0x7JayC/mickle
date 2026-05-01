@@ -47,7 +47,7 @@ type PayToken = "USDC" | "SOL";
 const fmtN = (s: string, n: number | string) => s.replace("{n}", String(n));
 
 const PRESETS = [
-  { gbp: 10, days: 10, tag: null as null | "bestFit" | "bestFee" },
+  { gbp: 5, days: 5, tag: null as null | "bestFit" | "bestFee" },
   { gbp: 30, days: 30, tag: "bestFit" as const },
   { gbp: 90, days: 90, tag: "bestFee" as const },
 ];

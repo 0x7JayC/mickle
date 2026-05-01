@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { useRouter } from "next/navigation";
+import { AuthButton } from "@coinbase/cdp-react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
 const dict: Dict = {
@@ -13,12 +14,15 @@ const dict: Dict = {
 };
 
 // Lives on the landing. Two CTAs:
-//   • "Start your streak" → opens the full Privy modal (email · Apple ·
-//     Google · Solana wallet)
-//   • "Connect Solana wallet" → opens straight to the wallet picker
+//   • Primary — Coinbase CDP AuthButton (email · Apple · Google).
+//     Provisions a Solana embedded wallet automatically. The grandma
+//     path: no seed phrase, no wallet UI to learn.
+//   • Secondary — Privy's wallet-only modal for crypto-native users
+//     who want to connect Backpack / Phantom / Solflare directly.
 //
-// Once authenticated, push to /dashboard. While auth is in-flight Privy
-// shows its own modal — we don't need a loading state here.
+// After CDP signs in, the AuthButton fires onSignInSuccess and we push
+// to /dashboard. Privy users continue to be redirected by the existing
+// useEffect.
 export function LandingAuth() {
   const lang = useLang();
   const { ready, authenticated, login } = usePrivy();
@@ -28,22 +32,25 @@ export function LandingAuth() {
     if (ready && authenticated) router.push("/dashboard");
   }, [ready, authenticated, router]);
 
-  // While auth is in flight or we're about to redirect, render the
-  // buttons in their default state — Privy's modal owns the spinner.
   return (
-    <div className="flex flex-wrap justify-center gap-3 mb-12 sm:mb-12">
-      <button
-        onClick={() => login()}
-        className="glass-button-primary px-7 py-3.5 font-semibold"
-      >
+    <div className="flex flex-col items-center gap-3 mb-12 sm:mb-12">
+      <div className="flex flex-wrap justify-center gap-3">
+        <AuthButton
+          onSignInSuccess={() => router.push("/dashboard")}
+          // CDP renders its own pill button — wrap so it inherits our
+          // glass styling sibling-treatment in the row.
+          className="cdp-auth-button"
+        />
+        <button
+          onClick={() => login({ loginMethods: ["wallet"] })}
+          className="glass-button px-7 py-3.5 font-semibold text-foreground"
+        >
+          {t(dict, "connectWallet", lang)}
+        </button>
+      </div>
+      <p className="text-[11px] text-foreground/45 font-mono uppercase tracking-[0.18em]">
         {t(dict, "startStreak", lang)}
-      </button>
-      <button
-        onClick={() => login({ loginMethods: ["wallet"] })}
-        className="glass-button px-7 py-3.5 font-semibold text-foreground"
-      >
-        {t(dict, "connectWallet", lang)}
-      </button>
+      </p>
     </div>
   );
 }

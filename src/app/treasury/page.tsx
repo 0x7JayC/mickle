@@ -20,8 +20,6 @@ type TreasuryData = {
     total_swapped_usdc: number;
     spyx_held: number;
     float_usdc: number;
-    float_apy: number;
-    annual_float_yield_usdc: number;
     onchain: {
       address: string;
       sol: number;
@@ -60,14 +58,6 @@ const dict: Dict = {
   swappedSpyx: { en: "Swapped → SPYx", zh: "已兑换 → SPYx" },
   spyxHeld: { en: "SPYx held", zh: "SPYx 持仓" },
   floatIdle: { en: "Float idle", zh: "闲置浮动资金" },
-  floatYield: { en: "Float yield · Kamino USDC vault", zh: "浮动收益 · Kamino USDC 金库" },
-  apy: { en: "APY", zh: "年化" },
-  perYearModelled: { en: "/ year, modelled", zh: "/ 年,估算" },
-  floatBody: {
-    en: "Cohort float — USDC sitting in the treasury between deposit and the next daily swap — earns ~4.5% APY in Kamino USDC vaults on Solana. This is leg 2 of Mickle's revenue. Captured on working capital, never on user principal. See ",
-    zh: "用户群体的浮动资金 —— 存入后等待下一次每日兑换的 USDC —— 在 Solana 上的 Kamino USDC 金库中以约 4.5% 年化运转。这是 Mickle 的第二条收入腿,只对运营资金计息,永远不动用户本金。详见 ",
-  },
-  floatBodyTail: { en: " on the repo for the full model.", zh: " (在代码仓库)。" },
   recentBatches: { en: "Recent batches", zh: "最近批次" },
   noBatches: { en: "No batches yet. The first one runs the day after the first user tap.", zh: "还没有批次。首次用户打卡后的第二天会运行第一批。" },
   quoteOnly: { en: "quote only", zh: "仅报价" },
@@ -77,9 +67,9 @@ const dict: Dict = {
   leg1Kicker: { en: "Leg 1 · headline", zh: "第一腿 · 显性" },
   leg1Title: { en: "0.99% deposit fee", zh: "0.99% 存款费" },
   leg1Body: { en: "Charged once per top-up. £30+ deposits net positive; smaller deposits subsidised by leg 2.", zh: "每次充值收取一次。£30 以上充值正向回报,较小充值由第二腿补贴。" },
-  leg2Kicker: { en: "Leg 2 · the silent leg", zh: "第二腿 · 静默" },
-  leg2Title: { en: "Float yield", zh: "浮动收益" },
-  leg2Body: { en: "Treasury USDC earns ~4.5% APY in Kamino vaults between deposit and daily swap. Working-capital yield, no user-facing change.", zh: "金库 USDC 在存入与每日兑换之间于 Kamino 金库中以约 4.5% 年化运转。运营资金收益,对用户无任何影响。" },
+  leg2Kicker: { en: "Leg 2 · roadmap", zh: "第二腿 · 路线图" },
+  leg2Title: { en: "Float yield (planned)", zh: "浮动收益(规划中)" },
+  leg2Body: { en: "Once a Kamino integration ships, idle treasury USDC will earn yield between deposit and daily swap. Not yet live — flagged here so it's not surfaced as fake data.", zh: "Kamino 集成上线后,金库闲置 USDC 将在存入与每日兑换之间产生收益。当前尚未启用,在此标注以避免误导。" },
   leg3Kicker: { en: "Leg 3 · future", zh: "第三腿 · 未来" },
   leg3Title: { en: "Streak Premium", zh: "连胜会员" },
   leg3Body: { en: "£0.99/month after £30 lifetime contribution. Reminders, multi-asset baskets, tax CSV. Same shape as Plum / Moneybox.", zh: "累计投入 £30 后每月 £0.99。提醒、多资产组合、税务 CSV。模式同 Plum / Moneybox。" },
@@ -96,7 +86,6 @@ const fmtUsd = (v: number) =>
   v.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
 const fmtNum = (v: number, max = 4) =>
   v.toLocaleString("en-US", { maximumFractionDigits: max });
-const fmtPct = (v: number) => `${(v * 100).toFixed(2)}%`;
 
 export default function TreasuryPage() {
   const lang = useLang();
@@ -168,25 +157,6 @@ export default function TreasuryPage() {
                 suffix="SPYx"
               />
               <Card label={t(dict, "floatIdle", lang)} value={fmtUsd(data.treasury.float_usdc)} />
-            </div>
-            <div className="mt-3 rounded-[18px] border border-foreground/10 bg-white p-5">
-              <div className="flex items-baseline justify-between gap-3 mb-1">
-                <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-                  {t(dict, "floatYield", lang)}
-                </span>
-                <span className="text-[12px] font-mono text-foreground/55 tabular-nums">
-                  {fmtPct(data.treasury.float_apy)} {t(dict, "apy", lang)}
-                </span>
-              </div>
-              <div className="text-2xl font-bold tracking-tight tabular-nums">
-                {fmtUsd(data.treasury.annual_float_yield_usdc)}{" "}
-                <span className="text-sm font-normal text-foreground/55">{t(dict, "perYearModelled", lang)}</span>
-              </div>
-              <p className="text-[12px] text-foreground/55 mt-2 leading-relaxed">
-                {t(dict, "floatBody", lang)}
-                <code className="font-mono">MONEY.md</code>
-                {t(dict, "floatBodyTail", lang)}
-              </p>
             </div>
           </section>
 

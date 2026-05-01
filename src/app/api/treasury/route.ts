@@ -1,11 +1,8 @@
 // Public treasury stats. No auth — this is the transparency page.
 // Aggregates the cohort: total taps, total contributed, total swapped,
-// recent batches, and a modelled float-yield number so visitors can
-// see the three-leg revenue model in action.
-//
-// Also includes a live on-chain block (SOL, USDC, SPYx-or-JLP) read
-// straight from the treasury wallet via RPC, so the page reflects the
-// actual current state of funds — not just what the database believes.
+// recent batches. All numbers are derived from Supabase (ledger) and
+// live RPC reads of the treasury wallet — no modelled / aspirational
+// figures are surfaced here.
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -77,10 +74,6 @@ async function readOnchain() {
   };
 }
 
-// Kamino USDC vault APY. Update if/when we move the float to a different
-// venue. As of April 2026, Kamino main USDC vault was paying ~4.5%.
-const FLOAT_APY = 0.045;
-
 export async function GET() {
   const sb = supabaseAdmin();
 
@@ -116,7 +109,6 @@ export async function GET() {
   // Float = USDC sitting in the treasury between deposit and the next
   // daily swap. Approximation: total deposited minus total swapped.
   const floatUsdc = Math.max(totalDepositedUsdc - totalSwappedUsdc, 0);
-  const annualFloatYieldUsdc = floatUsdc * FLOAT_APY;
 
   return NextResponse.json({
     cohort: {
@@ -132,8 +124,6 @@ export async function GET() {
       total_swapped_usdc: Number(totalSwappedUsdc.toFixed(2)),
       spyx_held: Number(totalSpyx.toFixed(6)),
       float_usdc: Number(floatUsdc.toFixed(2)),
-      float_apy: FLOAT_APY,
-      annual_float_yield_usdc: Number(annualFloatYieldUsdc.toFixed(2)),
       onchain,
     },
     recent_batches: batchRows.map((b) => ({

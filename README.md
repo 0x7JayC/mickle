@@ -2,7 +2,7 @@
 
 > Every little makes a mickle.
 
-DCA into a tokenized S&P basket on Solana. $1 a day. Global. On-chain. Watch consistency compound.
+DCA into a tokenized S&P basket on Solana. £1 a day. Global. On-chain. Watch consistency compound.
 
 Built for Breakout hackathon. See `../.superstack/idea-context.md` for the full thesis, MVP plan, GTM, risks, and validation sprint.
 
@@ -19,7 +19,7 @@ Built for Breakout hackathon. See `../.superstack/idea-context.md` for the full 
 ## What ships in v0 (this commit)
 
 - ✅ Landing page with **The Time Machine** — interactive S&P compounding visualization
-- ✅ `/app` daily-ritual UI — streak, parable, "Add today's $1" tap
+- ✅ `/dashboard` daily-ritual UI — streak, parable, "Add today's £1" tap
 - ✅ Local-storage persistence (so the demo works without a wallet on day 1)
 - ⏳ Privy wallet integration
 - ⏳ Jupiter swap (server-side batcher)
@@ -54,7 +54,7 @@ vercel
 
 1. **Wire Privy** — replace localStorage with embedded wallet + Postgres
 2. **Wire Jupiter swap** — USDC → SPYx route, single user happy path
-3. **Add server-side batcher** — pool daily $1 deposits, execute one swap, distribute pro-rata
+3. **Add server-side batcher** — pool daily £1 deposits, execute one swap, distribute pro-rata
 4. **Manual USDC deposit** — landing for advanced users while fiat on-ramp is in flight
 5. **Streak cNFTs** — milestone mints at day 7 / 30 / 100 / 365
 6. **Fiat on-ramp** — Jupiter's MoonPay/Coinbase partner integration

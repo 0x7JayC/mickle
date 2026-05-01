@@ -30,7 +30,7 @@ remotion/scenes/
 replace with a real screen recording:
 
 1. Capture an MP4 / PNG of the live app at iPhone 15 Pro aspect (19.5:9).
-   The simplest path: open `mickle-gamma.vercel.app/app` in Chrome
+   The simplest path: open `mickle-gamma.vercel.app/dashboard` in Chrome
    responsive mode at 390×844, screen-record the relevant beat.
 2. Drop the file in `public/` as `demo-signin.png` (etc.).
 3. Set the `asset` field in `STEPS` inside `remotion/scenes/Demo.tsx`:

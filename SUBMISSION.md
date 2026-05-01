@@ -12,11 +12,11 @@ Live demo: **https://mickle-gamma.vercel.app**
 
 ## 2. Tagline (one-liner, ≤100 chars)
 
-Every little makes a mickle. $1 a day into the S&P 500. On Solana. Global.
+Every little makes a mickle. £1 a day into the S&P 500. On Solana. Global.
 
 ## 3. Short description (≤280 chars, like a tweet)
 
-Mickle is a daily ritual: $1 a day into the tokenized S&P 500 on Solana. Email login, no seed phrase, 60+ countries. The patience product crypto doesn't have. Many a mickle makes a muckle.
+Mickle is a daily ritual: £1 a day into the tokenized S&P 500 on Solana. Email login, no seed phrase, 60+ countries. The patience product crypto doesn't have. Many a mickle makes a muckle.
 
 ## 4. Long description (markdown)
 
@@ -28,7 +28,7 @@ Mickle is the daily-ritual investment app crypto doesn't have. One tap, once a d
 
 ### The problem
 
-I tried to set up a $1-a-day DCA into the S&P 500 for someone in my family. Robinhood doesn't open accounts in their country. eToro's spread eats the dollar. UK ISAs are tax wrappers, not products. **There is no Web2 path to fractional S&P at $1, globally, 24/7.** The most boring trade in finance is locked away from billions of people.
+I tried to set up a £1-a-day DCA into the S&P 500 for someone in my family. Robinhood doesn't open accounts in their country. eToro's spread eats the pound. UK ISAs are tax wrappers, not products. **There is no Web2 path to fractional S&P at £1, globally, 24/7.** The most boring trade in finance is locked away from billions of people.
 
 ### Why now
 
@@ -136,7 +136,7 @@ Key files:
 
 ### 0:15 – 0:45 · The problem
 
-> *"I tried to set up a one-pound-a-day DCA for someone in my family. Robinhood: not available in their country. eToro's spread eats the dollar. UK ISAs are tax wrappers, not products. The most boring trade in finance — buying the index — is locked away from billions of people. The rails for this exist on Solana. Nobody had built it."*
+> *"I tried to set up a one-pound-a-day DCA for someone in my family. Robinhood: not available in their country. eToro's spread eats the pound. UK ISAs are tax wrappers, not products. The most boring trade in finance — buying the index — is locked away from billions of people. The rails for this exist on Solana. Nobody had built it."*
 
 ### 0:45 – 1:30 · The solution + live demo
 
@@ -181,7 +181,7 @@ Total: 180 seconds.
 Use this when filling out [arena.colosseum.com](https://arena.colosseum.com).
 
 - [ ] **Project name:** Mickle
-- [ ] **One-liner:** Every little makes a mickle. $1/day into the S&P 500. Solana. Global.
+- [ ] **One-liner:** Every little makes a mickle. £1/day into the S&P 500. Solana. Global.
 - [ ] **Description:** paste section 4 (long description) above
 - [ ] **Track:** Consumer (primary), DeFi/RWA (secondary)
 - [ ] **Demo video:** record per script in section 5, upload to YouTube as **unlisted**, paste URL
@@ -200,14 +200,14 @@ Use this when filling out [arena.colosseum.com](https://arena.colosseum.com).
 | Check | How |
 |---|---|
 | Live URL loads | `curl -I https://mickle-gamma.vercel.app` returns 200 |
-| Demo panel visible | Sign in, see "Demo · Jump to" panel bottom-right of `/app` |
+| Demo panel visible | Sign in, see "Demo · Jump to" panel bottom-right of `/dashboard` |
 | Tap → streak bumps | Click £1 button, streak goes 0 → 1 |
 | Demo top-up records | Open Top up, simulate £30, Contributed shows £30.00 |
 | Day 7 celebration fires | Click "Day 7" in panel, see 🌱 overlay |
 | Activity feed populates | Open Activity drawer, see all events with timestamps |
 | iOS PWA install works | Safari → Share → Add to Home Screen → coral gem icon appears |
 | Build is green | `npx next build` finishes with no errors |
-| No console errors | Open DevTools on `/app`, no red entries |
+| No console errors | Open DevTools on `/dashboard`, no red entries |
 
 ## 8. Q&A prep (top 3 likely judge questions)
 

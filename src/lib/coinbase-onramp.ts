@@ -8,7 +8,9 @@
 //      the destination wallet(s) + assets.
 //   3. Use the returned token as ?sessionToken=... in the Onramp URL.
 //
-// Docs: https://docs.cdp.coinbase.com/onramp/docs/api-initializing
+// JWT signing is delegated to the official cdp-sdk helper, which
+// handles both EC SEC1 PEMs (the default Coinbase ships) and Ed25519
+// keys without us having to fight with PKCS#8 conversion.
 //
 // Credentials precedence (matches lib/cdp-server.ts):
 //   1. COINBASE_API_KEY as a JSON blob — accepts {name, privateKey}
@@ -16,9 +18,9 @@
 //   2. Individual env vars CDP_API_KEY_ID + CDP_API_KEY_SECRET (the
 //      shape Coinbase tells you to use in their setup error message).
 
-import { SignJWT, importPKCS8 } from "jose";
+import { generateJwt } from "@coinbase/cdp-sdk/auth";
 
-type CdpKey = { name: string; privateKey: string };
+type CdpKey = { apiKeyId: string; apiKeySecret: string };
 
 function parseKey(): CdpKey {
   // Path A — bundled JSON blob.
@@ -31,54 +33,22 @@ function parseKey(): CdpKey {
         apiKeyId?: string;
         apiKeySecret?: string;
       };
-      const name = j.name ?? j.apiKeyId;
-      const privateKey = j.privateKey ?? j.apiKeySecret;
-      if (name && privateKey) return { name, privateKey };
+      const apiKeyId = j.apiKeyId ?? j.name;
+      const apiKeySecret = (j.apiKeySecret ?? j.privateKey)?.replace(/\\n/g, "\n");
+      if (apiKeyId && apiKeySecret) return { apiKeyId, apiKeySecret };
     } catch {
       // fall through to env-var path
     }
   }
 
-  // Path B — individual env vars. CDP_API_KEY_ID is the JWT subject /
-  // kid; CDP_API_KEY_SECRET is the PEM private key.
+  // Path B — individual env vars.
   const id = process.env.CDP_API_KEY_ID;
-  const secret = process.env.CDP_API_KEY_SECRET;
-  if (id && secret) return { name: id, privateKey: secret };
+  const secret = process.env.CDP_API_KEY_SECRET?.replace(/\\n/g, "\n");
+  if (id && secret) return { apiKeyId: id, apiKeySecret: secret };
 
   throw new Error(
     "CDP credentials not configured. Set COINBASE_API_KEY (JSON download from portal.cdp.coinbase.com) or CDP_API_KEY_ID + CDP_API_KEY_SECRET.",
   );
-}
-
-async function signCdpJwt({
-  method,
-  host,
-  path,
-}: {
-  method: "GET" | "POST";
-  host: string;
-  path: string;
-}): Promise<string> {
-  const { name, privateKey } = parseKey();
-  // CDP keys are PKCS#8 EC P-256 PEMs. jose accepts the literal newline
-  // form; if Vercel has stored the JSON with escaped \n we normalise here.
-  const pem = privateKey.replace(/\\n/g, "\n");
-  const key = await importPKCS8(pem, "ES256");
-
-  const now = Math.floor(Date.now() / 1000);
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-
-  return await new SignJWT({
-    iss: "cdp",
-    sub: name,
-    aud: ["cdp_service"],
-    uri: `${method} ${host}${path}`,
-  })
-    .setProtectedHeader({ alg: "ES256", kid: name, nonce, typ: "JWT" })
-    .setIssuedAt(now)
-    .setNotBefore(now)
-    .setExpirationTime(now + 120)
-    .sign(key);
 }
 
 export async function createOnrampSessionToken(opts: {
@@ -88,7 +58,14 @@ export async function createOnrampSessionToken(opts: {
 }): Promise<string> {
   const host = "api.developer.coinbase.com";
   const path = "/onramp/v1/token";
-  const jwt = await signCdpJwt({ method: "POST", host, path });
+  const { apiKeyId, apiKeySecret } = parseKey();
+  const jwt = await generateJwt({
+    apiKeyId,
+    apiKeySecret,
+    requestMethod: "POST",
+    requestHost: host,
+    requestPath: path,
+  });
 
   const r = await fetch(`https://${host}${path}`, {
     method: "POST",

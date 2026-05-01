@@ -204,6 +204,7 @@ export default function DepositModal({
       const { signature } = await signAndSendTransaction({
         transaction: tx.serialize(),
         wallet: standardWallet,
+        chain: "solana:mainnet",
       });
       const txSig = bs58.encode(signature);
       onConfirmDeposit?.(amount, txSig);
@@ -211,7 +212,9 @@ export default function DepositModal({
       onClose();
     } catch (e) {
       console.error("[deposit] wallet path failed", e);
-      setError(t(dict, "txError", lang));
+      // Surface the underlying message so we can debug live tests.
+      const msg = (e as { message?: string })?.message;
+      setError(msg ? `${t(dict, "txError", lang)} (${msg})` : t(dict, "txError", lang));
       setConfirming(false);
     }
   };

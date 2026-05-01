@@ -5,40 +5,72 @@
 // the EndUserAccount, including the canonical user ID. We use that
 // ID as users.auth_id, prefixed `cdp:` for provider-namespacing.
 //
-// The CDP SDK reads CDP_API_KEY_ID + CDP_API_KEY_SECRET from env by
-// default. We also support the modern bundled COINBASE_API_KEY JSON
-// format ({ name, privateKey }) — same blob the Onramp flow uses —
-// by parsing it once at module load and feeding the values into the
-// constructor.
+// Credentials precedence:
+//   1. Bundled COINBASE_API_KEY JSON. Tolerates the two field-name
+//      conventions Coinbase ships:
+//        { "name": "...", "privateKey": "..." }
+//        { "apiKeyId": "...", "apiKeySecret": "...", "walletSecret"? }
+//   2. Individual CDP_API_KEY_ID / CDP_API_KEY_SECRET / CDP_WALLET_SECRET
+//      env vars (the SDK's default).
+//
+// If neither is set, a clear error is thrown ahead of the SDK's own
+// generic 'missing required parameters' message.
 
 import { CdpClient } from "@coinbase/cdp-sdk";
 
 let cachedClient: CdpClient | null = null;
 
+type AnyKeyFormat = {
+  name?: string;
+  privateKey?: string;
+  apiKeyId?: string;
+  apiKeySecret?: string;
+  walletSecret?: string;
+};
+
 function getClient(): CdpClient {
   if (cachedClient) return cachedClient;
 
-  // Prefer the bundled JSON if present — one env var, less to wire.
   const bundled = process.env.COINBASE_API_KEY;
   if (bundled) {
     try {
-      const k = JSON.parse(bundled) as { name?: string; privateKey?: string };
-      if (k.name && k.privateKey) {
+      const k = JSON.parse(bundled) as AnyKeyFormat;
+      const apiKeyId = k.apiKeyId ?? k.name;
+      const apiKeySecret = (k.apiKeySecret ?? k.privateKey)?.replace(/\\n/g, "\n");
+      if (apiKeyId && apiKeySecret) {
         cachedClient = new CdpClient({
-          apiKeyId: k.name,
-          apiKeySecret: k.privateKey.replace(/\\n/g, "\n"),
+          apiKeyId,
+          apiKeySecret,
+          ...(k.walletSecret ? { walletSecret: k.walletSecret } : {}),
         });
         return cachedClient;
       }
-    } catch {
-      // fall through to env-var path
+      throw new Error(
+        "COINBASE_API_KEY JSON is missing required fields (need apiKeyId+apiKeySecret or name+privateKey).",
+      );
+    } catch (e) {
+      // Fall through to env-var path on JSON parse failure; only
+      // re-throw if neither approach yields credentials below.
+      if ((e as Error).message?.includes("missing required fields")) throw e;
     }
   }
 
-  // Falls back to the SDK's default behaviour: reads CDP_API_KEY_ID,
-  // CDP_API_KEY_SECRET, CDP_WALLET_SECRET from process.env directly.
-  cachedClient = new CdpClient();
-  return cachedClient;
+  const id = process.env.CDP_API_KEY_ID;
+  const secret = process.env.CDP_API_KEY_SECRET;
+  if (id && secret) {
+    cachedClient = new CdpClient({
+      apiKeyId: id,
+      apiKeySecret: secret,
+      ...(process.env.CDP_WALLET_SECRET
+        ? { walletSecret: process.env.CDP_WALLET_SECRET }
+        : {}),
+    });
+    return cachedClient;
+  }
+
+  throw new Error(
+    "CDP credentials not configured. Set COINBASE_API_KEY (CDP JSON download) or CDP_API_KEY_ID + CDP_API_KEY_SECRET on Vercel.",
+  );
 }
 
 export type CdpAuthClaims = {

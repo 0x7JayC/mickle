@@ -19,8 +19,10 @@ const dict: Dict = {
   applePayBody: { en: "Card or Apple Pay → USDC, settled to the Mickle treasury via Coinbase. Includes a ~2% on-ramp fee.", zh: "银行卡或 Apple Pay → USDC,通过 Coinbase 结算至 Mickle 金库。包含约 2% 入金费。" },
   orPayCrypto: { en: "or pay with crypto wallet", zh: "或使用加密钱包支付" },
   openingOnramp: { en: "Opening Coinbase…", zh: "正在打开 Coinbase…" },
-  rateLineUsdc: { en: "≈ {amt} USDC at today's rate", zh: "按今日汇率 ≈ {amt} USDC" },
-  rateLineSol: { en: "≈ {amt} SOL at today's rate", zh: "按今日汇率 ≈ {amt} SOL" },
+  rateLineUsdc: { en: "≈ {n} USDC at today's rate", zh: "按今日汇率 ≈ {n} USDC" },
+  rateLineSol: { en: "≈ {n} SOL at today's rate", zh: "按今日汇率 ≈ {n} SOL" },
+  onrampFee: { en: "On-ramp fee · ~2% (Coinbase)", zh: "入金费 · 约 2%(Coinbase)" },
+  mickleFee: { en: "Mickle fee · 0.99%", zh: "Mickle 手续费 · 0.99%" },
   payToken: { en: "Pay with", zh: "支付方式" },
   days: { en: "days", zh: "天" },
   bestFit: { en: "best fit", zh: "推荐" },
@@ -127,7 +129,13 @@ export default function DepositModal({
   }, [mode]);
 
   const fee = amount * FEE_PCT;
-  const net = amount - fee;
+  // Coinbase Onramp's headline fee for card / Apple Pay flows is around
+  // 2%. Show it inline when the user is on the Apple Pay path so the
+  // breakdown matches what Coinbase will actually charge.
+  const ONRAMP_FEE_PCT = 0.02;
+  const showOnrampFee = mode === "wallet" && onrampEnabled && !showWalletPath;
+  const onrampFee = showOnrampFee ? amount * ONRAMP_FEE_PCT : 0;
+  const net = amount - fee - onrampFee;
   const usdcAmount = gbpUsdRate ? amount / gbpUsdRate : null;
   const solAmount = gbpPerSol ? amount / gbpPerSol : null;
   const tokenAmount = token === "USDC" ? usdcAmount : solAmount;
@@ -353,7 +361,18 @@ export default function DepositModal({
 
         <div className="rounded-2xl border border-foreground/10 p-4 mb-5 bg-foreground/[0.025]">
           <Row label={t(dict, "topUp", lang)} value={`£${amount.toFixed(2)}`} />
-          <Row label={t(dict, "fee", lang)} value={`−£${fee.toFixed(2)}`} muted />
+          {showOnrampFee && (
+            <Row
+              label={t(dict, "onrampFee", lang)}
+              value={`−£${onrampFee.toFixed(2)}`}
+              muted
+            />
+          )}
+          <Row
+            label={t(dict, showOnrampFee ? "mickleFee" : "fee", lang)}
+            value={`−£${fee.toFixed(2)}`}
+            muted
+          />
           <div className="h-px bg-foreground/10 my-2" />
           <Row label={t(dict, "intoSpx", lang)} value={`£${net.toFixed(2)}`} bold />
           {mode === "wallet" && tokenAmount && (

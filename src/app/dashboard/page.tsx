@@ -46,9 +46,11 @@ const dict: Dict = {
   contributed: { en: "Contributed", zh: "已投入" },
   emptyContributed: { en: "Top up to start your streak", zh: "充值后开始你的连续打卡" },
   totalDeposited: { en: "Total deposited to date", zh: "累计存入金额" },
-  daysLeft: { en: "Days left", zh: "剩余天数" },
-  daysLeftHint: { en: "Each tap uses £1 from your balance", zh: "每次打卡消耗余额 £1" },
-  daysLeftEmpty: { en: "Top up to keep tapping", zh: "充值后继续打卡" },
+  balanceLabel: { en: "Balance left", zh: "剩余余额" },
+  balanceEmpty: { en: "Top up to keep tapping", zh: "充值后继续打卡" },
+  daysOfTaps: { en: "{n} days of taps", zh: "{n} 天打卡" },
+  oneDayOfTaps: { en: "1 day of taps", zh: "还能打 1 天" },
+  lifetime: { en: "£{n} contributed lifetime", zh: "终生累计 £{n}" },
   insufficientBalance: { en: "Top up first — every tap uses £1.", zh: "请先充值 —— 每次打卡需 £1。" },
   position: { en: "Position", zh: "持仓" },
   live: { en: "Live", zh: "实时" },
@@ -800,10 +802,13 @@ function ContributedStat({
   const fmtGbp = (v: number) =>
     v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
   const empty = gbp <= 0;
+  const daysLine =
+    daysLeft === 1 ? t(dict, "oneDayOfTaps", lang) : fmt(t(dict, "daysOfTaps", lang), daysLeft);
+  const lifetimeLine = fmt(t(dict, "lifetime", lang), gbp.toFixed(2));
   return (
     <div className="glass-strong rounded-[18px] p-5">
       <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-3">
-        {t(dict, "contributed", lang)}
+        {t(dict, "balanceLabel", lang)}
       </div>
       {empty ? (
         <>
@@ -814,24 +819,18 @@ function ContributedStat({
         </>
       ) : (
         <>
-          <div className="flex items-baseline gap-3 flex-wrap">
-            <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
-              {fmtGbp(gbp)}
-            </div>
-            <div
-              className={`text-[12px] font-mono uppercase tracking-[0.18em] tabular-nums ${
-                daysLeft > 0 ? "text-accent" : "text-foreground/50"
-              }`}
-            >
-              {daysLeft > 0
-                ? `· ${daysLeft} ${t(dict, "daysLeft", lang).toLowerCase()}`
-                : `· ${t(dict, "daysLeftEmpty", lang)}`}
-            </div>
+          <div className="text-3xl font-bold tracking-tight text-foreground tabular-nums">
+            {fmtGbp(balance)}
           </div>
-          <div className="text-[12px] text-foreground/55 mt-2 leading-relaxed">
-            {balance > 0
-              ? `${fmtGbp(balance)} ${t(dict, "daysLeftHint", lang).toLowerCase()}`
-              : t(dict, "totalDeposited", lang)}
+          <div
+            className={`text-[12px] font-mono uppercase tracking-[0.18em] mt-1 ${
+              balance > 0 ? "text-accent" : "text-foreground/50"
+            }`}
+          >
+            {balance > 0 ? daysLine : t(dict, "balanceEmpty", lang)}
+          </div>
+          <div className="text-[12px] text-foreground/55 mt-3 leading-relaxed">
+            {lifetimeLine}
           </div>
         </>
       )}

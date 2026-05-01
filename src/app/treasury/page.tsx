@@ -22,6 +22,12 @@ type TreasuryData = {
     float_usdc: number;
     float_apy: number;
     annual_float_yield_usdc: number;
+    onchain: {
+      address: string;
+      sol: number;
+      usdc: number;
+      spyx: number;
+    } | null;
   };
   recent_batches: {
     id: string;
@@ -79,6 +85,9 @@ const dict: Dict = {
   leg3Body: { en: "£0.99/month after £30 lifetime contribution. Reminders, multi-asset baskets, tax CSV. Same shape as Plum / Moneybox.", zh: "累计投入 £30 后每月 £0.99。提醒、多资产组合、税务 CSV。模式同 Plum / Moneybox。" },
   footer: { en: "© Mickle · Receipts, not promises.", zh: "© Mickle · 凭证,而非承诺。" },
   back: { en: "← Back to landing", zh: "← 返回首页" },
+  liveOnchain: { en: "Live on-chain", zh: "链上实时" },
+  walletShort: { en: "Treasury wallet", zh: "金库钱包" },
+  viewOnSolscan: { en: "View on Solscan ↗", zh: "在 Solscan 查看 ↗" },
 };
 
 const fmtGbp = (v: number) =>
@@ -180,6 +189,45 @@ export default function TreasuryPage() {
               </p>
             </div>
           </section>
+
+          {data.treasury.onchain && (
+            <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
+              <SectionLabel>
+                <span className="inline-flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  {t(dict, "liveOnchain", lang)}
+                </span>
+              </SectionLabel>
+              <div className="grid grid-cols-3 gap-3">
+                <Card label="SOL" value={fmtNum(data.treasury.onchain.sol, 4)} suffix="SOL" />
+                <Card
+                  label="USDC"
+                  value={fmtNum(data.treasury.onchain.usdc, 2)}
+                  suffix="USDC"
+                />
+                <Card
+                  label={t(dict, "spyxHeld", lang)}
+                  value={fmtNum(data.treasury.onchain.spyx, 4)}
+                  suffix="SPYx"
+                />
+              </div>
+              <a
+                href={`https://solscan.io/account/${data.treasury.onchain.address}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-2 text-[12px] font-mono text-foreground/55 hover:text-accent"
+              >
+                <span className="uppercase tracking-[0.18em]">{t(dict, "walletShort", lang)}</span>
+                <code className="font-mono">
+                  {data.treasury.onchain.address.slice(0, 6)}…{data.treasury.onchain.address.slice(-4)}
+                </code>
+                <span className="text-accent">{t(dict, "viewOnSolscan", lang)}</span>
+              </a>
+            </section>
+          )}
 
           <section className="px-4 sm:px-6 pb-20 max-w-5xl mx-auto">
             <SectionLabel>{t(dict, "recentBatches", lang)}</SectionLabel>

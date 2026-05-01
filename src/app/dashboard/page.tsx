@@ -108,7 +108,14 @@ export default function App() {
   // post-logout destination.
   const signOut = async () => {
     await logout();
-    router.push("/");
+    // Hard navigation (not router.push) so the entire React tree —
+    // including 7 video elements on the landing — is torn down and
+    // browser memory is released. Soft-pushes accumulated enough state
+    // across a session to crash the Chrome renderer with 'page couldn't
+    // load'.
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
   };
   const { wallets: solanaWallets } = useSolanaWallets();
   const allWallets = solanaWallets.map((w) => ({

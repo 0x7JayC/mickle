@@ -63,16 +63,6 @@ const dict: Dict = {
   quoteOnly: { en: "quote only", zh: "仅报价" },
   onchain: { en: "On-chain ↗", zh: "链上查看 ↗" },
   demoQuoted: { en: "Demo · quoted", zh: "演示 · 报价" },
-  threeLegHeader: { en: "Three-leg revenue · how Mickle survives", zh: "三腿收入 · Mickle 如何存活" },
-  leg1Kicker: { en: "Leg 1 · headline", zh: "第一腿 · 显性" },
-  leg1Title: { en: "0.99% deposit fee", zh: "0.99% 存款费" },
-  leg1Body: { en: "Charged once per top-up. £30+ deposits net positive; smaller deposits subsidised by leg 2.", zh: "每次充值收取一次。£30 以上充值正向回报,较小充值由第二腿补贴。" },
-  leg2Kicker: { en: "Leg 2 · roadmap", zh: "第二腿 · 路线图" },
-  leg2Title: { en: "Float yield (planned)", zh: "浮动收益(规划中)" },
-  leg2Body: { en: "Once a Kamino integration ships, idle treasury USDC will earn yield between deposit and daily swap. Not yet live — flagged here so it's not surfaced as fake data.", zh: "Kamino 集成上线后,金库闲置 USDC 将在存入与每日兑换之间产生收益。当前尚未启用,在此标注以避免误导。" },
-  leg3Kicker: { en: "Leg 3 · future", zh: "第三腿 · 未来" },
-  leg3Title: { en: "Streak Premium", zh: "连胜会员" },
-  leg3Body: { en: "£0.99/month after £30 lifetime contribution. Reminders, multi-asset baskets, tax CSV. Same shape as Plum / Moneybox.", zh: "累计投入 £30 后每月 £0.99。提醒、多资产组合、税务 CSV。模式同 Plum / Moneybox。" },
   footer: { en: "© Mickle · Receipts, not promises.", zh: "© Mickle · 凭证,而非承诺。" },
   back: { en: "← Back to landing", zh: "← 返回首页" },
   liveOnchain: { en: "Live on-chain", zh: "链上实时" },
@@ -246,14 +236,6 @@ export default function TreasuryPage() {
             </div>
           </section>
 
-          <section className="px-4 sm:px-6 pb-20 max-w-5xl mx-auto">
-            <SectionLabel>{t(dict, "threeLegHeader", lang)}</SectionLabel>
-            <div className="grid sm:grid-cols-3 gap-3">
-              <Leg kicker={t(dict, "leg1Kicker", lang)} title={t(dict, "leg1Title", lang)} body={t(dict, "leg1Body", lang)} />
-              <Leg kicker={t(dict, "leg2Kicker", lang)} title={t(dict, "leg2Title", lang)} body={t(dict, "leg2Body", lang)} />
-              <Leg kicker={t(dict, "leg3Kicker", lang)} title={t(dict, "leg3Title", lang)} body={t(dict, "leg3Body", lang)} />
-            </div>
-          </section>
         </>
       ) : null}
 
@@ -307,22 +289,3 @@ function Card({
   );
 }
 
-function Leg({
-  kicker,
-  title,
-  body,
-}: {
-  kicker: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="rounded-[18px] border border-foreground/10 bg-white p-5">
-      <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold mb-2">
-        {kicker}
-      </div>
-      <h3 className="text-lg font-bold tracking-tight mb-2">{title}</h3>
-      <p className="text-[13px] text-foreground/65 leading-relaxed">{body}</p>
-    </div>
-  );
-}

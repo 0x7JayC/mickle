@@ -1,11 +1,6 @@
 "use client";
 
-// CDP hooks need a client-side provider context that doesn't exist at
-// prerender time — opt the landing out of SSG.
-export const dynamic = "force-dynamic";
-
-import { useEffect, useRef, useState } from "react";
-import { SignInModal } from "@coinbase/cdp-react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { LandingNavCta } from "@/components/LandingAuth";
@@ -59,8 +54,9 @@ function beatOpacity(i: number, p: number) {
 export default function Home() {
   const lang = useLang();
   const router = useRouter();
-  const [signInOpen, setSignInOpen] = useState(false);
-  const onCta = () => setSignInOpen(true);
+  // Scrolly-beat CTAs route straight to /dashboard, where CDP
+  // initializes once and the inline AuthButton handles sign-in.
+  const onCta = () => router.push("/dashboard");
   const langRef = useRef<Lang>(lang);
   langRef.current = lang;
 
@@ -386,16 +382,6 @@ export default function Home() {
       <div className="scrolly-hint" ref={hintRef}>
         {HINT[lang]}
       </div>
-
-      {/* Single CDP sign-in modal driven by the scrolly CTAs above. */}
-      <SignInModal
-        open={signInOpen}
-        setIsOpen={setSignInOpen}
-        onSuccess={() => {
-          setSignInOpen(false);
-          router.push("/dashboard");
-        }}
-      />
     </div>
   );
 }

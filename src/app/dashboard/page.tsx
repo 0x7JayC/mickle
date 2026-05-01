@@ -19,6 +19,7 @@ import OnboardingBanner from "@/components/OnboardingBanner";
 import SettingsDrawer from "@/components/SettingsDrawer";
 import QuoteOfDay from "@/components/QuoteOfDay";
 import { SiteNav } from "@/components/SiteNav";
+import { AuthButton } from "@coinbase/cdp-react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
 const dict: Dict = {
@@ -409,6 +410,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated]);
 
+  // CDP is mounted only on /dashboard now, so a signed-out visitor
+  // landing here gets an inline AuthButton instead of being bounced
+  // back to landing. Once CDP confirms initialized + not signed in,
+  // we show the welcome card; while initializing we render nothing
+  // to avoid a flash of "please sign in" before CDP knows.
+  if (ready && !authenticated) {
+    return <DashboardSignInGate />;
+  }
+
   return (
     <>
       <SiteNav>
@@ -798,6 +808,39 @@ function ProgressCard({
         {lang === "zh" ? `${streak} / 共 ${target.days} 天` : `${streak} of ${target.days} days`}
       </div>
     </section>
+  );
+}
+
+// Inline auth prompt for signed-out visitors landing on /dashboard.
+// Replaces the bounce-to-/ behaviour from before: now /dashboard is
+// the only route that initializes CDP, so this is where sign-in
+// happens. The AuthButton itself reflects the SDK's loading state.
+const gateDict: Dict = {
+  title: { en: "Sign in to Mickle", zh: "登录 Mickle" },
+  body: {
+    en: "Email, Apple ID or Google. A Solana wallet appears in five seconds — no seed phrase, no app store.",
+    zh: "用邮箱、Apple ID 或 Google 登录。五秒内自动生成 Solana 钱包,无需助记词,无需下载 App。",
+  },
+};
+
+function DashboardSignInGate() {
+  const lang = useLang();
+  const router = useRouter();
+  return (
+    <>
+      <SiteNav />
+      <main className="flex-1 px-4 sm:px-6 max-w-md w-full mx-auto pt-16 pb-20 text-center">
+        <h1 className="text-display text-3xl sm:text-5xl font-bold tracking-tight mb-3">
+          {t(gateDict, "title", lang)}
+        </h1>
+        <p className="text-[15px] text-foreground/65 leading-relaxed mb-8">
+          {t(gateDict, "body", lang)}
+        </p>
+        <div className="flex flex-col items-center gap-3">
+          <AuthButton onSignInSuccess={() => router.refresh()} />
+        </div>
+      </main>
+    </>
   );
 }
 

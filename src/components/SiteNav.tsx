@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useIsSignedIn, useIsInitialized } from "@coinbase/cdp-hooks";
 import { LangToggle } from "./LangToggle";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
@@ -18,9 +17,11 @@ const dict: Dict = {
 // mobile collapsed into a 3×3 dot-grid Liquid Glass menu.
 export function SiteNav({ children }: { children?: React.ReactNode }) {
   const lang = useLang();
-  const { isInitialized } = useIsInitialized();
-  const { isSignedIn } = useIsSignedIn();
-  const showLinks = isInitialized && isSignedIn;
+  // CDP only mounts inside /dashboard, so SiteNav can't depend on the
+  // sign-in state for visibility — it'd throw on landing / treasury.
+  // Always show the Account + Treasury links; /dashboard handles the
+  // signed-out case via its inline AuthButton.
+  const showLinks = true;
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 

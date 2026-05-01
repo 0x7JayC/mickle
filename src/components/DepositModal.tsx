@@ -1,7 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
+import {
+  useWallets as useSolanaWallets,
+  useSignAndSendTransaction,
+} from "@privy-io/react-auth/solana";
+import bs58 from "bs58";
 
 const dict: Dict = {
   topUp: { en: "Top up", zh: "充值" },
@@ -11,6 +16,9 @@ const dict: Dict = {
   demoMode: { en: "Demo mode · no real money", zh: "演示模式 · 无真实资金" },
   demoBody: { en: "Production routes GBP through Open Banking to a Kraken treasury (~0.2% all-in). See ", zh: "正式版通过开放银行将 GBP 路由到 Kraken 金库(全程约 0.2%)。详见 " },
   demoBodyTail: { en: " for architecture.", zh: " 了解架构。" },
+  walletMode: { en: "Pay with USDC", zh: "用 USDC 支付" },
+  walletBody: { en: "Sign a USDC transfer from your Solana wallet to the Mickle treasury. No fiat on-ramp needed.", zh: "从你的 Solana 钱包向 Mickle 金库签署一笔 USDC 转账。无需法币入金。" },
+  rateLine: { en: "≈ {usdc} USDC at today's rate", zh: "按今日汇率 ≈ {usdc} USDC" },
   days: { en: "days", zh: "天" },
   bestFit: { en: "best fit", zh: "推荐" },
   bestFee: { en: "best fee", zh: "费率最优" },
@@ -20,9 +28,16 @@ const dict: Dict = {
   simulate: { en: "Simulate £{n} top-up", zh: "模拟充值 £{n}" },
   provisioning: { en: "Provisioning wallet…", zh: "钱包创建中…" },
   continue: { en: "Continue · £{n}", zh: "继续 · £{n}" },
+  payUsdc: { en: "Pay £{n} with USDC", zh: "用 USDC 支付 £{n}" },
+  signing: { en: "Confirm in wallet…", zh: "请在钱包中确认…" },
+  txError: { en: "Transfer failed. Make sure your wallet has USDC and a little SOL for fees.", zh: "转账失败。请确认钱包有 USDC 以及少量 SOL 作为手续费。" },
   footerDemo: { en: "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in.", zh: "黑客松演示。正式版替换为 Open Banking + Kraken 金库,全程 0.5% 以下。" },
+  footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into SPYx on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库,在每日打卡时自动兑换为 SPYx。" },
   footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into SPYx on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana,每日打卡时自动兑换为 SPYx。" },
 };
+
+const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const USDC_DECIMALS = 6;
 
 const fmtN = (s: string, n: number | string) => s.replace("{n}", String(n));
 
@@ -39,47 +54,147 @@ export default function DepositModal({
   email,
   onClose,
   onConfirmDemo,
+  onConfirmDeposit,
 }: {
   wallet: string | null;
   email: string | null;
   onClose: () => void;
   onConfirmDemo?: (gbp: number) => void;
+  onConfirmDeposit?: (gbp: number, txSig: string) => void;
 }) {
   const lang = useLang();
   const [amount, setAmount] = useState(30);
   const [confirming, setConfirming] = useState(false);
-  const apiKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
-  const env = process.env.NEXT_PUBLIC_TRANSAK_ENV || "STAGING";
-  const isDemo = !apiKey;
+  const [error, setError] = useState<string | null>(null);
+  const [gbpUsdRate, setGbpUsdRate] = useState<number | null>(null);
+  const transakKey = process.env.NEXT_PUBLIC_TRANSAK_API_KEY;
+  const transakEnv = process.env.NEXT_PUBLIC_TRANSAK_ENV || "STAGING";
+  const treasury = process.env.NEXT_PUBLIC_MICKLE_TREASURY;
+
+  // Mode: wallet-first (v0). Falls through to Transak if it's wired, else demo.
+  const mode: "wallet" | "transak" | "demo" = treasury
+    ? "wallet"
+    : transakKey
+      ? "transak"
+      : "demo";
+
+  const { wallets } = useSolanaWallets();
+  const { signAndSendTransaction } = useSignAndSendTransaction();
+
+  // GBP→USD reference rate (USDC ≈ USD). Coingecko public endpoint, no key.
+  useEffect(() => {
+    if (mode !== "wallet") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(
+          "https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=gbp",
+          { cache: "no-store" },
+        );
+        const j = (await r.json()) as { "usd-coin"?: { gbp?: number } };
+        const gbpPerUsdc = j["usd-coin"]?.gbp;
+        if (!cancelled && typeof gbpPerUsdc === "number" && gbpPerUsdc > 0) {
+          setGbpUsdRate(gbpPerUsdc);
+        }
+      } catch {
+        if (!cancelled) setGbpUsdRate(0.79); // safe fallback ~ April 2026
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
   const fee = amount * FEE_PCT;
   const net = amount - fee;
+  const usdcAmount = gbpUsdRate ? amount / gbpUsdRate : null;
 
   const start = async () => {
-    if (isDemo) {
+    setError(null);
+    if (mode === "demo") {
       setConfirming(true);
       await new Promise((r) => setTimeout(r, 700));
       onConfirmDemo?.(amount);
+      setConfirming(false);
       onClose();
       return;
     }
-    if (!wallet) return;
-    const base =
-      env === "PRODUCTION" ? "https://global.transak.com" : "https://global-stg.transak.com";
-    const params = new URLSearchParams({
-      apiKey: apiKey!,
-      cryptoCurrencyCode: "USDC",
-      network: "solana",
-      fiatCurrency: "GBP",
-      defaultFiatAmount: String(amount),
-      walletAddress: wallet,
-      disableWalletAddressForm: "true",
-      hideMenu: "true",
-      themeColor: "ff7a59",
-      ...(email ? { email } : {}),
-    });
-    window.open(`${base}/?${params.toString()}`, "transak", "width=480,height=720");
-    onClose();
+
+    if (mode === "transak") {
+      if (!wallet) return;
+      const base =
+        transakEnv === "PRODUCTION"
+          ? "https://global.transak.com"
+          : "https://global-stg.transak.com";
+      const params = new URLSearchParams({
+        apiKey: transakKey!,
+        cryptoCurrencyCode: "USDC",
+        network: "solana",
+        fiatCurrency: "GBP",
+        defaultFiatAmount: String(amount),
+        walletAddress: wallet,
+        disableWalletAddressForm: "true",
+        hideMenu: "true",
+        themeColor: "ff7a59",
+        ...(email ? { email } : {}),
+      });
+      window.open(`${base}/?${params.toString()}`, "transak", "width=480,height=720");
+      onClose();
+      return;
+    }
+
+    // mode === "wallet" — sign a USDC SPL transfer to the treasury.
+    const standardWallet = wallets[0];
+    if (!standardWallet || !wallet || !treasury || !usdcAmount) return;
+    setConfirming(true);
+    try {
+      const [
+        { Connection, PublicKey, TransactionMessage, VersionedTransaction },
+        { getAssociatedTokenAddressSync, createAssociatedTokenAccountIdempotentInstruction, createTransferCheckedInstruction },
+      ] = await Promise.all([
+        import("@solana/web3.js"),
+        import("@solana/spl-token"),
+      ]);
+
+      const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
+      const conn = new Connection(rpc, "confirmed");
+      const owner = new PublicKey(wallet);
+      const treasuryPk = new PublicKey(treasury);
+      const mint = new PublicKey(USDC_MINT);
+
+      const srcAta = getAssociatedTokenAddressSync(mint, owner);
+      const destAta = getAssociatedTokenAddressSync(mint, treasuryPk);
+
+      // Lamports = USDC * 10^6, rounded to whole units.
+      const lamports = BigInt(Math.round(usdcAmount * 10 ** USDC_DECIMALS));
+
+      const ixs = [
+        // Idempotent: no-op if treasury ATA already exists, costs ~2k lamports otherwise.
+        createAssociatedTokenAccountIdempotentInstruction(owner, destAta, treasuryPk, mint),
+        createTransferCheckedInstruction(srcAta, mint, destAta, owner, lamports, USDC_DECIMALS),
+      ];
+
+      const { blockhash } = await conn.getLatestBlockhash("confirmed");
+      const msg = new TransactionMessage({
+        payerKey: owner,
+        recentBlockhash: blockhash,
+        instructions: ixs,
+      }).compileToV0Message();
+      const tx = new VersionedTransaction(msg);
+
+      const { signature } = await signAndSendTransaction({
+        transaction: tx.serialize(),
+        wallet: standardWallet,
+      });
+      const txSig = bs58.encode(signature);
+      onConfirmDeposit?.(amount, txSig);
+      setConfirming(false);
+      onClose();
+    } catch (e) {
+      console.error("[deposit] wallet path failed", e);
+      setError(t(dict, "txError", lang));
+      setConfirming(false);
+    }
   };
 
   return (
@@ -114,7 +229,7 @@ export default function DepositModal({
           {t(dict, "preFund", lang)}
         </p>
 
-        {isDemo && (
+        {mode === "demo" && (
           <div className="rounded-2xl border border-amber-200/70 bg-amber-50 px-4 py-3 mb-5 flex items-start gap-3">
             <span className="text-amber-600 text-base leading-none mt-0.5">⚠</span>
             <div>
@@ -127,6 +242,17 @@ export default function DepositModal({
                 {t(dict, "demoBodyTail", lang)}
               </p>
             </div>
+          </div>
+        )}
+
+        {mode === "wallet" && (
+          <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-4 py-3 mb-5">
+            <div className="text-[12px] font-semibold text-foreground/85 mb-0.5">
+              {t(dict, "walletMode", lang)}
+            </div>
+            <p className="text-[11px] text-foreground/65 leading-relaxed">
+              {t(dict, "walletBody", lang)}
+            </p>
           </div>
         )}
 
@@ -164,24 +290,45 @@ export default function DepositModal({
           <Row label={t(dict, "fee", lang)} value={`−£${fee.toFixed(2)}`} muted />
           <div className="h-px bg-foreground/10 my-2" />
           <Row label={t(dict, "intoSpx", lang)} value={`£${net.toFixed(2)}`} bold />
+          {mode === "wallet" && usdcAmount && (
+            <p className="text-[11px] text-foreground/55 mt-2 text-right tabular-nums">
+              {fmtN(t(dict, "rateLine", lang), usdcAmount.toFixed(2))}
+            </p>
+          )}
         </div>
+
+        {error && (
+          <p className="text-[12px] text-red-600 mb-3 text-center leading-relaxed">{error}</p>
+        )}
 
         <button
           onClick={start}
-          disabled={confirming || (!isDemo && !wallet)}
+          disabled={
+            confirming ||
+            (mode !== "demo" && !wallet) ||
+            (mode === "wallet" && !usdcAmount)
+          }
           className="glass-button-primary w-full py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {confirming
-            ? t(dict, "recordingDemo", lang)
-            : isDemo
+            ? mode === "wallet"
+              ? t(dict, "signing", lang)
+              : t(dict, "recordingDemo", lang)
+            : mode === "demo"
               ? fmtN(t(dict, "simulate", lang), amount)
               : !wallet
                 ? t(dict, "provisioning", lang)
-                : fmtN(t(dict, "continue", lang), amount)}
+                : mode === "wallet"
+                  ? fmtN(t(dict, "payUsdc", lang), amount)
+                  : fmtN(t(dict, "continue", lang), amount)}
         </button>
 
         <p className="text-[11px] text-foreground/50 mt-4 leading-relaxed text-center">
-          {isDemo ? t(dict, "footerDemo", lang) : t(dict, "footerProd", lang)}
+          {mode === "demo"
+            ? t(dict, "footerDemo", lang)
+            : mode === "wallet"
+              ? t(dict, "footerWallet", lang)
+              : t(dict, "footerProd", lang)}
         </p>
       </div>
     </div>

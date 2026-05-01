@@ -8,6 +8,32 @@ A £1 daily deposit cannot economically use a hosted on-ramp (Transak / MoonPay 
 
 The solution is **never on-ramp per-user, per-tap.** Aggregate at the treasury and amortise the on-ramp cost across the whole cohort.
 
+## v0 — crypto wallet path (what's shipped today)
+
+The earliest viable path skips fiat entirely. Users who already hold USDC on Solana sign an SPL transfer from their wallet (Privy embedded or external) directly into the Mickle treasury. No EMI, no on-ramp, no FCA exposure.
+
+```
+User → Privy embedded wallet (or any Solana wallet)
+       Signs USDC SPL transfer → NEXT_PUBLIC_MICKLE_TREASURY
+                       ↓
+   Client posts { amount_gbp, tx_sig } to /api/deposits
+                       ↓
+   Server records deposit in ledger (USDC equivalent of GBP preset)
+                       ↓
+   Daily streak tap debits ledger → cohort swap → SPYx
+```
+
+**Treasury address (current):** `9THd4U9orQUVcmng636ELmNnuSEkUdYivWRdMrhVWnqM`
+
+**Why ship this first:**
+- Zero regulatory surface — Mickle never custodies fiat.
+- Crypto-native users can deposit in seconds; no KYC re-prompt.
+- The ledger and daily-swap engine are exercised end-to-end on real funds, so when fiat on-ramps land later they plug into a proven pipeline.
+
+**What's deferred:**
+- GBP→USDC FX rate is read from a public quote (Coingecko / Jupiter) at deposit time and stored alongside the ledger row. Fee remains 0.99% on the GBP-quoted amount.
+- Fiat on-ramp (Transak / Open Banking) is the next path, layered on top of the same ledger.
+
 ## Hackathon demo architecture (what's shipped)
 
 ```
@@ -187,6 +213,7 @@ Recommendation: **Griffin** — they're the closest cultural fit (API-first, fin
 
 ## Decision log
 
+- **2026-05-01** — shipped v0 wallet path (USDC SPL transfer → Mickle treasury) ahead of any fiat on-ramp. Rationale: zero regulatory surface, exercises ledger + swap end-to-end on real funds, and crypto-native users can deposit without KYC friction. Transak / Open Banking layered on top later.
 - **2026-04-30** — chose Transak for the hackathon demo. Production path documented here. EMI partnership conversation deferred until Mickle wins the Colosseum Consumer track or raises seed.
 - **2026-04-30** — pooled treasury (one position, pro-rata share) chosen over per-user positions to keep on-chain costs viable at small deposit sizes.
 - **2026-04-30** — moved from a single-leg 0.99% transaction-fee model to the three-leg revenue model above (deposit fee + float yield + Streak Premium). The single-leg model was structurally underwater at £10–£25 top-ups; without leg 2 (float yield via Kamino USDC vaults) and leg 3 (£0.99/mo Streak Premium), Mickle could not recover hard CAC on its target audience. Reframes the deck's "no AUM gating" line — yield is captured on cohort *float* (working capital), never on the user's invested principal.

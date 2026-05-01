@@ -312,13 +312,13 @@ export default function App() {
     }
   };
 
-  const onConfirmDemoDeposit = async (gbp: number) => {
+  const recordDeposit = async (gbp: number, txSig?: string) => {
     const token = await getAccessToken();
     if (!token) return;
     const r = await fetch("/api/deposits", {
       method: "POST",
       headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-      body: JSON.stringify({ amount_gbp: gbp }),
+      body: JSON.stringify({ amount_gbp: gbp, ...(txSig ? { tx_sig: txSig } : {}) }),
     });
     if (r.ok) {
       const { user: u } = await r.json();
@@ -328,6 +328,8 @@ export default function App() {
       setTimeout(() => setTapToast(null), 4000);
     }
   };
+  const onConfirmDemoDeposit = (gbp: number) => recordDeposit(gbp);
+  const onConfirmDeposit = (gbp: number, txSig: string) => recordDeposit(gbp, txSig);
 
   return (
     <>
@@ -471,6 +473,7 @@ export default function App() {
           email={user?.email?.address ?? null}
           onClose={() => setDepositOpen(false)}
           onConfirmDemo={onConfirmDemoDeposit}
+          onConfirmDeposit={onConfirmDeposit}
         />
       )}
 

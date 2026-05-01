@@ -4,13 +4,9 @@
 // single sorted array, returns the last 30 events.
 
 import { NextResponse } from "next/server";
-import { PrivyClient } from "@privy-io/server-auth";
+import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const privy = new PrivyClient(
-  process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-  process.env.PRIVY_APP_SECRET || "",
-);
 
 export const dynamic = "force-dynamic";
 
@@ -23,22 +19,19 @@ type ActivityItem = {
 };
 
 export async function GET(req: Request) {
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "missing token" }, { status: 401 });
-  }
-  let claims;
+  let userId: string;
   try {
-    claims = await privy.verifyAuthToken(auth.slice(7));
-  } catch {
-    return NextResponse.json({ error: "invalid token" }, { status: 401 });
+    ({ userId } = await verifyCdpAuth(req));
+  } catch (e) {
+    const err = e as AuthError;
+    return NextResponse.json({ error: err.message }, { status: err.status });
   }
 
   const sb = supabaseAdmin();
   const { data: user } = await sb
     .from("users")
     .select("id")
-    .eq("privy_id", claims.userId)
+    .eq("auth_id", userId)
     .single();
   if (!user) return NextResponse.json({ activity: [] });
 

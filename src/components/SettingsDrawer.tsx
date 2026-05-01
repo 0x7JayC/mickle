@@ -1,6 +1,6 @@
 "use client";
 
-import { usePrivy } from "@privy-io/react-auth";
+import { useCurrentUser } from "@coinbase/cdp-hooks";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
 const dict: Dict = {
@@ -41,13 +41,14 @@ export default function SettingsDrawer({
   onSignOut: () => void;
 }) {
   const lang = useLang();
-  const { linkEmail, user } = usePrivy();
+  const { currentUser } = useCurrentUser();
   if (!open) return null;
   const fmtGbp = (v: number) =>
     v.toLocaleString("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 2 });
-  const emails = (user?.linkedAccounts ?? []).filter((a) => a.type === "email") as {
-    address?: string;
-  }[];
+  // CDP's authenticationMethods.email is a single object (verified
+  // email) — map into the shape the UI expected from Privy.
+  const cdpEmail = currentUser?.authenticationMethods?.email?.email;
+  const emails: { address?: string }[] = cdpEmail ? [{ address: cdpEmail }] : [];
   return (
     <div
       className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center px-4 py-6 bg-black/40 backdrop-blur-md fade-up"
@@ -81,7 +82,12 @@ export default function SettingsDrawer({
           <div className="flex items-center justify-between gap-3">
             <code className="font-mono text-[14px] text-foreground/85 break-all">{email}</code>
             <button
-              onClick={() => linkEmail()}
+              onClick={() => {
+                // CDP supports linking additional emails via the
+                // <LinkAuth> component / useLinkEmail hook. Wired
+                // post-CDP migration; for now disabled.
+              }}
+              disabled
               className="shrink-0 text-[12px] text-accent font-semibold hover:underline"
             >
               {emails.length > 1 ? t(dict, "manage", lang) : t(dict, "addAnother", lang)}
@@ -98,7 +104,7 @@ export default function SettingsDrawer({
               v={`${walletCount}`}
               suffix={walletCount === 1 ? t(dict, "wallet", lang) : t(dict, "walletsUnit", lang)}
             />
-            <Stat k={t(dict, "memberSince", lang)} v={joinedLabel(user?.createdAt, lang)} />
+            <Stat k={t(dict, "memberSince", lang)} v={joinedLabel(undefined, lang)} />
           </div>
         </Section>
 

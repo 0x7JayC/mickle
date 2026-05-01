@@ -1,42 +1,38 @@
 import { NextResponse } from "next/server";
-import { PrivyClient } from "@privy-io/server-auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 
-const privy = new PrivyClient(
-  process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-  process.env.PRIVY_APP_SECRET || "",
-);
+export const dynamic = "force-dynamic";
 
+// Upsert the signed-in user's row.
+//
+// The CDP token tells us who the request is from. We rely on the
+// frontend to pass the user's Solana address + email since cdp-hooks
+// already has them locally — saves a round-trip to fetch the
+// EndUser from CDP again.
 export async function POST(req: Request) {
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "missing token" }, { status: 401 });
-  }
-  const token = auth.slice(7);
-
-  let claims;
+  let userId: string;
   try {
-    claims = await privy.verifyAuthToken(token);
-  } catch {
-    return NextResponse.json({ error: "invalid token" }, { status: 401 });
+    ({ userId } = await verifyCdpAuth(req));
+  } catch (e) {
+    const err = e as AuthError;
+    return NextResponse.json({ error: err.message }, { status: err.status });
   }
 
-  const user = await privy.getUserById(claims.userId);
-  const wallet = user.linkedAccounts.find(
-    (a) => a.type === "wallet" && (a as { chainType?: string }).chainType === "solana",
-  ) as { address?: string } | undefined;
-  const email = user.linkedAccounts.find((a) => a.type === "email") as { address?: string } | undefined;
+  const body = (await req.json().catch(() => null)) as
+    | { wallet?: string | null; email?: string | null }
+    | null;
 
   const sb = supabaseAdmin();
   const { data, error } = await sb
     .from("users")
     .upsert(
       {
-        privy_id: claims.userId,
-        wallet: wallet?.address ?? null,
-        email: email?.address ?? null,
+        auth_id: userId,
+        wallet: body?.wallet ?? null,
+        email: body?.email ?? null,
       },
-      { onConflict: "privy_id" },
+      { onConflict: "auth_id" },
     )
     .select()
     .single();

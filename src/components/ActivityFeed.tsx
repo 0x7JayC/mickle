@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { useIsSignedIn, useGetAccessToken } from "@coinbase/cdp-hooks";
 import { useLang, t, type Dict, type Lang } from "@/lib/i18n";
 
 const dict: Dict = {
@@ -52,12 +52,13 @@ function timeAgo(iso: string, lang: Lang): string {
 
 export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
   const lang = useLang();
-  const { authenticated, getAccessToken } = usePrivy();
+  const { isSignedIn } = useIsSignedIn();
+  const { getAccessToken } = useGetAccessToken();
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!authenticated) return;
+    if (!isSignedIn) return;
     (async () => {
       const token = await getAccessToken();
       if (!token) return;
@@ -66,7 +67,7 @@ export default function ActivityFeed({ refreshKey }: { refreshKey: number }) {
       });
       if (r.ok) setItems((await r.json()).activity ?? []);
     })();
-  }, [authenticated, refreshKey, getAccessToken]);
+  }, [isSignedIn, refreshKey, getAccessToken]);
 
   if (items.length === 0) return null;
 

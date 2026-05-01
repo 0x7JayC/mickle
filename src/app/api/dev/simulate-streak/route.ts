@@ -3,13 +3,9 @@
 // run in a real production deploy.
 
 import { NextResponse } from "next/server";
-import { PrivyClient } from "@privy-io/server-auth";
+import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const privy = new PrivyClient(
-  process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-  process.env.PRIVY_APP_SECRET || "",
-);
 
 export const dynamic = "force-dynamic";
 
@@ -18,15 +14,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "demo cheat disabled" }, { status: 403 });
   }
 
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "missing token" }, { status: 401 });
-  }
-  let claims;
+  let userId: string;
   try {
-    claims = await privy.verifyAuthToken(auth.slice(7));
-  } catch {
-    return NextResponse.json({ error: "invalid token" }, { status: 401 });
+    ({ userId } = await verifyCdpAuth(req));
+  } catch (e) {
+    const err = e as AuthError;
+    return NextResponse.json({ error: err.message }, { status: err.status });
   }
 
   const body = (await req.json().catch(() => null)) as { target?: number } | null;
@@ -37,7 +30,7 @@ export async function POST(req: Request) {
 
   const sb = supabaseAdmin();
   const { data, error } = await sb.rpc("simulate_streak", {
-    p_privy_id: claims.userId,
+    p_auth_id: userId,
     p_target_streak: Math.floor(target),
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

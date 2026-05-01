@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ThemeShell from "@/components/ThemeShell";
-import PrivyProviders from "@/components/PrivyProviders";
 import CdpProviders from "@/components/CdpProviders";
 
 const geistSans = Geist({
@@ -82,9 +81,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col theme-a1">
         <CdpProviders>
-          <PrivyProviders>
-            <ThemeShell>{children}</ThemeShell>
-          </PrivyProviders>
+          <ThemeShell>{children}</ThemeShell>
         </CdpProviders>
       </body>
     </html>

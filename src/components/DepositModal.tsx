@@ -2,10 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
-import {
-  useWallets as useSolanaWallets,
-  useSignAndSendTransaction,
-} from "@privy-io/react-auth/solana";
+import { useSolanaAddress, useSendSolanaTransaction } from "@coinbase/cdp-hooks";
 import bs58 from "bs58";
 
 const dict: Dict = {
@@ -94,8 +91,8 @@ export default function DepositModal({
       ? "transak"
       : "demo";
 
-  const { wallets } = useSolanaWallets();
-  const { signAndSendTransaction } = useSignAndSendTransaction();
+  const { solanaAddress } = useSolanaAddress();
+  const { sendSolanaTransaction } = useSendSolanaTransaction();
 
   // GBP→USDC + GBP→SOL reference rates. Coingecko public endpoint, no key.
   useEffect(() => {
@@ -169,12 +166,12 @@ export default function DepositModal({
       return;
     }
 
-    // mode === "wallet" — sign a USDC SPL or native SOL transfer to the treasury.
-    // Pick the wallet matching the address shown in the dashboard, not just
-    // wallets[0]. With both Privy embedded + an external wallet (e.g. Backpack)
-    // connected, the embedded one is index 0 but is usually empty.
-    const standardWallet = wallets.find((w) => w.address === wallet) ?? wallets[0];
-    if (!standardWallet || !wallet || !treasury || !tokenAmount) return;
+    // mode === "wallet" — sign a USDC SPL or native SOL transfer to the
+    // treasury via the CDP embedded wallet. The wallet prop and the
+    // CDP-managed solanaAddress should match (both come from the same
+    // signed-in user's embedded account).
+    const owner = solanaAddress ?? wallet;
+    if (!owner || !treasury || !tokenAmount) return;
     setConfirming(true);
     try {
       const web3 = await import("@solana/web3.js");
@@ -182,43 +179,45 @@ export default function DepositModal({
 
       const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
       const conn = new Connection(rpc, "confirmed");
-      const owner = new PublicKey(wallet);
+      const ownerPk = new PublicKey(owner);
       const treasuryPk = new PublicKey(treasury);
 
       let ixs;
       if (token === "USDC") {
         const spl = await import("@solana/spl-token");
         const mint = new PublicKey(USDC_MINT);
-        const srcAta = spl.getAssociatedTokenAddressSync(mint, owner);
+        const srcAta = spl.getAssociatedTokenAddressSync(mint, ownerPk);
         const destAta = spl.getAssociatedTokenAddressSync(mint, treasuryPk);
         const lamports = BigInt(Math.round(tokenAmount * 10 ** USDC_DECIMALS));
         ixs = [
           // Idempotent: no-op if treasury ATA already exists.
-          spl.createAssociatedTokenAccountIdempotentInstruction(owner, destAta, treasuryPk, mint),
-          spl.createTransferCheckedInstruction(srcAta, mint, destAta, owner, lamports, USDC_DECIMALS),
+          spl.createAssociatedTokenAccountIdempotentInstruction(ownerPk, destAta, treasuryPk, mint),
+          spl.createTransferCheckedInstruction(srcAta, mint, destAta, ownerPk, lamports, USDC_DECIMALS),
         ];
       } else {
         // Native SOL — SystemProgram.transfer in lamports.
         const lamports = Math.round(tokenAmount * 10 ** SOL_DECIMALS);
         ixs = [
-          SystemProgram.transfer({ fromPubkey: owner, toPubkey: treasuryPk, lamports }),
+          SystemProgram.transfer({ fromPubkey: ownerPk, toPubkey: treasuryPk, lamports }),
         ];
       }
 
       const { blockhash } = await conn.getLatestBlockhash("confirmed");
       const msg = new TransactionMessage({
-        payerKey: owner,
+        payerKey: ownerPk,
         recentBlockhash: blockhash,
         instructions: ixs,
       }).compileToV0Message();
       const tx = new VersionedTransaction(msg);
-
-      const { signature } = await signAndSendTransaction({
-        transaction: tx.serialize(),
-        wallet: standardWallet,
-        chain: "solana:mainnet",
+      // CDP expects the transaction as base64. SolanaAddress here is
+      // typed; we cast the string to the branded type CDP expects.
+      const txBase64 = Buffer.from(tx.serialize()).toString("base64");
+      const result = await sendSolanaTransaction({
+        solanaAccount: owner as `${string}`,
+        network: "solana",
+        transaction: txBase64,
       });
-      const txSig = bs58.encode(signature);
+      const txSig = result.transactionSignature;
       onConfirmDeposit?.(amount, txSig);
       setConfirming(false);
       onClose();

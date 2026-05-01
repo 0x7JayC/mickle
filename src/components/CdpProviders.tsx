@@ -37,10 +37,11 @@ const theme: Partial<Theme> = {
 };
 
 export default function CdpProviders({ children }: { children: React.ReactNode }) {
-  // Pass-through if the CDP project ID isn't configured. Same defensive
-  // shape as PrivyProviders — keeps SSR / preview deploys working when
-  // the env var is missing.
-  if (!config.projectId) return <>{children}</>;
+  // Always render the provider so cdp-hooks calls don't throw 'useCDP
+  // must be used within a CDPHooksProvider' during prerender. If the
+  // project ID is empty the hooks will be inert — useIsSignedIn returns
+  // { isSignedIn: false }, AuthButton renders disabled — which is the
+  // correct behaviour in environments without CDP credentials.
   return (
     <CDPReactProvider config={config} theme={theme}>
       {children}

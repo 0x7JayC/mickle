@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { useWallets as useSolanaWallets } from "@privy-io/react-auth/solana";
+import {
+  useIsInitialized,
+  useIsSignedIn,
+  useCurrentUser,
+  useGetAccessToken,
+  useSolanaAddress,
+  useSignOut,
+} from "@coinbase/cdp-hooks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TimeMachine from "@/components/TimeMachine";
@@ -102,33 +108,38 @@ type Position = {
 export default function App() {
   const lang = useLang();
   const router = useRouter();
-  const { ready, authenticated, user, logout, linkWallet, getAccessToken } = usePrivy();
-  // Sign out → land on the marketing site, not the unauthenticated /app
-  // welcome modal. Wraps logout so settings drawer + nav share the same
-  // post-logout destination.
+  const { isInitialized } = useIsInitialized();
+  const { isSignedIn } = useIsSignedIn();
+  const { currentUser } = useCurrentUser();
+  const { getAccessToken } = useGetAccessToken();
+  const { solanaAddress } = useSolanaAddress();
+  const { signOut: cdpSignOut } = useSignOut();
+
+  const ready = isInitialized;
+  const authenticated = isSignedIn;
+  // CDP exposes the verified email on authenticationMethods.email
+  // (single object, not array).
+  const userEmail = currentUser?.authenticationMethods?.email?.email ?? null;
+
+  // Sign out → land on the marketing site. Hard navigation tears down
+  // the React tree + Privy/CDP provider state so memory and providers
+  // reset cleanly between sessions.
   const signOut = async () => {
-    await logout();
-    // Hard navigation (not router.push) so the entire React tree —
-    // including 7 video elements on the landing — is torn down and
-    // browser memory is released. Soft-pushes accumulated enough state
-    // across a session to crash the Chrome renderer with 'page couldn't
-    // load'.
+    await cdpSignOut();
     if (typeof window !== "undefined") {
       window.location.href = "/";
     }
   };
-  const { wallets: solanaWallets } = useSolanaWallets();
-  const allWallets = solanaWallets.map((w) => ({
-    address: w.address,
-    embedded:
-      "walletClientType" in w &&
-      (w as { walletClientType?: string }).walletClientType === "privy",
-    label:
-      "walletClientType" in w &&
-      (w as { walletClientType?: string }).walletClientType === "privy"
-        ? "Mickle"
-        : "Solana",
-  }));
+
+  // CDP gives us a single embedded Solana address per user. Crypto-
+  // wallet linking will land in a follow-up phase via wallet-adapter.
+  const allWallets = solanaAddress
+    ? [{ address: solanaAddress, embedded: true, label: "Mickle" }]
+    : [];
+  const linkWallet = () => {
+    // Wallet-adapter integration deferred to Phase 5. For now this is a
+    // no-op so callers don't crash.
+  };
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
   const [walletShown, setWalletShown] = useState(false);
@@ -150,15 +161,8 @@ export default function App() {
   // Bumped after any state change that should refresh the activity feed
   const [activityKey, setActivityKey] = useState(0);
 
-  // Prefer an externally-connected wallet (Backpack, Phantom, etc.) over the
-  // empty Privy embedded wallet — that's the one the user funded. Fall back
-  // to embedded if no external wallet is linked.
-  const externalWallet = solanaWallets.find(
-    (w) =>
-      "walletClientType" in w &&
-      (w as { walletClientType?: string }).walletClientType !== "privy",
-  );
-  const wallet = externalWallet?.address ?? solanaWallets[0]?.address ?? null;
+  // CDP gives us one embedded Solana address per user.
+  const wallet = solanaAddress ?? null;
 
   useEffect(() => {
     if (!authenticated) return;
@@ -167,14 +171,15 @@ export default function App() {
       if (!token) return;
       const r = await fetch("/api/users/upsert", {
         method: "POST",
-        headers: { authorization: `Bearer ${token}` },
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ wallet, email: userEmail }),
       });
       if (r.ok) {
         const { user } = await r.json();
         setDbUser(user);
       }
     })();
-  }, [authenticated, wallet, getAccessToken]);
+  }, [authenticated, wallet, userEmail, getAccessToken]);
 
   // Last treasury batch — load once for the activity strip
   useEffect(() => {
@@ -249,7 +254,7 @@ export default function App() {
 
   const today = new Date().toISOString().slice(0, 10);
   const tappedToday = dbUser?.last_tap_date === today;
-  const email = user?.email?.address ?? dbUser?.email ?? "—";
+  const email = userEmail ?? dbUser?.email ?? "—";
   const handle = email.split("@")[0];
   const streak = dbUser?.streak_count ?? 0;
   const contributed = Number(dbUser?.total_contributed_gbp ?? 0);
@@ -543,7 +548,7 @@ export default function App() {
       {depositOpen && (
         <DepositModal
           wallet={wallet}
-          email={user?.email?.address ?? null}
+          email={userEmail ?? null}
           onClose={() => setDepositOpen(false)}
           onConfirmDemo={onConfirmDemoDeposit}
           onConfirmDeposit={onConfirmDeposit}

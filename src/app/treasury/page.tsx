@@ -1,5 +1,9 @@
 "use client";
 
+// CDP hooks (used by OpenAppButton) need a client-side context that
+// doesn't exist at prerender time, so opt the route out of SSG.
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { OpenAppButton } from "@/components/LandingAuth";

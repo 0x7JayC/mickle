@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+// CDP hooks need a client-side provider context that doesn't exist at
+// prerender time — opt the landing out of SSG.
+export const dynamic = "force-dynamic";
+
+import { useEffect, useRef, useState } from "react";
+import { SignInModal } from "@coinbase/cdp-react";
+import { useRouter } from "next/navigation";
 import { SiteNav } from "@/components/SiteNav";
 import { LandingNavCta } from "@/components/LandingAuth";
 import { useLang, type Lang } from "@/lib/i18n";
@@ -53,8 +58,9 @@ function beatOpacity(i: number, p: number) {
 
 export default function Home() {
   const lang = useLang();
-  const { login } = usePrivy();
-  const onCta = () => login();
+  const router = useRouter();
+  const [signInOpen, setSignInOpen] = useState(false);
+  const onCta = () => setSignInOpen(true);
   const langRef = useRef<Lang>(lang);
   langRef.current = lang;
 
@@ -380,6 +386,16 @@ export default function Home() {
       <div className="scrolly-hint" ref={hintRef}>
         {HINT[lang]}
       </div>
+
+      {/* Single CDP sign-in modal driven by the scrolly CTAs above. */}
+      <SignInModal
+        open={signInOpen}
+        setIsOpen={setSignInOpen}
+        onSuccess={() => {
+          setSignInOpen(false);
+          router.push("/dashboard");
+        }}
+      />
     </div>
   );
 }

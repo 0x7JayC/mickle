@@ -8,27 +8,19 @@
 // dashboard credits the deposit.
 
 import { NextResponse } from "next/server";
-import { PrivyClient } from "@privy-io/server-auth";
+import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 import { createOnrampSessionToken } from "@/lib/coinbase-onramp";
 
-const privy = new PrivyClient(
-  process.env.NEXT_PUBLIC_PRIVY_APP_ID || "",
-  process.env.PRIVY_APP_SECRET || "",
-);
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const auth = req.headers.get("authorization");
-  if (!auth?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "missing token" }, { status: 401 });
-  }
-
-  let claims;
+  let userId: string;
   try {
-    claims = await privy.verifyAuthToken(auth.slice(7));
-  } catch {
-    return NextResponse.json({ error: "invalid token" }, { status: 401 });
+    ({ userId } = await verifyCdpAuth(req));
+  } catch (e) {
+    const err = e as AuthError;
+    return NextResponse.json({ error: err.message }, { status: err.status });
   }
 
   const body = (await req.json().catch(() => null)) as { amount_gbp?: number } | null;
@@ -58,7 +50,7 @@ export async function POST(req: Request) {
 
   // partnerUserId helps map the resulting transaction to a Mickle user
   // when we wire up the Transaction Status webhook later. ≤ 49 chars.
-  const partnerUserId = claims.userId.slice(0, 49);
+  const partnerUserId = userId.slice(0, 49);
 
   const params = new URLSearchParams({
     sessionToken,

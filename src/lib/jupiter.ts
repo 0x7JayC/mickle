@@ -1,9 +1,14 @@
-// Minimal Jupiter v1 client. Quote is free + keyless. Swap requires
-// a treasury keypair via TREASURY_PRIVATE_KEY env (base58). Without it,
-// callers run in demo mode — real quote, no on-chain execution.
+// Minimal Jupiter v1 client. When JUP_API_KEY is set we hit the paid
+// endpoint (higher rate limits, better routing); otherwise the lite
+// endpoint is used. Swap requires a treasury keypair via TREASURY_PRIVATE_KEY
+// (base58). Without it, callers run in demo mode — real quote, no on-chain
+// execution.
 
-const QUOTE_URL = "https://lite-api.jup.ag/swap/v1/quote";
-const SWAP_URL = "https://lite-api.jup.ag/swap/v1/swap";
+const apiKey = process.env.JUP_API_KEY;
+const BASE = apiKey ? "https://api.jup.ag" : "https://lite-api.jup.ag";
+const QUOTE_URL = `${BASE}/swap/v1/quote`;
+const SWAP_URL = `${BASE}/swap/v1/swap`;
+const jupHeaders: Record<string, string> = apiKey ? { "x-api-key": apiKey } : {};
 
 export const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 export const USDC_DECIMALS = 6;
@@ -35,7 +40,7 @@ export async function quoteUsdcToSpyx({
     onlyDirectRoutes: "false",
     asLegacyTransaction: "false",
   });
-  const r = await fetch(`${QUOTE_URL}?${params}`, { cache: "no-store" });
+  const r = await fetch(`${QUOTE_URL}?${params}`, { cache: "no-store", headers: jupHeaders });
   if (!r.ok) return null;
   return (await r.json()) as Quote;
 }
@@ -63,7 +68,7 @@ export async function executeSwap({
   const treasury = Keypair.fromSecretKey(bs58.decode(privKey));
   const swapRes = await fetch(SWAP_URL, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...jupHeaders },
     body: JSON.stringify({
       quoteResponse: quote,
       userPublicKey: treasury.publicKey.toBase58(),

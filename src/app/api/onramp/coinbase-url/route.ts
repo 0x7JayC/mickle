@@ -42,8 +42,12 @@ export async function POST(req: Request) {
       asset: "USDC",
     });
   } catch (e) {
+    const detail = (e as Error).message;
+    // Log so the failure shape surfaces in Vercel runtime logs (the
+    // response-body detail isn't logged by default).
+    console.error("[onramp] init failed:", detail);
     return NextResponse.json(
-      { error: "onramp init failed", detail: (e as Error).message },
+      { error: "onramp init failed", detail },
       { status: 502 },
     );
   }

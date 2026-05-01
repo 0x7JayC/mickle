@@ -383,7 +383,10 @@ export default function App() {
     });
     if (!r.ok) {
       const err = await r.json().catch(() => ({}));
-      throw new Error(err.error ?? "onramp not available");
+      const reason = err?.detail
+        ? `${err.error ?? "onramp not available"} — ${err.detail}`
+        : err?.error ?? "onramp not available";
+      throw new Error(reason);
     }
     const { url } = (await r.json()) as { url: string };
     window.location.href = url;

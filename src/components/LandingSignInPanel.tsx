@@ -2,10 +2,16 @@
 
 import { SignIn } from "@coinbase/cdp-react";
 import { useRouter } from "next/navigation";
+import SiwsConnectButton from "./SiwsConnectButton";
 
 // Inline sign-in panel. CDP provider is mounted at root layout so the
 // SignIn component reads from the page-wide context — this means the
 // same provider survives OAuth redirect-returns to the landing.
+//
+// Below the CDP form, a 'Connect Solana wallet' button kicks off the
+// parallel SIWS path: connect via wallet-adapter (Backpack, Phantom,
+// Solflare via Wallet Standard), sign a nonce, server-issued JWT
+// stored locally as the bearer token for subsequent calls.
 export default function LandingSignInPanel({
   onClose,
   onSuccess,
@@ -39,7 +45,23 @@ export default function LandingSignInPanel({
             ×
           </button>
         )}
+
         <SignIn onSuccess={handleSuccess} />
+
+        {/* Divider + parallel SIWS path. Crypto-native users connect
+            their wallet, sign a nonce, and skip CDP entirely. */}
+        <div className="flex items-center gap-3 my-5">
+          <div className="flex-1 h-px bg-foreground/10" />
+          <span className="text-[10px] uppercase tracking-[0.18em] font-mono text-foreground/45">
+            or
+          </span>
+          <div className="flex-1 h-px bg-foreground/10" />
+        </div>
+
+        <SiwsConnectButton onSuccess={handleSuccess} />
+        <p className="text-[11px] text-foreground/45 mt-2 text-center leading-relaxed">
+          Crypto-native? Backpack · Phantom · Solflare
+        </p>
       </div>
     </div>
   );

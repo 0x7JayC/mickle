@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  useIsInitialized,
-  useIsSignedIn,
-  useCurrentUser,
-  useGetAccessToken,
-  useSolanaAddress,
-  useSignOut,
-} from "@coinbase/cdp-hooks";
+import { useMickleAuth } from "@/lib/use-mickle-auth";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TimeMachine from "@/components/TimeMachine";
@@ -109,37 +102,43 @@ type Position = {
 export default function App() {
   const lang = useLang();
   const router = useRouter();
-  const { isInitialized } = useIsInitialized();
-  const { isSignedIn } = useIsSignedIn();
-  const { currentUser } = useCurrentUser();
-  const { getAccessToken } = useGetAccessToken();
-  const { solanaAddress } = useSolanaAddress();
-  const { signOut: cdpSignOut } = useSignOut();
-
-  const ready = isInitialized;
-  const authenticated = isSignedIn;
-  // CDP exposes the verified email on authenticationMethods.email
-  // (single object, not array).
-  const userEmail = currentUser?.authenticationMethods?.email?.email ?? null;
+  // Unified auth — hides whether the user took CDP (email/Google) or
+  // SIWS (wallet) on the way in. Dashboard code reads a single shape.
+  const auth = useMickleAuth();
+  const ready = auth.ready;
+  const authenticated = auth.isSignedIn;
+  const userEmail = auth.email;
+  const solanaAddress = auth.solanaAddress;
+  const getAccessToken = auth.getAccessToken;
+  // For the gate logic below — kept for symmetry with the previous
+  // currentUser-as-extra-signal check.
+  const currentUser = authenticated ? { __present: true } : null;
 
   // Sign out → land on the marketing site. Hard navigation tears down
-  // the React tree + Privy/CDP provider state so memory and providers
-  // reset cleanly between sessions.
+  // the React tree + provider state so memory and providers reset
+  // cleanly between sessions.
   const signOut = async () => {
-    await cdpSignOut();
+    await auth.signOut();
     if (typeof window !== "undefined") {
       window.location.href = "/";
     }
   };
 
-  // CDP gives us a single embedded Solana address per user. Crypto-
-  // wallet linking will land in a follow-up phase via wallet-adapter.
+  // SIWS users: their connected wallet IS their identity, label
+  // accordingly. CDP users: embedded Mickle wallet.
   const allWallets = solanaAddress
-    ? [{ address: solanaAddress, embedded: true, label: "Mickle" }]
+    ? [
+        {
+          address: solanaAddress,
+          embedded: auth.provider === "cdp",
+          label: auth.provider === "siws" ? "Wallet" : "Mickle",
+        },
+      ]
     : [];
   const linkWallet = () => {
-    // Wallet-adapter integration deferred to Phase 5. For now this is a
-    // no-op so callers don't crash.
+    // Multi-wallet linking is a follow-up. SIWS users already have
+    // their wallet connected; CDP users get an embedded wallet at
+    // sign-in.
   };
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const [position, setPosition] = useState<Position | null>(null);

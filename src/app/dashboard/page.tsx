@@ -427,7 +427,7 @@ export default function App() {
       <SiteNav>
         <button
           onClick={() => setDepositOpen(true)}
-          className="glass-button-primary px-3 sm:px-5 py-1.5 sm:py-2 text-sm font-semibold"
+          className="glass-button px-3 sm:px-5 py-1.5 sm:py-2 text-sm font-semibold text-foreground"
         >
           {t(dict, "topUp", lang)}
         </button>
@@ -444,26 +444,21 @@ export default function App() {
       </SiteNav>
       <main className="flex-1 px-4 sm:px-6 max-w-3xl w-full mx-auto pt-6 pb-20">
 
-      {/* Greeting + streak inline — wallet is no longer the first thing on screen */}
-      <header className="flex items-end justify-between mb-7 gap-3">
-        <div className="min-w-0 flex-1">
-          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            {greeting}
-          </span>
-          <h1 className="text-display text-3xl sm:text-5xl font-bold mt-1 tracking-tight leading-none truncate">
-            {handle}.
-          </h1>
+      {/* P5: streak is the hero, handle drops to a sub-line.
+          Coral 56px display digit + mono caps under, mirroring how
+          the streak is the protagonist of the page. */}
+      <header className="mb-7">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
+          {t(dict, "streak", lang)}
+        </span>
+        <div
+          className="font-mono font-bold text-[56px] sm:text-[72px] text-accent leading-none mt-1 tabular-nums"
+          style={{ letterSpacing: "-0.02em" }}
+        >
+          {streak}
         </div>
-        <div className="text-right shrink-0">
-          <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
-            {t(dict, "streak", lang)}
-          </span>
-          <div className="font-mono font-bold text-2xl sm:text-4xl text-accent leading-none mt-1 tabular-nums">
-            {streak}
-            <span className="ml-1 text-xl sm:text-2xl" aria-hidden>
-              {streak > 0 ? "🔥" : "·"}
-            </span>
-          </div>
+        <div className="text-[12px] sm:text-[13px] text-foreground/55 mt-2 leading-relaxed truncate">
+          {greeting}, <span className="text-foreground/85 font-semibold">{handle}</span>
         </div>
       </header>
 
@@ -485,7 +480,7 @@ export default function App() {
           borderColor: "rgba(255,122,89,0.28)",
         }}
       >
-        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
+        <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 font-semibold">
           {t(dict, "todaysRitual", lang)}
         </span>
         <h2 className="text-display text-3xl sm:text-4xl font-bold mt-2 mb-6 tracking-tight">
@@ -532,7 +527,7 @@ export default function App() {
               href={`https://solscan.io/tx/${lastBatch.tx_sig}`}
               target="_blank"
               rel="noreferrer"
-              className="ml-auto shrink-0 text-accent font-semibold hover:underline"
+              className="ml-auto shrink-0 text-foreground/65 font-semibold hover:text-foreground hover:underline"
             >
               {t(dict, "view", lang)}
             </a>
@@ -663,7 +658,7 @@ export default function App() {
             >
               <span
                 className="shrink-0 w-2 h-2 rounded-full"
-                style={{ background: w.embedded ? "var(--accent)" : "#10b981" }}
+                style={{ background: w.embedded ? "#caa54a" : "#10b981" }}
                 aria-hidden
               />
               <div className="min-w-0 flex-1">
@@ -678,7 +673,7 @@ export default function App() {
           ))}
           <button
             onClick={() => linkWallet()}
-            className="w-full mt-1 text-[13px] font-semibold text-accent border border-accent/30 hover:bg-accent/5 rounded-full px-4 py-2 transition"
+            className="w-full mt-1 text-[13px] font-semibold text-foreground/85 border border-foreground/15 hover:border-foreground/30 hover:bg-foreground/[0.04] rounded-full px-4 py-2 transition"
           >
             {t(dict, "connectWallet", lang)}
           </button>
@@ -756,13 +751,13 @@ function EarnedCard({
       <div className="flex items-center gap-4">
         <div
           className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-          style={{ background: "var(--accent)" }}
+          style={{ background: "#caa54a" }}
           aria-hidden
         >
           {kind.emoji}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-accent font-bold">
+          <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 font-semibold">
             {t(dict, "milestoneEarned", lang)}
           </div>
           <div className="text-lg sm:text-xl font-bold tracking-tight mt-0.5">
@@ -794,7 +789,7 @@ function ProgressCard({
         <span className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55">
           {t(dict, "nextMilestone", lang)}
         </span>
-        <span className="text-[12px] font-semibold text-accent whitespace-nowrap">
+        <span className="text-[12px] font-semibold text-foreground/85 whitespace-nowrap">
           {lang === "zh" ? `第 ${target.days} 天` : `Day ${target.days}`} · {t(dict, target.labelKey, lang)}
         </span>
       </div>
@@ -803,7 +798,7 @@ function ProgressCard({
           className="h-full rounded-full transition-all duration-700"
           style={{
             width: `${Math.max(progress * 100, 2)}%`,
-            background: "var(--accent)",
+            background: "#0c0a14",
           }}
         />
       </div>
@@ -882,7 +877,7 @@ function ContributedStat({
           </div>
           <div
             className={`text-[12px] font-mono uppercase tracking-[0.18em] mt-1 ${
-              balance > 0 ? "text-accent" : "text-foreground/50"
+              balance > 0 ? "text-foreground/65" : "text-foreground/40"
             }`}
           >
             {balance > 0 ? daysLine : t(dict, "balanceEmpty", lang)}

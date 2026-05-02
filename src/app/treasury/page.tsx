@@ -119,41 +119,8 @@ export default function TreasuryPage() {
         </section>
       ) : data ? (
         <>
-          <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
-            <SectionLabel>{t(dict, "cohort", lang)}</SectionLabel>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card label={t(dict, "users", lang)} value={fmtNum(data.cohort.users, 0)} />
-              <Card label={t(dict, "activeStreaks", lang)} value={fmtNum(data.cohort.active_streaks, 0)} />
-              <Card label={t(dict, "longestStreak", lang)} value={`${fmtNum(data.cohort.longest_streak, 0)} ${t(dict, "daySuffix", lang)}`} />
-              <Card label={t(dict, "totalTaps", lang)} value={fmtNum(data.cohort.total_taps, 0)} />
-            </div>
-            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Card
-                label={t(dict, "contributedLifetime", lang)}
-                value={fmtGbp(data.cohort.total_contributed_gbp)}
-                accent
-              />
-              <Card
-                label={t(dict, "pendingTaps", lang)}
-                value={`${fmtNum(data.cohort.pending_taps, 0)} ${t(dict, "taps", lang)}`}
-              />
-            </div>
-          </section>
-
-          <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
-            <SectionLabel>{t(dict, "pooledHeader", lang)}</SectionLabel>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Card label={t(dict, "deposited", lang)} value={fmtUsd(data.treasury.total_deposited_usdc)} />
-              <Card label={t(dict, "swappedSpyx", lang)} value={fmtUsd(data.treasury.total_swapped_usdc)} />
-              <Card
-                label={t(dict, "spyxHeld", lang)}
-                value={fmtNum(data.treasury.spyx_held, 6)}
-                suffix="SPYx"
-              />
-              <Card label={t(dict, "floatIdle", lang)} value={fmtUsd(data.treasury.float_usdc)} />
-            </div>
-          </section>
-
+          {/* P3: Lead with the on-chain block — that's the proof.
+              Cohort vanity metrics drop to last. */}
           {data.treasury.onchain && (
             <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
               <SectionLabel>
@@ -182,18 +149,18 @@ export default function TreasuryPage() {
                 href={`https://solscan.io/account/${data.treasury.onchain.address}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-2 text-[12px] font-mono text-foreground/55 hover:text-accent"
+                className="mt-3 inline-flex items-center gap-2 text-[12px] font-mono text-foreground/55 hover:text-foreground"
               >
                 <span className="uppercase tracking-[0.18em]">{t(dict, "walletShort", lang)}</span>
                 <code className="font-mono">
                   {data.treasury.onchain.address.slice(0, 6)}…{data.treasury.onchain.address.slice(-4)}
                 </code>
-                <span className="text-accent">{t(dict, "viewOnSolscan", lang)}</span>
+                <span className="text-foreground/85 underline-offset-4 underline decoration-foreground/25">{t(dict, "viewOnSolscan", lang)}</span>
               </a>
             </section>
           )}
 
-          <section className="px-4 sm:px-6 pb-20 max-w-5xl mx-auto">
+          <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
             <SectionLabel>{t(dict, "recentBatches", lang)}</SectionLabel>
             <div className="rounded-[18px] border border-foreground/10 bg-white overflow-hidden">
               {data.recent_batches.length === 0 ? (
@@ -225,7 +192,7 @@ export default function TreasuryPage() {
                         href={`https://solscan.io/tx/${b.tx_sig}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="shrink-0 text-[12px] font-semibold text-accent hover:underline"
+                        className="shrink-0 text-[12px] font-semibold text-foreground/85 hover:text-foreground underline-offset-4 underline decoration-foreground/25"
                       >
                         {t(dict, "onchain", lang)}
                       </a>
@@ -237,6 +204,40 @@ export default function TreasuryPage() {
                   </div>
                 ))
               )}
+            </div>
+          </section>
+
+          <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
+            <SectionLabel>{t(dict, "pooledHeader", lang)}</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Card label={t(dict, "deposited", lang)} value={fmtUsd(data.treasury.total_deposited_usdc)} />
+              <Card label={t(dict, "swappedSpyx", lang)} value={fmtUsd(data.treasury.total_swapped_usdc)} />
+              <Card
+                label={t(dict, "spyxHeld", lang)}
+                value={fmtNum(data.treasury.spyx_held, 6)}
+                suffix="SPYx"
+              />
+              <Card label={t(dict, "floatIdle", lang)} value={fmtUsd(data.treasury.float_usdc)} />
+            </div>
+          </section>
+
+          <section className="px-4 sm:px-6 pb-20 max-w-5xl mx-auto">
+            <SectionLabel>{t(dict, "cohort", lang)}</SectionLabel>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Card label={t(dict, "users", lang)} value={fmtNum(data.cohort.users, 0)} />
+              <Card label={t(dict, "activeStreaks", lang)} value={fmtNum(data.cohort.active_streaks, 0)} />
+              <Card label={t(dict, "longestStreak", lang)} value={`${fmtNum(data.cohort.longest_streak, 0)} ${t(dict, "daySuffix", lang)}`} />
+              <Card label={t(dict, "totalTaps", lang)} value={fmtNum(data.cohort.total_taps, 0)} />
+            </div>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Card
+                label={t(dict, "contributedLifetime", lang)}
+                value={fmtGbp(data.cohort.total_contributed_gbp)}
+              />
+              <Card
+                label={t(dict, "pendingTaps", lang)}
+                value={`${fmtNum(data.cohort.pending_taps, 0)} ${t(dict, "taps", lang)}`}
+              />
             </div>
           </section>
 
@@ -277,7 +278,7 @@ function Card({
   return (
     <div
       className={`rounded-[18px] border p-4 ${
-        accent ? "border-accent/30 bg-accent/[0.06]" : "border-foreground/10 bg-white"
+        accent ? "border-foreground/15 bg-foreground/[0.03]" : "border-foreground/10 bg-white"
       }`}
     >
       <div className="text-[11px] uppercase tracking-[0.22em] font-mono text-foreground/55 mb-2">

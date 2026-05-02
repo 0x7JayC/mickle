@@ -7,8 +7,10 @@
 //
 // Returns a single shape so dashboard / modal code doesn't have to
 // branch on provider every time it needs a token or address.
+// All callbacks are useCallback-stabilised so consumers can safely
+// put them in useEffect deps without infinite-loop re-renders.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useIsInitialized,
   useIsSignedIn,
@@ -92,15 +94,25 @@ export function useMickleAuth(): MickleAuth {
     provider === "cdp" ? (cdpAddress as string | null) ?? null : siwsAddress;
   const email = provider === "cdp" ? cdpEmail : null;
 
-  const getAccessToken = async (): Promise<string | null> => {
-    if (provider === "cdp") return await cdpGetToken();
-    if (provider === "siws") return siwsJwt;
-    return null;
-  };
+  // Stash the live values in a ref so the stable callbacks below
+  // always read fresh state without changing identity. Without this,
+  // consumers that put getAccessToken in useEffect deps would loop:
+  // every render builds a new function, effect re-fires, setState
+  // triggers another render, repeat.
+  const stateRef = useRef({ provider, siwsJwt, cdpGetToken, cdpSignedIn, cdpSignOut });
+  stateRef.current = { provider, siwsJwt, cdpGetToken, cdpSignedIn, cdpSignOut };
 
-  const signOut = async () => {
-    if (cdpSignedIn) {
-      await cdpSignOut();
+  const getAccessToken = useCallback(async (): Promise<string | null> => {
+    const s = stateRef.current;
+    if (s.provider === "cdp") return await s.cdpGetToken();
+    if (s.provider === "siws") return s.siwsJwt;
+    return null;
+  }, []);
+
+  const signOut = useCallback(async () => {
+    const s = stateRef.current;
+    if (s.cdpSignedIn) {
+      await s.cdpSignOut();
     }
     if (typeof window !== "undefined") {
       localStorage.removeItem(MICKLE_SIWS_KEY);
@@ -108,7 +120,7 @@ export function useMickleAuth(): MickleAuth {
     }
     setSiwsJwt(null);
     setSiwsAuthId(null);
-  };
+  }, []);
 
   return {
     ready,

@@ -413,13 +413,36 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated]);
 
-  // CDP is mounted only on /dashboard now, so a signed-out visitor
-  // landing here gets an inline AuthButton instead of being bounced
-  // back to landing. Once CDP confirms initialized + not signed in,
-  // we show the welcome card; while initializing we render nothing
-  // to avoid a flash of "please sign in" before CDP knows.
-  if (ready && !authenticated) {
+  // CDP signs the user out *visually* during a refresh window because
+  // useIsInitialized can flip true before the SDK has finished
+  // rehydrating the persisted session from localStorage. To stop the
+  // gate from flashing for already-signed-in users, we hold off on
+  // rendering it until isSignedIn has been false for a continuous
+  // grace window — by which point the rehydration has either
+  // completed (auth flips true, gate never shows) or really did fail
+  // (gate shows). currentUser is also checked: if CDP has hydrated a
+  // user object, treat that as authenticated even if isSignedIn lags.
+  const [gateConfirmed, setGateConfirmed] = useState(false);
+  const looksSignedOut = ready && !authenticated && !currentUser;
+  useEffect(() => {
+    if (!looksSignedOut) {
+      setGateConfirmed(false);
+      return;
+    }
+    const t = setTimeout(() => setGateConfirmed(true), 800);
+    return () => clearTimeout(t);
+  }, [looksSignedOut]);
+
+  if (!ready) {
+    return <DashboardLoadingShell />;
+  }
+  if (looksSignedOut && gateConfirmed) {
     return <DashboardSignInGate />;
+  }
+  if (looksSignedOut) {
+    // Brief loading state during the rehydration grace window so we
+    // don't show a 'sign in' card to a user CDP is about to confirm.
+    return <DashboardLoadingShell />;
   }
 
   return (
@@ -813,6 +836,26 @@ function ProgressCard({
 // Replaces the bounce-to-/ behaviour from before: now /dashboard is
 // the only route that initializes CDP, so this is where sign-in
 // happens. The AuthButton itself reflects the SDK's loading state.
+// Quiet loading shell shown while CDP is rehydrating the persisted
+// session on a fresh page load. Looks like a calm dashboard, no
+// 'sign in' prompt — so users who refresh after signing in don't see
+// a misleading flash.
+function DashboardLoadingShell() {
+  return (
+    <>
+      <SiteNav />
+      <main className="flex-1 px-4 sm:px-6 max-w-3xl w-full mx-auto pt-6 pb-20">
+        <div className="animate-pulse">
+          <div className="h-3 w-24 bg-foreground/[0.08] rounded mb-3" />
+          <div className="h-14 w-32 bg-foreground/[0.08] rounded mb-6" />
+          <div className="h-3 w-48 bg-foreground/[0.06] rounded mb-10" />
+          <div className="h-32 w-full bg-foreground/[0.05] rounded-[18px]" />
+        </div>
+      </main>
+    </>
+  );
+}
+
 const gateDict: Dict = {
   title: { en: "Sign in to Mickle", zh: "登录 Mickle" },
   body: {

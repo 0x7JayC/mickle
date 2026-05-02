@@ -550,7 +550,7 @@ export default function App() {
             {t(dict, "moveSlider", lang)}
           </span>
         </div>
-        <TimeMachine />
+        <TimeMachine lockedDaily={1} streakDays={streak} />
       </section>
 
       {depositOpen && (

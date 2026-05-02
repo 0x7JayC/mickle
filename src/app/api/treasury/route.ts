@@ -85,7 +85,7 @@ export async function GET() {
       .from("swap_batches")
       .select("id, executed_at, total_usdc, spyx_received, tx_sig")
       .order("executed_at", { ascending: false })
-      .limit(7),
+      .limit(30),
     readOnchain(),
   ]);
 

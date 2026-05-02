@@ -9,6 +9,8 @@ const dict: Dict = {
   contributed: { en: "Contributed", zh: "已投入" },
   compounding: { en: "Compounding", zh: "复利收益" },
   inHorizon: { en: "In {h}", zh: "{h} 后" },
+  yourPace: { en: "Your pace", zh: "你的节奏" },
+  youAreHere: { en: "You are here", zh: "当前位置" },
 };
 
 const fmtH = (s: string, h: string) => s.replace("{h}", h);
@@ -45,10 +47,23 @@ function fmtMoney(n: number) {
   return `£${n.toFixed(0)}`;
 }
 
-export default function TimeMachine() {
+// P9: When the dashboard renders the Time Machine for a signed-in
+// user, pass `lockedDaily` (the user's per-tap commitment in £) and
+// `streakDays` (their current streak length in days). The slider is
+// hidden, the curve gets a 'You are here' marker at the user's
+// elapsed-streak position, and the chart frames the projection as
+// 'this is yours' rather than 'an example'.
+export default function TimeMachine({
+  lockedDaily,
+  streakDays = 0,
+}: {
+  lockedDaily?: number;
+  streakDays?: number;
+} = {}) {
   const lang = useLang();
-  const [daily, setDaily] = useState(1);
+  const [daily, setDaily] = useState(lockedDaily ?? 1);
   const [horizon, setHorizon] = useState<Horizon>(HORIZONS[4]);
+  const isLocked = typeof lockedDaily === "number";
 
   const future = useMemo(() => projectFutureValue(daily, horizon.years), [daily, horizon]);
   const contributed = useMemo(() => projectContributed(daily, horizon.years), [daily, horizon]);
@@ -89,17 +104,21 @@ export default function TimeMachine() {
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-3 mb-7">
         <div className="glass-pill flex items-center gap-3 pl-4 pr-4 py-2.5">
-          <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">{t(dict, "daily", lang)}</span>
+          <span className="text-[10px] text-muted uppercase tracking-[0.18em] font-semibold">
+            {isLocked ? t(dict, "yourPace", lang) : t(dict, "daily", lang)}
+          </span>
           <span className="text-foreground font-mono text-lg font-semibold tabular-nums">£{daily}</span>
-          <input
-            type="range"
-            min={1}
-            max={20}
-            step={1}
-            value={daily}
-            onChange={(e) => setDaily(Number(e.target.value))}
-            className="w-32 sm:w-40 accent-[#ff7a59]"
-          />
+          {!isLocked && (
+            <input
+              type="range"
+              min={1}
+              max={20}
+              step={1}
+              value={daily}
+              onChange={(e) => setDaily(Number(e.target.value))}
+              className="w-32 sm:w-40 accent-[#ff7a59]"
+            />
+          )}
         </div>
         <div className="glass-pill flex gap-1 p-1">
           {HORIZONS.map((h) => {
@@ -154,6 +173,49 @@ export default function TimeMachine() {
             strokeDasharray="4 5"
           />
           <path d={linePath} fill="none" stroke="url(#grad-line)" strokeWidth="3" filter="url(#glow)" strokeLinecap="round" />
+          {isLocked && streakDays > 0 && (() => {
+            // Find the curve point at the user's current elapsed time
+            // (streakDays / 30.44 ≈ months) and drop a marker there.
+            const monthsElapsed = streakDays / 30.44;
+            const totalMonths = horizon.years * 12;
+            const tx = Math.min(monthsElapsed / totalMonths, 1);
+            // Find the matching point on the projected curve
+            const idx = Math.max(
+              0,
+              Math.min(
+                points.length - 1,
+                points.findIndex((p) => p.m / totalMonths >= tx),
+              ),
+            );
+            const px = xAt(idx);
+            const py = yAt(points[idx]?.v ?? 0);
+            return (
+              <g>
+                <line
+                  x1={px}
+                  y1={H - PAD}
+                  x2={px}
+                  y2={py}
+                  stroke="#0c0a14"
+                  strokeOpacity="0.45"
+                  strokeWidth="1"
+                  strokeDasharray="2 3"
+                />
+                <circle cx={px} cy={py} r="6" fill="#ff7a59" stroke="#fff" strokeWidth="2" />
+                <text
+                  x={Math.min(px + 10, W - 80)}
+                  y={Math.max(py - 10, 14)}
+                  fontFamily="ui-monospace, Menlo, monospace"
+                  fontSize="10"
+                  fontWeight="600"
+                  fill="#0c0a14"
+                  letterSpacing="0.08em"
+                >
+                  {t(dict, "youAreHere", lang).toUpperCase()}
+                </text>
+              </g>
+            );
+          })()}
         </svg>
         <div className="flex items-center gap-5 text-xs text-muted mt-2 px-1">
           <span className="flex items-center gap-1.5">

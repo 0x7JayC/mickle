@@ -67,6 +67,9 @@ const dict: Dict = {
   updatedSecsAgo: { en: "updated {n}s ago", zh: "{n} 秒前更新" },
   updatedMinAgo: { en: "updated {n}m ago", zh: "{n} 分钟前更新" },
   staleHint: { en: "data may be stale — retrying", zh: "数据可能过时 — 正在重试" },
+  thirtyDays: { en: "Last 30 days", zh: "最近 30 天" },
+  subscribe: { en: "Subscribe to receipts (RSS) ↗", zh: "订阅 RSS 凭证 ↗" },
+  noBatchesYet: { en: "No batches yet — first swap fires the day after the first user tap.", zh: "暂无批次 —— 首次用户打卡后一天会执行第一笔。" },
   noBatches: { en: "No batches yet. The first one runs the day after the first user tap.", zh: "还没有批次。首次用户打卡后的第二天会运行第一批。" },
   quoteOnly: { en: "quote only", zh: "仅报价" },
   onchain: { en: "On-chain ↗", zh: "链上查看 ↗" },
@@ -227,8 +230,28 @@ export default function TreasuryPage() {
           )}
 
           <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
-            <SectionLabel>{t(dict, "recentBatches", lang)}</SectionLabel>
-            <div className="rounded-[18px] border border-foreground/10 bg-white overflow-hidden">
+            <div className="flex items-baseline justify-between gap-3 mb-3 px-1">
+              <SectionLabel>{t(dict, "recentBatches", lang)}</SectionLabel>
+              <a
+                href="/api/treasury/feed.xml"
+                className="text-[11px] uppercase tracking-[0.18em] font-mono text-foreground/55 hover:text-foreground"
+              >
+                {t(dict, "subscribe", lang)}
+              </a>
+            </div>
+
+            {/* P8 — 30-day bar chart promotes the most concrete
+                artifact from 'footer' to 'feature'. One bar per
+                executed swap, ordered chronologically, height
+                proportional to total_usdc. */}
+            <BatchChart
+              batches={data.recent_batches}
+              label={t(dict, "thirtyDays", lang)}
+              empty={t(dict, "noBatchesYet", lang)}
+              lang={lang}
+            />
+
+            <div className="rounded-[18px] border border-foreground/10 bg-white overflow-hidden mt-3">
               {data.recent_batches.length === 0 ? (
                 <div className="p-5 text-foreground/55 text-[14px]">
                   {t(dict, "noBatches", lang)}
@@ -319,6 +342,104 @@ export default function TreasuryPage() {
         </div>
       </footer>
     </main>
+  );
+}
+
+// P8: 30-day rolling bar chart of cohort swap volumes. Each batch
+// is one bar; height ∝ total_usdc; the most recent batch sits on the
+// right. The chart bucketizes by date so multiple batches in the
+// same UTC day stack into one bar.
+function BatchChart({
+  batches,
+  label,
+  empty,
+  lang,
+}: {
+  batches: TreasuryData["recent_batches"];
+  label: string;
+  empty: string;
+  lang: ReturnType<typeof useLang>;
+}) {
+  // Bucket batches into 30 daily slots ending today (UTC).
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  const days: { date: Date; total: number; key: string }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - i);
+    days.push({
+      date: d,
+      total: 0,
+      key: d.toISOString().slice(0, 10),
+    });
+  }
+  for (const b of batches) {
+    const day = new Date(b.executed_at).toISOString().slice(0, 10);
+    const slot = days.find((s) => s.key === day);
+    if (slot) slot.total += Number(b.total_usdc);
+  }
+
+  const max = Math.max(...days.map((d) => d.total), 1);
+  const total30d = days.reduce((s, d) => s + d.total, 0);
+  const hasAnyData = total30d > 0;
+
+  // Render even when no data — bars draw at zero, axis still helps
+  // visitors orient on the cadence.
+  return (
+    <div className="rounded-[18px] border border-foreground/10 bg-white p-4 sm:p-5">
+      <div className="flex items-baseline justify-between gap-3 mb-3">
+        <span className="text-[10px] uppercase tracking-[0.18em] font-mono text-foreground/55">
+          {label}
+        </span>
+        <span className="text-[12px] tabular-nums text-foreground/85">
+          {hasAnyData
+            ? total30d.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                maximumFractionDigits: 0,
+              })
+            : "—"}
+        </span>
+      </div>
+      <div className="flex items-end gap-[2px] h-24">
+        {days.map((d) => {
+          const h = hasAnyData ? Math.max((d.total / max) * 100, d.total > 0 ? 4 : 0) : 0;
+          return (
+            <div
+              key={d.key}
+              className="flex-1 rounded-sm transition-all"
+              title={`${d.key} · $${d.total.toFixed(2)}`}
+              style={{
+                height: `${h}%`,
+                background:
+                  d.total > 0
+                    ? "rgba(12, 10, 20, 0.85)"
+                    : "rgba(12, 10, 20, 0.06)",
+                minHeight: d.total > 0 ? 2 : 1,
+              }}
+              aria-label={`${d.key}: $${d.total.toFixed(2)}`}
+            />
+          );
+        })}
+      </div>
+      <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.16em] text-foreground/45 mt-2">
+        <span>
+          {days[0].date.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-GB", {
+            day: "numeric",
+            month: "short",
+          })}
+        </span>
+        <span>
+          {days[days.length - 1].date.toLocaleDateString(
+            lang === "zh" ? "zh-CN" : "en-GB",
+            { day: "numeric", month: "short" },
+          )}
+        </span>
+      </div>
+      {!hasAnyData && (
+        <p className="text-[12px] text-foreground/55 mt-3 leading-relaxed">{empty}</p>
+      )}
+    </div>
   );
 }
 

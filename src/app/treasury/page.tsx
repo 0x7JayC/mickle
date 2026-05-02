@@ -63,6 +63,10 @@ const dict: Dict = {
   spyxHeld: { en: "SPYx held", zh: "SPYx 持仓" },
   floatIdle: { en: "Float idle", zh: "闲置浮动资金" },
   recentBatches: { en: "Recent batches", zh: "最近批次" },
+  updatedJustNow: { en: "updated just now", zh: "刚刚更新" },
+  updatedSecsAgo: { en: "updated {n}s ago", zh: "{n} 秒前更新" },
+  updatedMinAgo: { en: "updated {n}m ago", zh: "{n} 分钟前更新" },
+  staleHint: { en: "data may be stale — retrying", zh: "数据可能过时 — 正在重试" },
   noBatches: { en: "No batches yet. The first one runs the day after the first user tap.", zh: "还没有批次。首次用户打卡后的第二天会运行第一批。" },
   quoteOnly: { en: "quote only", zh: "仅报价" },
   onchain: { en: "On-chain ↗", zh: "链上查看 ↗" },
@@ -81,17 +85,62 @@ const fmtUsd = (v: number) =>
 const fmtNum = (v: number, max = 4) =>
   v.toLocaleString("en-US", { maximumFractionDigits: max });
 
+// P6: 30s polling cadence keeps the on-chain block credibly live.
+// Anything older than this is shown as 'stale' (amber dot) so visitors
+// can tell the difference between 'just confirmed' and 'we lost the
+// connection 5 minutes ago'.
+const POLL_INTERVAL_MS = 30_000;
+const STALE_AFTER_MS = 90_000;
+
 export default function TreasuryPage() {
   const lang = useLang();
   const [data, setData] = useState<TreasuryData | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
 
+  // Poll the public treasury endpoint every 30s. The route already
+  // caches for 30s server-side, so this is cheap on infra and the
+  // user always sees a fresh-looking number.
   useEffect(() => {
-    fetch("/api/treasury")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => setData(j))
-      .finally(() => setLoaded(true));
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const r = await fetch("/api/treasury", { cache: "no-store" });
+        if (!r.ok) return;
+        const j = (await r.json()) as TreasuryData;
+        if (cancelled) return;
+        setData(j);
+        setLastUpdated(Date.now());
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    };
+    tick();
+    const id = setInterval(tick, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, []);
+
+  // Re-render every 5s so the 'updated Xs ago' label and stale-state
+  // dot tick forward without waiting for the next poll.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 5_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const ageMs = lastUpdated ? now - lastUpdated : null;
+  const isStale = ageMs !== null && ageMs > STALE_AFTER_MS;
+  const ageLabel = (() => {
+    if (ageMs === null) return null;
+    const sec = Math.floor(ageMs / 1000);
+    if (sec < 5) return t(dict, "updatedJustNow", lang);
+    if (sec < 60) return t(dict, "updatedSecsAgo", lang).replace("{n}", String(sec));
+    const min = Math.floor(sec / 60);
+    return t(dict, "updatedMinAgo", lang).replace("{n}", String(min));
+  })();
 
   return (
     <main className="flex-1">
@@ -125,11 +174,28 @@ export default function TreasuryPage() {
             <section className="px-4 sm:px-6 pb-8 max-w-5xl mx-auto">
               <SectionLabel>
                 <span className="inline-flex items-center gap-2">
+                  {/* P6: dot pulses green when fresh, holds amber
+                      when the last poll is older than STALE_AFTER_MS. */}
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    {!isStale && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
+                    )}
+                    <span
+                      className={`relative inline-flex rounded-full h-2 w-2 ${
+                        isStale ? "bg-amber-500" : "bg-emerald-500"
+                      }`}
+                    />
                   </span>
                   {t(dict, "liveOnchain", lang)}
+                  {ageLabel && (
+                    <span
+                      className={`text-[10px] tracking-[0.16em] font-mono ${
+                        isStale ? "text-amber-700" : "text-foreground/45"
+                      }`}
+                    >
+                      · {isStale ? t(dict, "staleHint", lang) : ageLabel}
+                    </span>
+                  )}
                 </span>
               </SectionLabel>
               <div className="grid grid-cols-3 gap-3">

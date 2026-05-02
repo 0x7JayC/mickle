@@ -232,25 +232,11 @@ export default function App() {
     };
   }, [authenticated, dbUser?.wallet, getAccessToken]);
 
-  // Single source of truth for auth UI is the landing page. If someone
-  // hits /app while signed out, bounce them to / so they see the same
-  // CTAs (Start your streak · Connect Solana wallet) as everyone else.
-  if (ready && !authenticated) {
-    if (typeof window !== "undefined") router.replace("/");
-    return (
-      <main className="flex-1 flex items-center justify-center">
-        <div className="text-muted">{t(dict, "redirecting", lang)}</div>
-      </main>
-    );
-  }
-
-  if (!ready) {
-    return (
-      <main className="flex-1 flex items-center justify-center">
-        <div className="text-muted">{t(dict, "loading", lang)}</div>
-      </main>
-    );
-  }
+  // (Old redirect-to-landing + Loading… blocks removed. The unified
+  // gate further down — DashboardLoadingShell + DashboardSignInGate
+  // with a grace window — replaces both, and crucially gives
+  // useMickleAuth time to read the SIWS JWT from localStorage before
+  // declaring the user signed-out.)
 
   const today = new Date().toISOString().slice(0, 10);
   const tappedToday = dbUser?.last_tap_date === today;

@@ -59,8 +59,8 @@ const dict: Dict = {
   daySuffix: { en: "d", zh: "天" },
   pooledHeader: { en: "Treasury (pooled, on Solana)", zh: "金库(在 Solana 上汇总)" },
   deposited: { en: "Deposited", zh: "已存入" },
-  swappedSpyx: { en: "Swapped → SPYx", zh: "已兑换 → SPYx" },
-  spyxHeld: { en: "SPYx held", zh: "SPYx 持仓" },
+  swappedSpyx: { en: "Swapped → pbSPYx", zh: "已兑换 → pbSPYx" },
+  spyxHeld: { en: "pbSPYx held", zh: "pbSPYx 持仓" },
   floatIdle: { en: "Float idle", zh: "闲置浮动资金" },
   recentBatches: { en: "Recent batches", zh: "最近批次" },
   updatedJustNow: { en: "updated just now", zh: "刚刚更新" },
@@ -211,7 +211,7 @@ export default function TreasuryPage() {
                 <Card
                   label={t(dict, "spyxHeld", lang)}
                   value={fmtNum(data.treasury.onchain.spyx, 4)}
-                  suffix="SPYx"
+                  suffix="pbSPYx"
                 />
               </div>
               <a
@@ -273,7 +273,7 @@ export default function TreasuryPage() {
                       </div>
                       <div className="text-[12px] text-foreground/55 tabular-nums">
                         {fmtUsd(b.total_usdc)} →{" "}
-                        {b.spyx_received ? `${fmtNum(b.spyx_received, 6)} SPYx` : t(dict, "quoteOnly", lang)}
+                        {b.spyx_received ? `${fmtNum(b.spyx_received, 6)} pbSPYx` : t(dict, "quoteOnly", lang)}
                       </div>
                     </div>
                     {b.tx_sig ? (
@@ -304,7 +304,7 @@ export default function TreasuryPage() {
               <Card
                 label={t(dict, "spyxHeld", lang)}
                 value={fmtNum(data.treasury.spyx_held, 6)}
-                suffix="SPYx"
+                suffix="pbSPYx"
               />
               <Card label={t(dict, "floatIdle", lang)} value={fmtUsd(data.treasury.float_usdc)} />
             </div>

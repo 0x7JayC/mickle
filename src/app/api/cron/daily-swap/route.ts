@@ -1,9 +1,11 @@
 // Daily treasury swap. Vercel triggers at 00:05 UTC (see vercel.json).
 //
-// Path: aggregate yesterday's unbatched taps → quote USDC→SPYx via
-// Jupiter → optionally execute on-chain → write a swap_batches row →
-// link taps to that batch. Pooled treasury model: SPYx is held by the
-// treasury wallet; user share is computed off the deposits ledger.
+// Path: aggregate yesterday's unbatched taps → quote USDC→pbSPYx via
+// Jupiter (secondary market) → optionally execute on-chain → write a
+// swap_batches row → link taps to that batch. Pooled treasury model:
+// pbSPYx is held by the treasury wallet (PiggyBank SPYx vault token,
+// 5x Oinks); user share is computed off the deposits ledger.
+// See MONEY.md § Leg 2b for the rationale behind pbSPYx vs raw SPYx.
 //
 // Auth: Vercel sends Authorization: Bearer $CRON_SECRET when the env
 // var is set. We reject anything else.

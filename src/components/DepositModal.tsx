@@ -38,8 +38,8 @@ const dict: Dict = {
   signing: { en: "Confirm in wallet…", zh: "请在钱包中确认…" },
   txError: { en: "Transfer failed. Make sure your wallet has enough balance plus a little SOL for fees.", zh: "转账失败。请确认钱包余额充足,且有少量 SOL 作为手续费。" },
   footerDemo: { en: "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in.", zh: "黑客松演示。正式版替换为 Open Banking + Kraken 金库,全程 0.5% 以下。" },
-  footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into SPYx on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库,在每日打卡时自动兑换为 SPYx。" },
-  footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into SPYx on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana,每日打卡时自动兑换为 SPYx。" },
+  footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into pbSPYx (yield-bearing S&P 500 position) on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库,在每日打卡时自动兑换为 pbSPYx(计息 S&P 500 持仓)。" },
+  footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into pbSPYx (yield-bearing S&P 500 position) on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana,每日打卡时自动兑换为 pbSPYx(计息 S&P 500 持仓)。" },
 };
 
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";

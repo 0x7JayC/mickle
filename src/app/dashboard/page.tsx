@@ -54,7 +54,7 @@ const dict: Dict = {
   insufficientBalance: { en: "Top up first — every tap uses £1.", zh: "请先充值 —— 每次打卡需 £1。" },
   position: { en: "Position", zh: "持仓" },
   live: { en: "Live", zh: "实时" },
-  notConfigured: { en: "SPYx mint not configured yet", zh: "SPYx 铸造尚未配置" },
+  notConfigured: { en: "pbSPYx mint not configured yet", zh: "pbSPYx 铸造尚未配置" },
   liveAfterTap: { en: "Live once your first tap settles", zh: "首次打卡结算后实时更新" },
   perShare: { en: "/ share", zh: "/ 股" },
   timeMachine: { en: "Time Machine", zh: "时间机器" },
@@ -527,7 +527,7 @@ export default function App() {
             })}{" "}
             · ${Number(lastBatch.total_usdc).toFixed(2)} {t(dict, "swapped", lang)}
             {lastBatch.spyx_received
-              ? ` · ${Number(lastBatch.spyx_received).toFixed(4)} SPYx`
+              ? ` · ${Number(lastBatch.spyx_received).toFixed(4)} pbSPYx`
               : ""}
           </span>
           {lastBatch.tx_sig && (
@@ -950,7 +950,7 @@ function PositionStat({ position }: { position: Position | null }) {
             {fmtGbp(gbp)}
           </div>
           <div className="text-[12px] text-foreground/55 mt-2 font-mono tabular-nums">
-            {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} SPYx
+            {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} pbSPYx
             {position?.usdPrice
               ? ` · ${fmtUsd(position.usdPrice)} ${t(dict, "perShare", lang)}`
               : ""}

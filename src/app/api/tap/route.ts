@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
+import { runDailySwap } from "@/lib/run-daily-swap";
 
 export const dynamic = "force-dynamic";
 
@@ -16,15 +18,17 @@ export async function POST(req: Request) {
   const sb = supabaseAdmin();
   const { data, error } = await sb.rpc("record_tap", { p_auth_id: userId });
   if (error) {
-    // record_tap raises 'insufficient balance' when the user has tapped
-    // through their pre-funded streak. Surface that as 402 so the client
-    // can prompt the user to top up.
     const insufficient = error.message?.toLowerCase().includes("insufficient balance");
     return NextResponse.json(
       { error: error.message },
       { status: insufficient ? 402 : 500 },
     );
   }
+
+  // Fire the daily swap in the background so the user sees their position
+  // update without waiting for the on-chain transaction to confirm.
+  const today = new Date().toISOString().slice(0, 10);
+  waitUntil(runDailySwap(today));
 
   return NextResponse.json({ user: data });
 }

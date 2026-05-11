@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useIsInitialized, useIsSignedIn } from "@coinbase/cdp-hooks";
 import { LangToggle } from "./LangToggle";
 import { useLang, t, type Dict } from "@/lib/i18n";
+import { useMickleAuth } from "@/lib/use-mickle-auth";
 
 const dict: Dict = {
   treasury: { en: "Treasury", zh: "金库" },
@@ -20,9 +20,8 @@ const dict: Dict = {
 export function SiteNav({ children }: { children?: React.ReactNode }) {
   const lang = useLang();
   const pathname = usePathname();
-  const { isInitialized } = useIsInitialized();
-  const { isSignedIn } = useIsSignedIn();
-  const showLinks = isInitialized && isSignedIn;
+  const { ready, isSignedIn } = useMickleAuth();
+  const showLinks = ready && isSignedIn;
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 

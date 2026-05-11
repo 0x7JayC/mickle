@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-
-const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 const SPYX_MINT = process.env.NEXT_PUBLIC_POSITION_MINT || "";
 
 export const dynamic = "force-dynamic";
@@ -17,59 +15,66 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: err.message }, { status: err.status });
   }
 
+  if (!SPYX_MINT) {
+    return NextResponse.json({ balance: 0, usdPrice: null, usdValue: 0, configured: false });
+  }
+
   const sb = supabaseAdmin();
   const { data: user } = await sb
     .from("users")
-    .select("wallet")
+    .select("id")
     .eq("auth_id", userId)
     .single();
 
-  const wallet = user?.wallet;
-  if (!wallet) {
-    return NextResponse.json({ wallet: null, balance: 0, usdPrice: null, usdValue: 0, configured: !!SPYX_MINT });
-  }
-  if (!SPYX_MINT) {
-    return NextResponse.json({ wallet, balance: 0, usdPrice: null, usdValue: 0, configured: false });
+  if (!user) {
+    return NextResponse.json({ balance: 0, usdPrice: null, usdValue: 0, configured: true });
   }
 
-  const [balance, usdPrice] = await Promise.all([
-    fetchSpyxBalance(wallet),
-    fetchJupiterPrice(SPYX_MINT),
-  ]);
+  // Fetch all this user's taps that have been included in a swap batch.
+  const { data: taps } = await sb
+    .from("taps")
+    .select("amount_usdc, swap_batch_id")
+    .eq("user_id", user.id)
+    .not("swap_batch_id", "is", null);
+
+  const balance = await calcProRataBalance(taps ?? [], sb);
+  const usdPrice = await fetchJupiterPrice(SPYX_MINT);
 
   return NextResponse.json({
-    wallet,
     balance,
     usdPrice,
-    usdValue: usdPrice ? balance * usdPrice : 0,
+    usdValue: usdPrice ? balance * usdPrice : balance, // pbUSDC ≈ $1 if price unavailable
     configured: true,
   });
 }
 
-async function fetchSpyxBalance(owner: string): Promise<number> {
-  try {
-    const r = await fetch(RPC, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getTokenAccountsByOwner",
-        params: [owner, { mint: SPYX_MINT }, { encoding: "jsonParsed" }],
-      }),
-      cache: "no-store",
-    });
-    const j = await r.json();
-    const accounts = j?.result?.value ?? [];
-    let total = 0;
-    for (const a of accounts) {
-      const ui = a?.account?.data?.parsed?.info?.tokenAmount?.uiAmount;
-      if (typeof ui === "number") total += ui;
-    }
-    return total;
-  } catch {
-    return 0;
+type Tap = { amount_usdc: number | string; swap_batch_id: string };
+
+async function calcProRataBalance(
+  taps: Tap[],
+  sb: ReturnType<typeof import("@/lib/supabase").supabaseAdmin>,
+): Promise<number> {
+  if (taps.length === 0) return 0;
+
+  const batchIds = [...new Set(taps.map((t) => t.swap_batch_id))];
+  const { data: batches } = await sb
+    .from("swap_batches")
+    .select("id, total_usdc, spyx_received")
+    .in("id", batchIds);
+
+  if (!batches || batches.length === 0) return 0;
+
+  const batchMap = new Map(batches.map((b) => [b.id, b]));
+  let total = 0;
+
+  for (const tap of taps) {
+    const batch = batchMap.get(tap.swap_batch_id);
+    if (!batch || !batch.spyx_received || !batch.total_usdc) continue;
+    const share = Number(tap.amount_usdc) / Number(batch.total_usdc);
+    total += share * Number(batch.spyx_received);
   }
+
+  return total;
 }
 
 async function fetchJupiterPrice(mint: string): Promise<number | null> {

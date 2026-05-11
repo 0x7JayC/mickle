@@ -43,6 +43,12 @@ export async function POST(req: Request) {
       .eq("wallet", wallet)
       .maybeSingle();
     if (byWallet && byWallet.auth_id !== userId) {
+      // Only allow relink if the caller's auth_id encodes this wallet —
+      // i.e. they signed in via SIWS which already verified ed25519 ownership.
+      // Any other auth provider (CDP) could submit an arbitrary wallet address.
+      if (userId !== `siws:${wallet}`) {
+        return NextResponse.json({ error: "wallet ownership not verified" }, { status: 403 });
+      }
       const { data: relinked, error: relinkErr } = await sb
         .from("users")
         .update({ auth_id: userId, email })

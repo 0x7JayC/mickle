@@ -1,16 +1,13 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ConnectionProvider, WalletProvider, useWallet } from "@solana/wallet-adapter-react";
-import { WalletModalProvider, useWalletModal } from "@solana/wallet-adapter-react-ui";
-import "@solana/wallet-adapter-react-ui/styles.css";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 
 // SIWS local-storage key. The dashboard's auth helper looks here
 // when CDP isn't signed in. Reused on logout to clear.
 export const MICKLE_SIWS_KEY = "mickle.siws.jwt";
 export const MICKLE_SIWS_AUTHID_KEY = "mickle.siws.authId";
-
-const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 
 // Inner button — assumes WalletProvider context is present. Splits
 // the click handler into 'connect → fetch nonce → sign → verify →
@@ -107,13 +104,7 @@ export default function SiwsConnectButton({
   onSuccess: () => void;
   label?: string;
 }) {
-  return (
-    <ConnectionProvider endpoint={RPC}>
-      <WalletProvider wallets={[]} autoConnect>
-        <WalletModalProvider>
-          <SiwsButton onSuccess={onSuccess} label={label} />
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
-  );
+  // WalletProvider / ConnectionProvider / WalletModalProvider live at
+  // the root (CdpProviders) — no need to re-wrap here.
+  return <SiwsButton onSuccess={onSuccess} label={label} />;
 }

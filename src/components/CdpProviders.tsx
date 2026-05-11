@@ -1,6 +1,11 @@
 "use client";
 
 import { CDPReactProvider, type Config, type Theme } from "@coinbase/cdp-react";
+import { ConnectionProvider, WalletProvider } from "@solana/wallet-adapter-react";
+import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
+import "@solana/wallet-adapter-react-ui/styles.css";
+
+const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 
 // Mickle wraps CDP's React provider so the embedded-wallet hooks
 // (useCurrentUser, useSendSolanaTransaction, etc.) and the AuthButton
@@ -61,14 +66,15 @@ const theme: Partial<Theme> = {
 };
 
 export default function CdpProviders({ children }: { children: React.ReactNode }) {
-  // Always render the provider so cdp-hooks calls don't throw 'useCDP
-  // must be used within a CDPHooksProvider' during prerender. If the
-  // project ID is empty the hooks will be inert — useIsSignedIn returns
-  // { isSignedIn: false }, AuthButton renders disabled — which is the
-  // correct behaviour in environments without CDP credentials.
   return (
     <CDPReactProvider config={config} theme={theme}>
-      {children}
+      <ConnectionProvider endpoint={RPC}>
+        <WalletProvider wallets={[]} autoConnect>
+          <WalletModalProvider>
+            {children}
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
     </CDPReactProvider>
   );
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 import { useSolanaAddress, useSendSolanaTransaction } from "@coinbase/cdp-hooks";
+import { useWallet } from "@solana/wallet-adapter-react";
 import bs58 from "bs58";
 
 const dict: Dict = {
@@ -95,6 +96,7 @@ export default function DepositModal({
 
   const { solanaAddress } = useSolanaAddress();
   const { sendSolanaTransaction } = useSendSolanaTransaction();
+  const { sendTransaction: walletSendTransaction, connected: walletConnected } = useWallet();
 
   // GBP→USDC + GBP→SOL reference rates. Coingecko public endpoint, no key.
   useEffect(() => {
@@ -219,13 +221,22 @@ export default function DepositModal({
       const tx = new VersionedTransaction(msg);
       // CDP expects the transaction as base64. SolanaAddress here is
       // typed; we cast the string to the branded type CDP expects.
-      const txBase64 = Buffer.from(tx.serialize()).toString("base64");
-      const result = await sendSolanaTransaction({
-        solanaAccount: owner as `${string}`,
-        network: "solana",
-        transaction: txBase64,
-      });
-      const txSig = result.transactionSignature;
+      let txSig: string;
+      if (walletConnected && walletSendTransaction) {
+        // SIWS path — external wallet (Phantom, Backpack, etc.)
+        const sig = await walletSendTransaction(tx, conn);
+        await conn.confirmTransaction(sig, "confirmed");
+        txSig = sig;
+      } else {
+        // CDP path — embedded wallet
+        const txBase64 = Buffer.from(tx.serialize()).toString("base64");
+        const result = await sendSolanaTransaction({
+          solanaAccount: owner as `${string}`,
+          network: "solana",
+          transaction: txBase64,
+        });
+        txSig = result.transactionSignature;
+      }
       onConfirmDeposit?.(amount, txSig);
       setConfirming(false);
       onClose();

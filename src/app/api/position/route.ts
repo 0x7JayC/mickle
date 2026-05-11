@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 
 const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
-const SPYX_MINT = process.env.NEXT_PUBLIC_SPYX_MINT || "";
+const SPYX_MINT = process.env.NEXT_PUBLIC_POSITION_MINT || "";
 
 export const dynamic = "force-dynamic";
 

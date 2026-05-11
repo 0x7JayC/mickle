@@ -14,7 +14,7 @@ export const revalidate = 30;
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 const TREASURY = process.env.NEXT_PUBLIC_MICKLE_TREASURY || "";
-const SPYX_MINT = process.env.NEXT_PUBLIC_SPYX_MINT || "";
+const SPYX_MINT = process.env.NEXT_PUBLIC_POSITION_MINT || "";
 
 async function rpc<T>(method: string, params: unknown[]): Promise<T | null> {
   try {

@@ -24,7 +24,7 @@ export type SwapRunResult =
   | { ok: false; status: number; error: string; detail?: string };
 
 export async function runDailySwap(date: string): Promise<SwapRunResult> {
-  const SPYX_MINT = process.env.NEXT_PUBLIC_SPYX_MINT || "";
+  const SPYX_MINT = process.env.NEXT_PUBLIC_POSITION_MINT || "";
   const RPC = process.env.NEXT_PUBLIC_SOLANA_RPC || "https://api.mainnet-beta.solana.com";
 
   const sb = supabaseAdmin();

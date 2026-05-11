@@ -166,7 +166,7 @@ Semantics unchanged (yield-bearing position acquired per batch). No DB migration
 
 **Env var to set in Vercel:**
 ```
-NEXT_PUBLIC_SPYX_MINT = F35yYmTR6PqkbTx449P1eGhB57mRhWAdYs93eCo2dMZR
+NEXT_PUBLIC_POSITION_MINT = F35yYmTR6PqkbTx449P1eGhB57mRhWAdYs93eCo2dMZR
 ```
 
 #### Phase 2 — pbSPYx (coming soon)
@@ -181,7 +181,7 @@ mint `E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK`).
 
 **Env var for Phase 2:**
 ```
-NEXT_PUBLIC_SPYX_MINT = E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK
+NEXT_PUBLIC_POSITION_MINT = E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK
 ```
 
 ### Leg 3 — Streak Premium (optional subscription, not in v1 UI)

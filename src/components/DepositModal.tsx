@@ -60,7 +60,6 @@ const FEE_PCT = 0.0099;
 export default function DepositModal({
   wallet,
   email,
-  demoEnabled = false,
   onClose,
   onConfirmDemo,
   onConfirmDeposit,
@@ -68,7 +67,6 @@ export default function DepositModal({
 }: {
   wallet: string | null;
   email: string | null;
-  demoEnabled?: boolean;
   onClose: () => void;
   onConfirmDemo?: (gbp: number) => void;
   onConfirmDeposit?: (gbp: number, txSig: string) => void;
@@ -142,19 +140,15 @@ export default function DepositModal({
   const solAmount = gbpPerSol ? amount / gbpPerSol : null;
   const tokenAmount = token === "USDC" ? usdcAmount : solAmount;
 
-  const startDemo = async () => {
-    setError(null);
-    setConfirming(true);
-    await new Promise((r) => setTimeout(r, 700));
-    onConfirmDemo?.(amount);
-    setConfirming(false);
-    onClose();
-  };
-
   const start = async () => {
     setError(null);
     if (mode === "demo") {
-      return startDemo();
+      setConfirming(true);
+      await new Promise((r) => setTimeout(r, 700));
+      onConfirmDemo?.(amount);
+      setConfirming(false);
+      onClose();
+      return;
     }
 
     if (mode === "transak") {
@@ -444,16 +438,6 @@ export default function DepositModal({
                   : mode === "wallet"
                     ? fmtN(t(dict, token === "USDC" ? "payUsdc" : "paySol", lang), amount)
                     : fmtN(t(dict, "continue", lang), amount)}
-          </button>
-        )}
-
-        {mode === "wallet" && demoEnabled && (
-          <button
-            onClick={startDemo}
-            disabled={confirming}
-            className="block mx-auto mt-3 text-[12px] text-foreground/45 hover:text-foreground/70 underline underline-offset-4 disabled:opacity-40"
-          >
-            {confirming ? t(dict, "recordingDemo", lang) : fmtN(t(dict, "simulate", lang), amount)}
           </button>
         )}
 

@@ -566,7 +566,6 @@ export default function App() {
         <DepositModal
           wallet={wallet}
           email={userEmail ?? null}
-          demoEnabled={demoEnabled}
           onClose={() => setDepositOpen(false)}
           onConfirmDemo={onConfirmDemoDeposit}
           onConfirmDeposit={onConfirmDeposit}

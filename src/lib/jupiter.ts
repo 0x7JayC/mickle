@@ -1,13 +1,14 @@
-// Minimal Jupiter v1 client. When JUP_API_KEY is set we hit the paid
-// endpoint (higher rate limits, better routing); otherwise the lite
-// endpoint is used. Swap requires a treasury keypair via TREASURY_PRIVATE_KEY
-// (base58). Without it, callers run in demo mode — real quote, no on-chain
-// execution.
+// Jupiter Ultra API client. Ultra provides pre-built transactions with
+// better routing than swap v1 — specifically needed for pbUSDC which
+// only has routes via Raydium CLMM (not discoverable on lite swap v1).
+//
+// Flow: GET /ultra/v1/order (quote + pre-built tx) → sign → POST /ultra/v1/execute
+//
+// Swap requires TREASURY_PRIVATE_KEY (base58). Without it, callers run
+// in demo mode — real quote, no on-chain execution.
 
 const apiKey = process.env.JUP_API_KEY;
 const BASE = apiKey ? "https://api.jup.ag" : "https://lite-api.jup.ag";
-const QUOTE_URL = `${BASE}/swap/v1/quote`;
-const SWAP_URL = `${BASE}/swap/v1/swap`;
 const jupHeaders: Record<string, string> = apiKey ? { "x-api-key": apiKey } : {};
 
 export const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
@@ -18,6 +19,9 @@ export type Quote = {
   outAmount: string;
   priceImpactPct: string;
   routePlan: unknown[];
+  // Ultra-specific — present when taker is provided
+  transaction?: string;
+  requestId?: string;
   [k: string]: unknown;
 };
 
@@ -32,15 +36,22 @@ export async function quoteUsdcToSpyx({
 }): Promise<Quote | null> {
   const lamports = Math.floor(usdcAmount * 10 ** USDC_DECIMALS);
   if (lamports <= 0) return null;
+
+  const privKey = process.env.TREASURY_PRIVATE_KEY;
+  const taker = privKey ? await getTreasuryAddress(privKey) : undefined;
+
   const params = new URLSearchParams({
     inputMint: USDC_MINT,
     outputMint: spyxMint,
     amount: String(lamports),
     slippageBps: String(slippageBps),
-    onlyDirectRoutes: "false",
-    asLegacyTransaction: "false",
   });
-  const r = await fetch(`${QUOTE_URL}?${params}`, { cache: "no-store", headers: jupHeaders });
+  if (taker) params.set("taker", taker);
+
+  const r = await fetch(`${BASE}/ultra/v1/order?${params}`, {
+    cache: "no-store",
+    headers: jupHeaders,
+  });
   if (!r.ok) return null;
   return (await r.json()) as Quote;
 }
@@ -51,39 +62,43 @@ export type ExecutedSwap =
 
 export async function executeSwap({
   quote,
-  rpcUrl,
 }: {
   quote: Quote;
-  rpcUrl: string;
+  rpcUrl: string; // kept for API compat, Ultra execute doesn't need it
 }): Promise<ExecutedSwap> {
   const privKey = process.env.TREASURY_PRIVATE_KEY;
   if (!privKey) return { mode: "demo", quote };
+  if (!quote.transaction || !quote.requestId) return { mode: "demo", quote };
 
-  // Lazy-load heavy crypto deps so demo-mode requests never pay the cost.
-  const [{ Connection, Keypair, VersionedTransaction }, bs58] = await Promise.all([
+  const [{ Keypair, VersionedTransaction }, bs58] = await Promise.all([
     import("@solana/web3.js"),
     import("bs58").then((m) => m.default ?? m),
   ]);
 
   const treasury = Keypair.fromSecretKey(bs58.decode(privKey));
-  const swapRes = await fetch(SWAP_URL, {
+  const tx = VersionedTransaction.deserialize(
+    Buffer.from(quote.transaction as string, "base64"),
+  );
+  tx.sign([treasury]);
+  const signedTransaction = Buffer.from(tx.serialize()).toString("base64");
+
+  const execRes = await fetch(`${BASE}/ultra/v1/execute`, {
     method: "POST",
     headers: { "content-type": "application/json", ...jupHeaders },
-    body: JSON.stringify({
-      quoteResponse: quote,
-      userPublicKey: treasury.publicKey.toBase58(),
-      wrapAndUnwrapSol: true,
-      dynamicComputeUnitLimit: true,
-      prioritizationFeeLamports: "auto",
-    }),
+    body: JSON.stringify({ signedTransaction, requestId: quote.requestId }),
   });
-  if (!swapRes.ok) throw new Error(`swap build failed: ${swapRes.status}`);
-  const { swapTransaction } = (await swapRes.json()) as { swapTransaction: string };
+  if (!execRes.ok) throw new Error(`ultra execute failed: ${execRes.status}`);
+  const result = (await execRes.json()) as { signature?: string; status?: string; error?: string };
+  if (result.status !== "Success" || !result.signature) {
+    throw new Error(`swap failed: ${result.error ?? result.status}`);
+  }
+  return { mode: "executed", quote, signature: result.signature };
+}
 
-  const tx = VersionedTransaction.deserialize(Buffer.from(swapTransaction, "base64"));
-  tx.sign([treasury]);
-  const conn = new Connection(rpcUrl, "processed");
-  const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: false });
-  await conn.confirmTransaction(sig, "processed");
-  return { mode: "executed", quote, signature: sig };
+async function getTreasuryAddress(privKeyBase58: string): Promise<string> {
+  const [{ Keypair }, bs58] = await Promise.all([
+    import("@solana/web3.js"),
+    import("bs58").then((m) => m.default ?? m),
+  ]);
+  return Keypair.fromSecretKey(bs58.decode(privKeyBase58)).publicKey.toBase58();
 }

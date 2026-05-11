@@ -5,6 +5,7 @@ import { verifyCdpAuth, AuthError } from "@/lib/cdp-server";
 import { runDailySwap } from "@/lib/run-daily-swap";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   let userId: string;

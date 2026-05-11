@@ -82,8 +82,8 @@ export async function executeSwap({
 
   const tx = VersionedTransaction.deserialize(Buffer.from(swapTransaction, "base64"));
   tx.sign([treasury]);
-  const conn = new Connection(rpcUrl, "confirmed");
+  const conn = new Connection(rpcUrl, "processed");
   const sig = await conn.sendRawTransaction(tx.serialize(), { skipPreflight: false });
-  await conn.confirmTransaction(sig, "confirmed");
+  await conn.confirmTransaction(sig, "processed");
   return { mode: "executed", quote, signature: sig };
 }

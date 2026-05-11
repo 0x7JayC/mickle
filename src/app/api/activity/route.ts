@@ -102,7 +102,7 @@ export async function GET(req: Request) {
       at: b.executed_at,
       label: "Treasury swap",
       detail: b.tx_sig ? "Executed on Solana" : "Quoted (demo)",
-      amount: `${Number(b.total_usdc).toFixed(2)} USDC → ${Number(b.spyx_received ?? 0).toFixed(4)} pbSPYx`,
+      amount: `${Number(b.total_usdc).toFixed(2)} USDC → ${Number(b.spyx_received ?? 0).toFixed(2)} pbUSDC`,
     });
   }
 

@@ -5,7 +5,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { executeSwap, quoteUsdcToSpyx, USDC_DECIMALS } from "@/lib/jupiter";
 
-const SPYX_DECIMALS = 8;
+// Phase 1: pbUSDC (6 decimals, same as USDC). Change to 8 when switching to pbSPYx.
+const SPYX_DECIMALS = 6;
 
 export type SwapRunResult =
   | { ok: true; skipped: true; reason: string; date: string }

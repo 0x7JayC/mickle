@@ -137,37 +137,52 @@ This is the leg that makes the model investable.
 
 ### Leg 2b — PiggyBank Oinks (added 2026-05-05)
 
-The daily swap now targets **pbSPYx** (PiggyBank's SPYx vault token,
-mint `E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK`) instead of raw SPYx.
-This is a pure swap-target change — Jupiter routes USDC → pbSPYx via the
-secondary market, which PiggyBank explicitly supports as equivalent to
-minting directly ("same yield, same Oinks generation").
+Mickle's daily swap now routes through PiggyBank vaults in two phases.
 
-**Why pbSPYx instead of raw SPYx:**
-- **5x Oinks multiplier** — PiggyBank's SPYx vault carries a 5x boost.
-  Every $1 held earns 5 Oinks per 2-day epoch rather than 0.
-- **Compounding yield** — pbSPYx accumulates SPYx yield internally;
-  the exchange rate (pbSPYx : SPYx) drifts upward over time at no cost.
-- **Zero extra infrastructure** — no PiggyBank SDK or program interaction
-  needed; Jupiter's DEX routing handles the swap end-to-end.
+#### Phase 1 — pbUSDC (current, live)
 
-**Why NOT deposit USDC float into PiggyBank USDC vault:**
-PiggyBank withdrawals require 48–96h (two epochs). The daily swap cron
-runs at 00:05 UTC and needs liquid USDC. Locking float in PiggyBank
-would starve the cron. USDC float yield remains planned via Kamino
-(instant-redemption, ~4.5% APY), to be layered on separately.
+The daily swap now targets **pbUSDC** (PiggyBank's USDC yield vault token,
+mint `F35yYmTR6PqkbTx449P1eGhB57mRhWAdYs93eCo2dMZR`) instead of raw SPYx.
+Jupiter routes USDC → pbUSDC via the secondary market. PiggyBank explicitly
+states this is equivalent to minting directly: same yield, same Oinks.
 
-**Token accounting change:**
-The `swap_batches.spyx_received` column now records pbSPYx received,
-not raw SPYx. The semantics are the same (the yield-bearing position
-acquired per batch); only the underlying token has changed. No DB
-migration is needed.
+**What pbUSDC is:**
+- Delta-neutral yield-bearing stablecoin (~6–12% APY)
+- Strategies: perpetual long/short funding-rate arb, basis trades, PT rate arb
+- Oinks: 1x per $1 per 2-day epoch
+- Liquid: instantly tradeable on secondary market (no 48–96h lock for exit)
+
+**Why start here (not SPYx):**
+- Validates the PiggyBank / Jupiter routing end-to-end on a liquid, stable token
+- Provides yield on users' savings while SPYx vault integration is finalized
+- Lower market risk during the proof-of-concept phase
+- pbUSDC DEX liquidity is deeper than pbSPYx; swap routing is more reliable
+
+**Token accounting:** `swap_batches.spyx_received` now records pbUSDC received.
+Semantics unchanged (yield-bearing position acquired per batch). No DB migration.
+
+**Decimals change:** pbUSDC inherits USDC's 6 decimal places (was 8 for SPYx).
+`SPYX_DECIMALS` in `run-daily-swap.ts` updated to 6.
 
 **Env var to set in Vercel:**
 ```
+NEXT_PUBLIC_SPYX_MINT = F35yYmTR6PqkbTx449P1eGhB57mRhWAdYs93eCo2dMZR
+```
+
+#### Phase 2 — pbSPYx (coming soon)
+
+Swap target will move to **pbSPYx** (PiggyBank's SPYx vault token,
+mint `E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK`).
+
+- Restores the S&P 500 investment thesis
+- 5x Oinks multiplier — the highest available vault boost
+- Compounding yield on top of SPYx price exposure
+- Decimals revert to 8; env var swap is the only code change needed
+
+**Env var for Phase 2:**
+```
 NEXT_PUBLIC_SPYX_MINT = E65CoK961Rs5LzKhGZxbKsB7xpFhYhXogH8nhr8zamTK
 ```
-(was: SPYx mint `XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W`)
 
 ### Leg 3 — Streak Premium (optional subscription, not in v1 UI)
 

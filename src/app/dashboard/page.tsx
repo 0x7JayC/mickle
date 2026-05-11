@@ -54,9 +54,10 @@ const dict: Dict = {
   insufficientBalance: { en: "Top up first — every tap uses £1.", zh: "请先充值 —— 每次打卡需 £1。" },
   position: { en: "Position", zh: "持仓" },
   live: { en: "Live", zh: "实时" },
-  notConfigured: { en: "pbSPYx mint not configured yet", zh: "pbSPYx 铸造尚未配置" },
+  notConfigured: { en: "pbUSDC mint not configured yet", zh: "pbUSDC 铸造尚未配置" },
   liveAfterTap: { en: "Live once your first tap settles", zh: "首次打卡结算后实时更新" },
-  perShare: { en: "/ share", zh: "/ 股" },
+  perShare: { en: "/ pbUSDC", zh: "/ pbUSDC" },
+  spyxComingSoon: { en: "SPYx vault · 5× Oinks · Coming soon", zh: "SPYx 金库 · 5× Oinks · 即将上线" },
   timeMachine: { en: "Time Machine", zh: "时间机器" },
   moveSlider: { en: "Move the slider", zh: "拖动滑块" },
   wallets: { en: "Wallets", zh: "钱包" },
@@ -527,7 +528,7 @@ export default function App() {
             })}{" "}
             · ${Number(lastBatch.total_usdc).toFixed(2)} {t(dict, "swapped", lang)}
             {lastBatch.spyx_received
-              ? ` · ${Number(lastBatch.spyx_received).toFixed(4)} pbSPYx`
+              ? ` · ${Number(lastBatch.spyx_received).toFixed(2)} pbUSDC`
               : ""}
           </span>
           {lastBatch.tx_sig && (
@@ -950,7 +951,7 @@ function PositionStat({ position }: { position: Position | null }) {
             {fmtGbp(gbp)}
           </div>
           <div className="text-[12px] text-foreground/55 mt-2 font-mono tabular-nums">
-            {balance.toLocaleString("en-US", { maximumFractionDigits: 4 })} pbSPYx
+            {balance.toLocaleString("en-US", { maximumFractionDigits: 2 })} pbUSDC
             {position?.usdPrice
               ? ` · ${fmtUsd(position.usdPrice)} ${t(dict, "perShare", lang)}`
               : ""}
@@ -966,6 +967,12 @@ function PositionStat({ position }: { position: Position | null }) {
           </div>
         </>
       )}
+      <div className="mt-3 pt-3 border-t border-foreground/8">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.14em] text-foreground/35 bg-foreground/5 rounded-full px-2.5 py-1">
+          <span className="w-1 h-1 rounded-full bg-amber-400/60" />
+          {t(dict, "spyxComingSoon", lang)}
+        </span>
+      </div>
     </div>
   );
 }

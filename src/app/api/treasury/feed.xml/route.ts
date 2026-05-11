@@ -36,7 +36,7 @@ export async function GET() {
     const total = Number(b.total_usdc).toFixed(2);
     const spyx = b.spyx_received ? Number(b.spyx_received).toFixed(6) : null;
     const title = spyx
-      ? `${total} USDC → ${spyx} pbSPYx`
+      ? `${total} USDC → ${spyx} pbUSDC`
       : `${total} USDC · quoted (demo)`;
     const date = new Date(b.executed_at).toUTCString();
     return `

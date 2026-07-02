@@ -96,7 +96,7 @@ function LangButton({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className="px-[11px] py-[5px] text-[12px] font-bold tracking-wide rounded-full leading-none transition-all active:scale-[0.94]"
+      className="px-[11px] py-[5px] text-[12px] font-bold tracking-wide rounded-full leading-none transition-[background-color,color,opacity,box-shadow,transform] active:scale-[0.94]"
       style={{
         background: active ? "var(--foreground, #0a0a0a)" : "transparent",
         color: active ? "#fff" : "var(--foreground, #0a0a0a)",

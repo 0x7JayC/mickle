@@ -9,7 +9,7 @@ const dict: Dict = {
   dismiss: { en: "Dismiss", zh: "关闭" },
   welcome: { en: "Welcome to Mickle", zh: "欢迎来到 Mickle" },
   title: { en: "Your wallet is ready. Two steps to your first streak.", zh: "钱包已就绪。两步开启你的连续打卡。" },
-  step1: { en: "Top up £10 / £30 / £90 — pre-funds your daily ritual.", zh: "充值 £10 / £30 / £90 —— 为每日仪式预付资金。" },
+  step1: { en: "Top up £10 / £30 / £90 to pre-fund your daily ritual.", zh: "充值 £10 / £30 / £90，为每日仪式预付资金。" },
   step2: { en: "Tap once a day. £1 routes into the S&P 500. Watch your streak compound.", zh: "每天打卡一次。£1 自动投入 S&P 500。看连胜复利。" },
   topUpStart: { en: "Top up to start →", zh: "充值开始 →" },
   later: { en: "Maybe later", zh: "稍后再说" },

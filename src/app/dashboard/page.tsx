@@ -27,7 +27,7 @@ const dict: Dict = {
   streak: { en: "Streak", zh: "连续打卡" },
   todaysRitual: { en: "Today's ritual", zh: "今日仪式" },
   doneToday: { en: "Done for today.", zh: "今天已完成。" },
-  tapOnce: { en: "Tap once for £1.", zh: "轻点一次,投入 £1。" },
+  tapOnce: { en: "Tap once for £1.", zh: "轻点一次，投入 £1。" },
   alreadyTappedAria: { en: "Already tapped today", zh: "今天已打卡" },
   tapAria: { en: "Tap £1 into your S&P 500 position", zh: "投入 £1 到你的 S&P 500 持仓" },
   recording: { en: "Recording…", zh: "记录中…" },
@@ -51,7 +51,7 @@ const dict: Dict = {
   daysOfTaps: { en: "{n} days of taps", zh: "{n} 天打卡" },
   oneDayOfTaps: { en: "1 day of taps", zh: "还能打 1 天" },
   lifetime: { en: "£{n} contributed lifetime", zh: "终生累计 £{n}" },
-  insufficientBalance: { en: "Top up first — every tap uses £1.", zh: "请先充值 —— 每次打卡需 £1。" },
+  insufficientBalance: { en: "Top up first: every tap uses £1.", zh: "请先充值，每次打卡需 £1。" },
   position: { en: "Position", zh: "持仓" },
   live: { en: "Live", zh: "实时" },
   notConfigured: { en: "pbUSDC mint not configured yet", zh: "pbUSDC 铸造尚未配置" },
@@ -67,7 +67,7 @@ const dict: Dict = {
   connectWallet: { en: "+ Connect Solana wallet (Phantom · Backpack · Solflare)", zh: "+ 连接 Solana 钱包(Phantom · Backpack · Solflare)" },
   demoJump: { en: "Demo · jump to", zh: "演示 · 跳到" },
   day: { en: "Day", zh: "第" },
-  tapErr: { en: "Couldn't record your tap. Try again.", zh: "打卡未成功,请重试。" },
+  tapErr: { en: "Couldn't record your tap. Try again.", zh: "打卡未成功，请重试。" },
   day1Toast: { en: "Day 1. The hardest one is now behind you.", zh: "第 1 天。最难的一步已经迈出。" },
   weekToast: { en: "{n} days. Quietly compounding.", zh: "已连续 {n} 天。悄悄复利。" },
   dayToast: { en: "Day {n} · keep showing up.", zh: "第 {n} 天 · 继续坚持。" },
@@ -804,7 +804,7 @@ function ProgressCard({
       </div>
       <div className="h-2 rounded-full bg-foreground/10 overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-700"
+          className="h-full rounded-full transition-[width] duration-700"
           style={{
             width: `${Math.max(progress * 100, 2)}%`,
             background: "#0c0a14",
@@ -846,7 +846,7 @@ const gateDict: Dict = {
   title: { en: "Sign in to Mickle", zh: "登录 Mickle" },
   body: {
     en: "Email, Apple ID or Google. A Solana wallet appears in five seconds — no seed phrase, no app store.",
-    zh: "用邮箱、Apple ID 或 Google 登录。五秒内自动生成 Solana 钱包,无需助记词,无需下载 App。",
+    zh: "用邮箱、Apple ID 或 Google 登录。五秒内自动生成 Solana 钱包，无需助记词，无需下载 App。",
   },
 };
 

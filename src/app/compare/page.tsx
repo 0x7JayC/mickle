@@ -10,14 +10,14 @@ const dict: Dict = {
   hero: { en: "Pick a palette.", zh: "选一个配色。" },
   sub: {
     en: "Each panel is the live hero + Time Machine in that palette's ambient + glass treatment.",
-    zh: "每个面板都是该配色下真实的主视觉 + 时间机器,带氛围与玻璃质感。",
+    zh: "每个面板都是该配色下真实的主视觉 + 时间机器，带氛围与玻璃质感。",
   },
   thePatience: { en: "The patience product", zh: "耐心产物" },
   heroTitle1: { en: "Every little", zh: "积少" },
   heroTitle2: { en: "makes a mickle.", zh: "成多。" },
   heroSub: {
     en: "£1 a day into the S&P 500. On Solana. Watch consistency compound.",
-    zh: "每天 £1 投入 S&P 500,在 Solana 上。看坚持如何复利。",
+    zh: "每天 £1 投入 S&P 500，在 Solana 上。看坚持如何复利。",
   },
   startStreak: { en: "Start your streak", zh: "开始连续打卡" },
   how: { en: "How it works", zh: "如何运作" },
@@ -44,7 +44,7 @@ const PALETTES = [
   {
     id: "a5",
     name: { en: "A5 — Aurora", zh: "A5 — 极光" },
-    note: { en: "Teal · violet · magenta on near-black. Vivid, futuristic.", zh: "青绿 · 紫罗兰 · 品红,近黑底。明艳、未来感。" },
+    note: { en: "Teal · violet · magenta on near-black. Vivid, futuristic.", zh: "青绿 · 紫罗兰 · 品红，近黑底。明艳、未来感。" },
   },
 ];
 

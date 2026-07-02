@@ -58,6 +58,14 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Keyboard focus: visible ring on every interactive element, accent-tinted
+   per palette. Mouse/touch users never see it (focus-visible only). */
+:focus-visible {
+  outline: 2px solid var(--accent, #ff7a59);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 /* Calm mode: opt-in via .calm-bg on a route subtree (e.g. /app dashboard).
    Hides the vivid ambient layers and uses a solid cream background so glass
    cards have real contrast. */

@@ -304,11 +304,11 @@ export default function Home() {
             i={0}
             lang={lang}
             refCb={(el) => (beatRefs.current[0] = el)}
-            statTop={{ label: { en: "Customers Globally", zh: "全球用户" }, num: "100", plus: "o", desc: { en: "100+ humans now feeding the cat £1 a day.", zh: "已经有 100+ 用户开始用每天 £1,让未来慢慢长大。" } }}
-            statBottom={{ label: { en: "Happy Customers", zh: "满意客户" }, num: "10K", plus: "p", desc: { en: "Less anxiety. More index funds. Allegedly.", zh: "每天攒一点,不焦虑,不踩坑。" } }}
-            head={lang === "zh" ? <>嗨,我是<Star />MICKLE</> : <>HI. I&apos;M<Star />MICKLE</>}
+            statTop={{ label: { en: "The habit", zh: "每日习惯" }, num: "£1", unit: { en: "a day", zh: "每天" }, plus: "o", desc: { en: "One tap. Pooled with the cohort, swapped into the S&P 500.", zh: "每天轻点一次，和大家一起集中买入标普 500。" } }}
+            statBottom={{ label: { en: "Market hours", zh: "交易时间" }, num: "24/7", suffix: ".", plus: "p", desc: { en: "Tokenized S&P 500 on Solana. No market close.", zh: "代币化标普 500 在 Solana 上交易，没有休市。" } }}
+            head={lang === "zh" ? <>嗨，我是<Star />MICKLE</> : <>HI. I&apos;M<Star />MICKLE</>}
             cta={{ en: "Learn More →", zh: "了解更多 →" }}
-            meta={lang === "zh" ? <><strong>每天 £1</strong> 的小习惯,配合一只懂金融的猫。</> : <><strong>£1 a day.</strong> Run by a cat who reads the FT.</>}
+            meta={lang === "zh" ? <><strong>每天 £1</strong> 的小习惯，配合一只懂金融的猫。</> : <><strong>£1 a day.</strong> Run by a cat who reads the FT.</>}
             onCta={onCta}
           />
           <Beat
@@ -317,7 +317,7 @@ export default function Home() {
             refCb={(el) => (beatRefs.current[1] = el)}
             statTop={{ label: { en: "Minimum deposit", zh: "门槛" }, num: "£500", plus: "o", desc: { en: "What most brokers ask. Tough luck if you have £30 a month spare.", zh: "大多数券商最低起投门槛。对每月剩 £30 的人不友好。" } }}
             head={lang === "zh" ? <>投资<Star />太贵 太难</> : <>INVESTING<Star />IS COMPLICATED</>}
-            meta={lang === "zh" ? <>门槛、术语、波动 — <strong>大多数人卡在第一步。</strong></> : <>Jargon, minimums, vibes — <strong>most people give up before they start.</strong></>}
+            meta={lang === "zh" ? <>门槛、术语、波动，<strong>大多数人卡在第一步。</strong></> : <>Jargon, minimums, vibes: <strong>most people give up before they start.</strong></>}
             onCta={onCta}
           />
           <Beat
@@ -326,17 +326,17 @@ export default function Home() {
             refCb={(el) => (beatRefs.current[2] = el)}
             statTop={{ label: { en: "What £1 actually buys", zh: "£1 能买什么" }, num: "0.3", unit: { en: "lattes", zh: "杯" }, plus: "o", desc: { en: "A third of a London latte. Not enough to wake you up.", zh: "伦敦一杯拿铁的 1/3。还不够你早晨清醒。" } }}
             head={lang === "zh" ? <>£1<Star />能干什么</> : <>£1?<Star />HARDLY ANYTHING</>}
-            meta={lang === "zh" ? <>连一杯拿铁都买不到。<strong>你也这么想过,对吧?</strong></> : <>Won&apos;t get you a London latte. <strong>We&apos;ve heard that one.</strong></>}
+            meta={lang === "zh" ? <>连一杯拿铁都买不到。<strong>你也这么想过，对吧？</strong></> : <>Won&apos;t get you a London latte. <strong>We&apos;ve heard that one.</strong></>}
             onCta={onCta}
           />
           <Beat
             i={3}
             lang={lang}
             refCb={(el) => (beatRefs.current[3] = el)}
-            statTop={{ label: { en: "S&P 500", zh: "标普 500" }, num: "500", unit: { en: "co.", zh: "家" }, plus: "p", desc: { en: "The world's most profitable. Sliced thin enough that £1 fits.", zh: "全球最赚钱的 500 家公司。每天,你都买进一小片。" } }}
+            statTop={{ label: { en: "S&P 500", zh: "标普 500" }, num: "500", unit: { en: "co.", zh: "家" }, plus: "p", desc: { en: "The world's most profitable. Sliced thin enough that £1 fits.", zh: "全球最赚钱的 500 家公司。每天，你都买进一小片。" } }}
             head={lang === "zh" ? <>如果 £1<Star />能买 S&amp;P 500</> : <>WHAT IF £1<Star />BOUGHT S&amp;P 500</>}
             cta={{ en: "Show me the math →", zh: "看看怎么算 →" }}
-            meta={lang === "zh" ? <>每天,把世界 500 强的一小片,<strong>放进你的口袋</strong>。</> : <>A daily slice of the world&apos;s 500 biggest companies. <strong>In your pocket.</strong></>}
+            meta={lang === "zh" ? <>每天，把世界 500 强的一小片，<strong>放进你的口袋</strong>。</> : <>A daily slice of the world&apos;s 500 biggest companies. <strong>In your pocket.</strong></>}
             onCta={onCta}
           />
           <Beat
@@ -345,36 +345,36 @@ export default function Home() {
             refCb={(el) => (beatRefs.current[4] = el)}
             statTop={{ label: { en: "Mickle handles", zh: "交给 Mickle" }, num: "3", unit: { en: "steps", zh: "步" }, plus: "p", desc: { en: "Charge → Buy → Allocate. You don't lift a paw.", zh: "扣款 → 集中买入 → 按比例分配。你只负责出现。" } }}
             head={lang === "zh" ? <>自动<Star />集中<Star />公平</> : <>AUTO<Star />POOLED<Star />FAIR</>}
-            meta={lang === "zh" ? <>Mickle 替你扣款、批量买入、按比例分配 — <strong>你只负责坚持</strong>。</> : <>We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></>}
+            meta={lang === "zh" ? <>Mickle 替你扣款、批量买入、按比例分配，<strong>你只负责坚持</strong>。</> : <>We charge, pool, buy, divvy up. <strong>You just keep showing up.</strong></>}
             onCta={onCta}
           />
           <Beat
             i={5}
             lang={lang}
             refCb={(el) => (beatRefs.current[5] = el)}
-            statTop={{ label: { en: "Things we don't do", zh: "不做的事" }, num: "0", unit: { en: "fomo", zh: "焦虑" }, plus: "o", desc: { en: "No memecoins. No \"gems\". No vibes. Just an index.", zh: "不投机,不押注,不赌运气。只买全世界都用的指数。" } }}
+            statTop={{ label: { en: "Things we don't do", zh: "不做的事" }, num: "0", unit: { en: "fomo", zh: "焦虑" }, plus: "o", desc: { en: "No memecoins. No \"gems\". No vibes. Just an index.", zh: "不投机，不押注，不赌运气。只买全世界都用的指数。" } }}
             head={lang === "zh" ? <>不躁<Star />不慌</> : <>NO PUMPS<Star />NO DUMPS</>}
-            meta={lang === "zh" ? <>把全球最稳的资产,<strong>按小份额慢慢攒进来</strong>。</> : <>The boring asset class. In tiny servings. <strong>On purpose.</strong></>}
+            meta={lang === "zh" ? <>把全球最稳的资产，<strong>按小份额慢慢攒进来</strong>。</> : <>The boring asset class. In tiny servings. <strong>On purpose.</strong></>}
             onCta={onCta}
           />
           <Beat
             i={6}
             lang={lang}
             refCb={(el) => (beatRefs.current[6] = el)}
-            statTop={{ label: { en: "After 4 years", zh: "4 年后" }, num: "£1,500", plus: "o", desc: { en: "£1/day × 4 years × 7% average. Maths, not vibes.", zh: "每天 £1 + 平均 7% 年化。复利不是魔法,是没忽略的那 £1。" } }}
+            statTop={{ label: { en: "After 4 years", zh: "4 年后" }, num: "£1,500", plus: "o", desc: { en: "£1/day × 4 years × 7% average. Maths, not vibes.", zh: "每天 £1 + 平均 7% 年化。复利不是魔法，是没忽略的那 £1。" } }}
             head={lang === "zh" ? <>4 年<Star />1,500 英镑</> : <>4 YEARS<Star />£1,500</>}
             cta={{ en: "See the full curve →", zh: "看看完整曲线 →" }}
-            meta={lang === "zh" ? <>复利不是魔法,<strong>是你每天没忽略的那 £1</strong>。</> : <>Compounding isn&apos;t magic. <strong>It&apos;s the £1 you didn&apos;t skip.</strong></>}
+            meta={lang === "zh" ? <>复利不是魔法，<strong>是你每天没忽略的那 £1</strong>。</> : <>Compounding isn&apos;t magic. <strong>It&apos;s the £1 you didn&apos;t skip.</strong></>}
             onCta={onCta}
           />
           <Beat
             i={7}
             lang={lang}
             refCb={(el) => (beatRefs.current[7] = el)}
-            statTop={{ label: { en: "Best time to start", zh: "最好的开始时间" }, num: lang === "zh" ? "今天" : "Today", plus: "p", suffix: ".", desc: { en: "Not Monday. Not payday. The cat is waiting.", zh: "不是明天,不是工资日。是今天。" } }}
+            statTop={{ label: { en: "Best time to start", zh: "最好的开始时间" }, num: lang === "zh" ? "今天" : "Today", plus: "p", suffix: ".", desc: { en: "Not Monday. Not payday. The cat is waiting.", zh: "不是明天，不是工资日。是今天。" } }}
             head={lang === "zh" ? <>今天<Star />是最好的开始</> : <>TODAY<Star />BEATS TOMORROW</>}
             cta={{ en: "Join Mickle →", zh: "立即加入 Mickle →" }}
-            meta={lang === "zh" ? <>让 <strong>明天的自己</strong>,感谢今天的你。</> : <>Tomorrow-you will thank today-you. <strong>Probably loudly.</strong></>}
+            meta={lang === "zh" ? <>让 <strong>明天的自己</strong>，感谢今天的你。</> : <>Tomorrow-you will thank today-you. <strong>Probably loudly.</strong></>}
             onCta={onCta}
             signature
           />

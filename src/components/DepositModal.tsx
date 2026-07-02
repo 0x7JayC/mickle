@@ -9,15 +9,15 @@ import bs58 from "bs58";
 const dict: Dict = {
   topUp: { en: "Top up", zh: "充值" },
   close: { en: "Close", zh: "关闭" },
-  howManyDays: { en: "How many days?", zh: "充几天?" },
-  preFund: { en: "Pre-fund your streak. £1 routes into the S&P 500 each day you tap.", zh: "为你的连胜预付资金。每打卡一天,£1 自动投入 S&P 500。" },
+  howManyDays: { en: "How many days?", zh: "充几天？" },
+  preFund: { en: "Pre-fund your streak. £1 routes into the S&P 500 each day you tap.", zh: "为你的连胜预付资金。每打卡一天，£1 自动投入 S&P 500。" },
   demoMode: { en: "Demo mode · no real money", zh: "演示模式 · 无真实资金" },
   demoBody: { en: "Production routes GBP through Open Banking to a Kraken treasury (~0.2% all-in). See ", zh: "正式版通过开放银行将 GBP 路由到 Kraken 金库(全程约 0.2%)。详见 " },
   demoBodyTail: { en: " for architecture.", zh: " 了解架构。" },
   walletMode: { en: "Pay from your Solana wallet", zh: "用 Solana 钱包支付" },
   walletBody: { en: "Sign a USDC or SOL transfer from your Solana wallet to the Mickle treasury. No fiat on-ramp needed.", zh: "从你的 Solana 钱包向 Mickle 金库签署 USDC 或 SOL 转账。无需法币入金。" },
   applePayCta: { en: "Pay £{n} with Apple Pay", zh: "用 Apple Pay 支付 £{n}" },
-  applePayBody: { en: "Card or Apple Pay → USDC, settled to the Mickle treasury via Coinbase. Includes a ~2% on-ramp fee.", zh: "银行卡或 Apple Pay → USDC,通过 Coinbase 结算至 Mickle 金库。包含约 2% 入金费。" },
+  applePayBody: { en: "Card or Apple Pay → USDC, settled to the Mickle treasury via Coinbase. Includes a ~2% on-ramp fee.", zh: "银行卡或 Apple Pay → USDC，通过 Coinbase 结算至 Mickle 金库。包含约 2% 入金费。" },
   orPayCrypto: { en: "or pay with crypto wallet", zh: "或使用加密钱包支付" },
   openingOnramp: { en: "Opening Coinbase…", zh: "正在打开 Coinbase…" },
   rateLineUsdc: { en: "≈ {n} USDC at today's rate", zh: "按今日汇率 ≈ {n} USDC" },
@@ -37,10 +37,10 @@ const dict: Dict = {
   payUsdc: { en: "Pay £{n} with USDC", zh: "用 USDC 支付 £{n}" },
   paySol: { en: "Pay £{n} with SOL", zh: "用 SOL 支付 £{n}" },
   signing: { en: "Confirm in wallet…", zh: "请在钱包中确认…" },
-  txError: { en: "Transfer failed. Make sure your wallet has enough balance plus a little SOL for fees.", zh: "转账失败。请确认钱包余额充足,且有少量 SOL 作为手续费。" },
-  footerDemo: { en: "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in.", zh: "黑客松演示。正式版替换为 Open Banking + Kraken 金库,全程 0.5% 以下。" },
-  footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into pbUSDC (yield-bearing position via PiggyBank) on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库,在每日打卡时自动兑换为 pbUSDC(通过 PiggyBank 的计息持仓)。" },
-  footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into pbUSDC (yield-bearing position via PiggyBank) on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana,每日打卡时自动兑换为 pbUSDC(通过 PiggyBank 的计息持仓)。" },
+  txError: { en: "Transfer failed. Make sure your wallet has enough balance plus a little SOL for fees.", zh: "转账失败。请确认钱包余额充足，且有少量 SOL 作为手续费。" },
+  footerDemo: { en: "Hackathon demo. Production replaces this with Open Banking + Kraken treasury, sub-0.5% all-in.", zh: "黑客松演示。正式版替换为 Open Banking + Kraken 金库，全程 0.5% 以下。" },
+  footerWallet: { en: "USDC settles to the Mickle treasury on Solana, then auto-swaps into pbUSDC (yield-bearing position via PiggyBank) on your daily tap.", zh: "USDC 结算至 Solana 上的 Mickle 金库，在每日打卡时自动兑换为 pbUSDC(通过 PiggyBank 的计息持仓)。" },
+  footerProd: { en: "Pay by UK bank transfer or card. Funds settle to USDC on Solana, then auto-swap into pbUSDC (yield-bearing position via PiggyBank) on your daily tap.", zh: "通过英国银行转账或银行卡支付。资金以 USDC 结算到 Solana，每日打卡时自动兑换为 pbUSDC(通过 PiggyBank 的计息持仓)。" },
 };
 
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";

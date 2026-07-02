@@ -42,12 +42,12 @@ type TreasuryData = {
 
 const dict: Dict = {
   treasury: { en: "Treasury", zh: "金库" },
-  hero: { en: "Proof, not pitches.", zh: "链上为证,无需推销。" },
+  hero: { en: "Proof, not pitches.", zh: "链上为证，无需推销。" },
   sub: {
     en: "Every tap, every deposit, every daily swap. Aggregated across the whole cohort. Open Mickle is a daily ritual; the treasury is the receipt.",
-    zh: "每一次打卡、每一笔充值、每一次每日兑换。整个用户群体的汇总数据。Mickle 是每日仪式;金库是它的凭证。",
+    zh: "每一次打卡、每一笔充值、每一次每日兑换。整个用户群体的汇总数据。Mickle 是每日仪式；金库是它的凭证。",
   },
-  initialising: { en: "Treasury is initialising. Check back in a minute.", zh: "金库正在初始化,请稍后再来。" },
+  initialising: { en: "Treasury is initialising. Check back in a minute.", zh: "金库正在初始化，请稍后再来。" },
   cohort: { en: "Cohort", zh: "用户群体" },
   users: { en: "Users", zh: "用户数" },
   activeStreaks: { en: "Active streaks", zh: "活跃连胜" },
@@ -66,15 +66,15 @@ const dict: Dict = {
   updatedJustNow: { en: "updated just now", zh: "刚刚更新" },
   updatedSecsAgo: { en: "updated {n}s ago", zh: "{n} 秒前更新" },
   updatedMinAgo: { en: "updated {n}m ago", zh: "{n} 分钟前更新" },
-  staleHint: { en: "data may be stale — retrying", zh: "数据可能过时 — 正在重试" },
+  staleHint: { en: "data may be stale, retrying", zh: "数据可能过时，正在重试" },
   thirtyDays: { en: "Last 30 days", zh: "最近 30 天" },
   subscribe: { en: "Subscribe to receipts (RSS) ↗", zh: "订阅 RSS 凭证 ↗" },
-  noBatchesYet: { en: "No batches yet — first swap fires the day after the first user tap.", zh: "暂无批次 —— 首次用户打卡后一天会执行第一笔。" },
+  noBatchesYet: { en: "No batches yet. The first swap fires the day after the first user tap.", zh: "暂无批次。首次用户打卡后一天会执行第一笔。" },
   noBatches: { en: "No batches yet. The first one runs the day after the first user tap.", zh: "还没有批次。首次用户打卡后的第二天会运行第一批。" },
   quoteOnly: { en: "quote only", zh: "仅报价" },
   onchain: { en: "On-chain ↗", zh: "链上查看 ↗" },
   demoQuoted: { en: "Demo · quoted", zh: "演示 · 报价" },
-  footer: { en: "© Mickle · Proof, not pitches.", zh: "© Mickle · 链上为证,无需推销。" },
+  footer: { en: "© Mickle · Proof, not pitches.", zh: "© Mickle · 链上为证，无需推销。" },
   back: { en: "← Back to landing", zh: "← 返回首页" },
   liveOnchain: { en: "Live on-chain", zh: "链上实时" },
   walletShort: { en: "Treasury wallet", zh: "金库钱包" },
@@ -407,7 +407,7 @@ function BatchChart({
           return (
             <div
               key={d.key}
-              className="flex-1 rounded-sm transition-all"
+              className="flex-1 rounded-sm transition-[height,background-color]"
               title={`${d.key} · $${d.total.toFixed(2)}`}
               style={{
                 height: `${h}%`,

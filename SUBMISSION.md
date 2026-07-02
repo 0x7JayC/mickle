@@ -185,7 +185,7 @@ Use this when filling out [arena.colosseum.com](https://arena.colosseum.com).
 - [ ] **Description:** paste section 4 (long description) above
 - [ ] **Track:** Consumer (primary), DeFi/RWA (secondary)
 - [ ] **Demo video:** record per script in section 5, upload to YouTube as **unlisted**, paste URL
-- [ ] **Pitch deck:** export `pitch-deck-20260430-092308.html` to PDF (`npx playwright-pdf` or print → PDF), upload
+- [ ] **Pitch deck:** export `pitch-deck-20260511-120000.html` to PDF (`npx playwright-pdf` or print → PDF), upload
 - [ ] **GitHub repo URL:** `https://github.com/0x7JayC/mickle`
 - [ ] **Live demo URL:** `https://mickle-gamma.vercel.app`
 - [ ] **iOS demo (optional):** screen recording of the Capacitor build in iPhone simulator

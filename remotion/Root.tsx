@@ -3,6 +3,7 @@ import { loadFont as loadGeist } from "@remotion/google-fonts/Geist";
 import { loadFont as loadGeistMono } from "@remotion/google-fonts/GeistMono";
 import { Hackathon90 } from "./Hackathon90";
 import { Twitter30 } from "./Twitter30";
+import { PitchDeck } from "./PitchDeck";
 import { FPS } from "./brand";
 
 loadGeist();
@@ -23,6 +24,14 @@ export function Root() {
         id="Twitter30"
         component={Twitter30}
         durationInFrames={30 * FPS}
+        fps={FPS}
+        width={1920}
+        height={1080}
+      />
+      <Composition
+        id="PitchDeck"
+        component={PitchDeck}
+        durationInFrames={180 * FPS}
         fps={FPS}
         width={1920}
         height={1080}

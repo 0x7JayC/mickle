@@ -65,7 +65,7 @@ User experience overrides technical preference, code cleanliness, and architectu
 - **iOS shell:** `npm run ios:add && npm run ios:open` (see `MOBILE.md`).
 - **Money architecture:** documented in `MONEY.md`. Don't change the fee story without updating that file first (Documentation First rule).
 - **Brand discipline:** `DESIGN.md` (Apple) is the reference. Single coral accent, no decorative gradients, body 17px / 1.47 / -0.012em, weight ladder 300/400/600/700. Glass + shadows reserved for nav/sticky chrome. See commit `c631f01`.
-- **Pitch deck:** `pitch-deck-*.html` (Colosseum Consumer track, PAS framework, 8 slides).
+- **Pitch deck:** `pitch-deck-20260511-120000.html` (Colosseum Consumer track, PAS framework, 8 slides). Dark/light alternating theme, coral accent, Jupiter Ultra + pbUSDC/SPYx dual narrative.
 
 ## Files to update before changing behaviour
 

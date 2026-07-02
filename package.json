@@ -16,7 +16,8 @@
     "video:dev": "remotion studio",
     "video:render": "remotion render Hackathon90 out/hackathon-90.mp4 --crf 18 --color-space bt709 && remotion render Twitter30 out/twitter-30.mp4 --crf 18 --color-space bt709",
     "video:render:hackathon": "remotion render Hackathon90 out/hackathon-90.mp4 --crf 18 --color-space bt709",
-    "video:render:twitter": "remotion render Twitter30 out/twitter-30.mp4 --crf 18 --color-space bt709"
+    "video:render:twitter": "remotion render Twitter30 out/twitter-30.mp4 --crf 18 --color-space bt709",
+    "video:render:pitchdeck": "remotion render PitchDeck out/pitch-deck.mp4 --crf 18 --color-space bt709"
   },
   "dependencies": {
     "@capacitor/cli": "^8.3.1",

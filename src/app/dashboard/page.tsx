@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useMickleAuth } from "@/lib/use-mickle-auth";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import TimeMachine from "@/components/TimeMachine";
 import { getTodaysParable } from "@/lib/parables";
@@ -102,7 +101,6 @@ type Position = {
 
 export default function App() {
   const lang = useLang();
-  const router = useRouter();
   // Unified auth — hides whether the user took CDP (email/Google) or
   // SIWS (wallet) on the way in. Dashboard code reads a single shape.
   const auth = useMickleAuth();
@@ -207,7 +205,8 @@ export default function App() {
   };
   useEffect(() => {
     if (!authenticated) return;
-    refreshMilestones();
+    // Microtask defer: the fetch + setState happen outside the effect body.
+    Promise.resolve().then(refreshMilestones);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authenticated, dbUser?.streak_count]);
 
@@ -388,7 +387,8 @@ export default function App() {
     if (url.searchParams.get("onramp") === "success") {
       const amt = Number(url.searchParams.get("amount"));
       if (Number.isFinite(amt) && amt > 0) {
-        recordDeposit(amt);
+        // Microtask defer: fetch + setState happen outside the effect body.
+        Promise.resolve().then(() => recordDeposit(amt));
       }
       url.searchParams.delete("onramp");
       url.searchParams.delete("amount");
@@ -410,11 +410,15 @@ export default function App() {
   // user object, treat that as authenticated even if isSignedIn lags.
   const [gateConfirmed, setGateConfirmed] = useState(false);
   const looksSignedOut = ready && !authenticated && !currentUser;
+  // Reset during render (React's adjust-state-on-prop-change pattern)
+  // instead of inside the effect, so the effect only owns the 800ms timer.
+  const [prevSignedOut, setPrevSignedOut] = useState(looksSignedOut);
+  if (prevSignedOut !== looksSignedOut) {
+    setPrevSignedOut(looksSignedOut);
+    if (!looksSignedOut) setGateConfirmed(false);
+  }
   useEffect(() => {
-    if (!looksSignedOut) {
-      setGateConfirmed(false);
-      return;
-    }
+    if (!looksSignedOut) return;
     const t = setTimeout(() => setGateConfirmed(true), 800);
     return () => clearTimeout(t);
   }, [looksSignedOut]);

@@ -10,7 +10,7 @@
 // All callbacks are useCallback-stabilised so consumers can safely
 // put them in useEffect deps without infinite-loop re-renders.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import {
   useIsInitialized,
   useIsSignedIn,
@@ -51,6 +51,23 @@ function readSiwsAuthId(): string | null {
   return localStorage.getItem(MICKLE_SIWS_AUTHID_KEY);
 }
 
+// SIWS session lives in localStorage; expose it as an external store.
+// Storage events cover other tabs; notifySiws() covers same-tab writes
+// (sign-out clears the keys while consumers are still mounted).
+const siwsListeners = new Set<() => void>();
+function subscribeSiws(cb: () => void) {
+  siwsListeners.add(cb);
+  window.addEventListener("storage", cb);
+  return () => {
+    siwsListeners.delete(cb);
+    window.removeEventListener("storage", cb);
+  };
+}
+function notifySiws() {
+  siwsListeners.forEach((l) => l());
+}
+const siwsServerSnapshot = () => null;
+
 export function useMickleAuth(): MickleAuth {
   const { isInitialized: cdpReady } = useIsInitialized();
   const { isSignedIn: cdpSignedIn } = useIsSignedIn();
@@ -59,21 +76,10 @@ export function useMickleAuth(): MickleAuth {
   const { getAccessToken: cdpGetToken } = useGetAccessToken();
   const { signOut: cdpSignOut } = useSignOut();
 
-  // Read SIWS state from localStorage. Hydration-safe: start null,
-  // populate after mount, listen for storage events from other tabs.
-  const [siwsJwt, setSiwsJwt] = useState<string | null>(null);
-  const [siwsAuthId, setSiwsAuthId] = useState<string | null>(null);
-
-  useEffect(() => {
-    setSiwsJwt(readSiwsJwt());
-    setSiwsAuthId(readSiwsAuthId());
-    const handler = () => {
-      setSiwsJwt(readSiwsJwt());
-      setSiwsAuthId(readSiwsAuthId());
-    };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
-  }, []);
+  // Hydration-safe: the server snapshot is null, the client snapshot is
+  // re-read each render, and storage events cover other tabs.
+  const siwsJwt = useSyncExternalStore(subscribeSiws, readSiwsJwt, siwsServerSnapshot);
+  const siwsAuthId = useSyncExternalStore(subscribeSiws, readSiwsAuthId, siwsServerSnapshot);
 
   const cdpEmail = currentUser?.authenticationMethods?.email?.email ?? null;
   const siwsAddress = siwsAuthId?.startsWith("siws:")
@@ -100,7 +106,9 @@ export function useMickleAuth(): MickleAuth {
   // every render builds a new function, effect re-fires, setState
   // triggers another render, repeat.
   const stateRef = useRef({ provider, siwsJwt, cdpGetToken, cdpSignedIn, cdpSignOut });
-  stateRef.current = { provider, siwsJwt, cdpGetToken, cdpSignedIn, cdpSignOut };
+  useEffect(() => {
+    stateRef.current = { provider, siwsJwt, cdpGetToken, cdpSignedIn, cdpSignOut };
+  });
 
   const getAccessToken = useCallback(async (): Promise<string | null> => {
     const s = stateRef.current;
@@ -118,8 +126,7 @@ export function useMickleAuth(): MickleAuth {
       localStorage.removeItem(MICKLE_SIWS_KEY);
       localStorage.removeItem(MICKLE_SIWS_AUTHID_KEY);
     }
-    setSiwsJwt(null);
-    setSiwsAuthId(null);
+    notifySiws();
   }, []);
 
   return {

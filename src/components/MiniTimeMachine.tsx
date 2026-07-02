@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
 const dict: Dict = {
@@ -11,13 +11,6 @@ const dict: Dict = {
 const fmtN = (s: string, n: number) => s.replace("{n}", String(n));
 
 const CAGR = 0.102;
-
-function fv(daily: number, years: number) {
-  const m = daily * (365 / 12);
-  const r = CAGR / 12;
-  const n = years * 12;
-  return m * ((Math.pow(1 + r, n) - 1) / r);
-}
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `£${(n / 1_000_000).toFixed(1)}M`;
@@ -51,7 +44,9 @@ export default function MiniTimeMachine({ years = 30, daily = 1 }: { years?: num
   const area = `${line} L ${xAt(points.length - 1)} ${H - PAD} L ${xAt(0)} ${H - PAD} Z`;
   const contrib = points.map((p, i) => `${i === 0 ? "M" : "L"} ${xAt(i)} ${yAt(p.c)}`).join(" ");
 
-  const id = `${years}-${daily}-${Math.random().toString(36).slice(2, 7)}`;
+  // useId keeps gradient ids unique per instance; strip the colons so the
+  // ids stay valid inside SVG url(#...) references.
+  const id = useId().replace(/:/g, "");
 
   return (
     <div className="w-full">

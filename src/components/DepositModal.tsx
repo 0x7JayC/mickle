@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 import { useSolanaAddress, useSendSolanaTransaction } from "@coinbase/cdp-hooks";
 import { useWallet } from "@solana/wallet-adapter-react";
-import bs58 from "bs58";
 
 const dict: Dict = {
   topUp: { en: "Top up", zh: "充值" },

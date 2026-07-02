@@ -1,9 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useLang, t, type Dict } from "@/lib/i18n";
 
 const KEY = "mickle:onboarded";
+
+// Dismissal is a localStorage-backed external store; the server snapshot
+// is "dismissed" so the banner never flashes before hydration.
+const dismissListeners = new Set<() => void>();
+function readDismissed() {
+  try {
+    return localStorage.getItem(KEY) === "1";
+  } catch {
+    return true;
+  }
+}
+function writeDismissed() {
+  try {
+    localStorage.setItem(KEY, "1");
+  } catch {
+    // Storage blocked: listeners still hide it for this session.
+  }
+  dismissListeners.forEach((l) => l());
+}
+function subscribeDismissed(cb: () => void) {
+  dismissListeners.add(cb);
+  return () => {
+    dismissListeners.delete(cb);
+  };
+}
+const serverDismissed = () => true;
 
 const dict: Dict = {
   dismiss: { en: "Dismiss", zh: "关闭" },
@@ -25,19 +51,12 @@ export default function OnboardingBanner({
   onTopUp: () => void;
 }) {
   const lang = useLang();
-  const [dismissed, setDismissed] = useState(true); // hidden until hydrated
-
-  useEffect(() => {
-    setDismissed(localStorage.getItem(KEY) === "1");
-  }, []);
+  const dismissed = useSyncExternalStore(subscribeDismissed, readDismissed, serverDismissed);
 
   // Auto-dismiss once user has tapped or topped up
   if (streak > 0 || contributed > 0 || dismissed) return null;
 
-  const close = () => {
-    localStorage.setItem(KEY, "1");
-    setDismissed(true);
-  };
+  const close = writeDismissed;
 
   return (
     <div

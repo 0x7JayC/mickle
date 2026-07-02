@@ -66,7 +66,6 @@ export default function Home() {
   // first open; subsequent opens reuse the already-loaded bundle.
   const onCta = () => setSignInOpen(true);
   const langRef = useRef<Lang>(lang);
-  langRef.current = lang;
 
   // Refs for the parts the scroll handler mutates directly. Keeping
   // imperative DOM access here (instead of React state) so the rAF
@@ -231,6 +230,7 @@ export default function Home() {
   // language — the scroll loop only updates it on beat change, so without
   // this the eyebrow stays in the previous language until you scroll.
   useEffect(() => {
+    langRef.current = lang;
     const eyebrow = eyebrowRef.current;
     if (!eyebrow) return;
     const total = (scrollerRef.current?.offsetHeight ?? 0) - window.innerHeight;

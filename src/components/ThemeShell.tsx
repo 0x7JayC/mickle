@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 
 export type ThemeId = "a1" | "a2" | "a4" | "a5";
 
@@ -14,6 +14,39 @@ export const THEMES: { id: ThemeId; label: string; swatch: string }[] = [
   { id: "a5", label: "Aurora", swatch: "linear-gradient(135deg, #2dd4bf, #a855f7, #ec4899)" },
 ];
 
+// Theme lives in a module-level store (backed by localStorage) that the
+// component reads via useSyncExternalStore — no setState-in-effect, and
+// SSR renders DEFAULT_THEME until the client snapshot takes over.
+let cachedTheme: ThemeId | null = null;
+const themeListeners = new Set<() => void>();
+
+function readTheme(): ThemeId {
+  if (cachedTheme === null) {
+    const saved = localStorage.getItem(STORAGE_KEY) as ThemeId | null;
+    cachedTheme = saved && THEMES.some((t) => t.id === saved) ? saved : DEFAULT_THEME;
+  }
+  return cachedTheme;
+}
+
+function writeTheme(next: ThemeId) {
+  cachedTheme = next;
+  try {
+    localStorage.setItem(STORAGE_KEY, next);
+  } catch {
+    // Private mode / blocked storage: theme still applies for the session.
+  }
+  themeListeners.forEach((l) => l());
+}
+
+function subscribeTheme(cb: () => void) {
+  themeListeners.add(cb);
+  return () => {
+    themeListeners.delete(cb);
+  };
+}
+
+const serverTheme = () => DEFAULT_THEME;
+
 type Ctx = { theme: ThemeId; setTheme: (t: ThemeId) => void };
 const ThemeCtx = createContext<Ctx>({ theme: DEFAULT_THEME, setTheme: () => {} });
 
@@ -22,21 +55,13 @@ export function useTheme() {
 }
 
 export default function ThemeShell({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<ThemeId>(DEFAULT_THEME);
-  const [hydrated, setHydrated] = useState(false);
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, serverTheme);
+  const setTheme = writeTheme;
 
   useEffect(() => {
-    const saved = (localStorage.getItem(STORAGE_KEY) as ThemeId | null) ?? DEFAULT_THEME;
-    setTheme(saved);
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
     document.body.classList.remove("theme-a1", "theme-a2", "theme-a4", "theme-a5");
     document.body.classList.add(`theme-${theme}`);
-    localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme, hydrated]);
+  }, [theme]);
 
   return (
     <ThemeCtx.Provider value={{ theme, setTheme }}>

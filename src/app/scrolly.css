@@ -7,7 +7,7 @@
   --ink-muted: #2a2a2a;
   --hairline: rgba(10, 10, 10, 0.08);
   --accent-orange: #ff6a1a;
-  --accent-purple: #6c4cff;
+  --accent-deep: #c2410c; /* burnt shade of the same orange family — single-accent rule */
   --glass-fill: rgba(255, 255, 255, 0.55);
   --glass-stroke: rgba(255, 255, 255, 0.85);
   --fade: 500ms cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -117,7 +117,7 @@
   background: var(--ink);
 }
 .scrolly-icon-cluster .pills .dot.p {
-  background: var(--accent-purple);
+  background: var(--accent-deep);
 }
 .scrolly-eyebrow {
   font-size: 12px;
@@ -188,7 +188,7 @@
   color: var(--accent-orange);
 }
 .scrolly-stat-card .num .plus-p {
-  color: var(--accent-purple);
+  color: var(--accent-deep);
 }
 .scrolly-stat-card .desc {
   margin-top: 14px;
